@@ -1,0 +1,1 @@
+ C:\\Users\\DEV-UI-UX\\Desktop\\noogo-scan\\noogo\\noogoscan\\.dart_tool\\flutter_build\\83a26baec97f70752ed1b1a573e298af\\native_assets.json: 
