@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!--
+      Si tu sers ton app dans un sous-dossier, adapte le chemin ci-dessous.
+      Exemple : <base href="/noogo/">
+    -->
+    <base href="$FLUTTER_BASE_HREF" />
+
+    <meta charset="UTF-8" />
+    <meta content="IE=Edge" http-equiv="X-UA-Compatible" />
+    <meta name="description" content="Application de scan Noogo" />
+
+    <!-- ✅ Autoriser la caméra sur le web -->
+    <meta
+      name="permissions-policy"
+      content="camera=(self), microphone=(), geolocation=()"
+    />
+
+    <!-- ✅ PWA et mobile -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="Noogo" />
+    <link rel="apple-touch-icon" href="icons/03.png.png" />
+
+    <!-- ✅ Favicon -->
+    <link rel="icon" type="image/png" href="03.png" />
+
+    <title>Noogo</title>
+    <link rel="manifest" href="manifest.json" />
+  </head>
+
+  <body>
+    <script src="flutter_bootstrap.js" async></script>
+  </body>
+</html>
