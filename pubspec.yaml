@@ -1,0 +1,119 @@
+name: noogo
+description: Application Flutter pour restaurant avec intégration API Laravel
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.0.5
+  http: ^1.5.0
+  cached_network_image: ^3.3.0
+  url_launcher: ^6.1.7
+  intl: ^0.20.2
+  flutter_dotenv: ^6.0.0
+  shared_preferences: ^2.1.1
+  badges: ^3.1.1
+  flutter_spinkit: ^5.1.0
+  carousel_slider: ^5.1.1
+  animations: ^2.0.6
+  cupertino_icons: ^1.0.5
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^7.1.4
+  pusher_channels_flutter: ^2.5.0
+  flutter_launcher_icons: ^0.13.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+
+
+# ==========================================
+# 🎨 CONFIGURATION DES ICÔNES D'APPLICATION
+# ==========================================
+flutter_icons:
+  # Plateformes ciblées
+  android: true
+  ios: true
+  web:
+    generate: true
+  image_path: "assets/icons/03.png"
+  background_color: "#FF6B35"
+  theme_color: "#FF6B35"
+
+
+  # ========================================
+  # 📱 ANDROID - Icône adaptative (moderne)
+  # ========================================
+  # L'icône adaptative s'adapte aux différents launchers Android
+  # Elle nécessite deux éléments :
+  # 1. Foreground : Votre logo (avec marges)
+  # 2. Background : Couleur ou image de fond
+
+  adaptive_icon_foreground: "assets/icons/03.png"
+  adaptive_icon_background: "#FFFFFF" # Fond blanc
+
+  # Alternative avec image de fond :
+  # adaptive_icon_background: "assets/icons/icon_background.png"
+
+  # ========================================
+  # 🍎 iOS - Configuration
+  # ========================================
+  # iOS utilise directement l'image_path
+  # L'image sera automatiquement redimensionnée
+
+  # ========================================
+  # 🌐 Web - Favicon (optionnel)
+  # ========================================
+  # web:
+  #   generate: true
+  #   image_path: "assets/icons/03.png"
+  #   background_color: "#FFFFFF"
+  #   theme_color: "#FF6B6B"
+
+  # ========================================
+  # 🪟 Windows - Icône (optionnel)
+  # ========================================
+  # windows:
+  #   generate: true
+  #   image_path: "assets/icons/03.png"
+
+  # ========================================
+  # 🐧 Linux - Icône (optionnel)
+  # ========================================
+  # linux:
+  #   generate: true
+  #   image_path: "assets/icons/03.png"
+
+  # ========================================
+  # 🍎 macOS - Icône (optionnel)
+  # ========================================
+  # macos:
+  #   generate: true
+  #   image_path: "assets/icons/03.png"
+
+# ==========================================
+# 📦 CONFIGURATION FLUTTER
+# ==========================================
+flutter:
+  uses-material-design: true
+
+  # Assets de l'application
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/fonts/
+
+  # Fonts personnalisées (décommentez si nécessaire)
+  # fonts:
+  #   - family: Roboto
+  #     fonts:
+  #       - asset: assets/fonts/static/Roboto-Regular.ttf
+  #       - asset: assets/fonts/static/Roboto-Bold.ttf
+  #         weight: 700
