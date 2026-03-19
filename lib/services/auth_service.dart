@@ -1,13 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 import 'package:noogo/models/user.dart';
+import 'package:noogo/config/api_config.dart';
 
 
 class AuthService {
-  static const String baseUrl =
-      'https://dashboard-noogo.quickdev-it.com/api/auth';
+  /// URL de base pour l'authentification - depuis ApiConfig (.env)
+  static String get baseUrl => ApiConfig.authBaseUrl;
   static const String _userKey = 'user_data';
   static const String _tokenKey = 'auth_token';
   static const String _guestModeKey = 'guest_mode';

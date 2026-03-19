@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:pusher_channels_flutter/pusher_channels_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:noogo/config/api_config.dart';
 
 /// Service pour gérer les connexions WebSocket en temps réel avec Pusher
 class RealtimeService {
@@ -25,11 +26,11 @@ class RealtimeService {
   Function()? onConnected;
   Function()? onDisconnected;
 
-  /// Configuration Pusher - VOS CLÉS
-  static const String pusherKey = 'c1ae7868685df7094dd2';
-  static const String pusherCluster = 'eu';
-  static const String pusherAppId = '2072946';
-  static const String authEndpoint = 'https://dashboard-noogo.quickdev-it.com/api/broadcasting/auth';
+  /// Configuration Pusher - Depuis ApiConfig (.env)
+  static String get pusherKey => ApiConfig.pusherKey;
+  static String get pusherCluster => ApiConfig.pusherCluster;
+  static String get pusherAppId => ApiConfig.pusherAppId;
+  static String get authEndpoint => ApiConfig.pusherAuthEndpoint;
 
   /// Initialiser le service Pusher
   Future<void> initialize({required String userId, String? token}) async {

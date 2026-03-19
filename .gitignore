@@ -32,3 +32,7 @@
      *.mov
      *.avi
 *.hprof
+
+# Environment variables
+.env
+*.env.local

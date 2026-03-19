@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:noogo/services/restaurant_storage_service.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,8 +13,11 @@ import 'utils/app_text_styles.dart';
 import 'screens/splash_screen.dart';
 
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Charger les variables d'environnement depuis .env
+  await dotenv.load(fileName: ".env");
 
   // Configuration de la barre de statut
   SystemChrome.setSystemUIOverlayStyle(

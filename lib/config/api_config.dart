@@ -1,14 +1,64 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 class ApiConfig {
-  //  Base URL
-  static const String baseUrl = 'https://dashboard-noogo.quickdev-it.com/api';
+  // ============================================
+  // 🔐 CONFIGURATION DEPUIS .env
+  // ============================================
+  
+  /// Base URL de l'API
+  static String get baseUrl => 
+      dotenv.env['API_BASE_URL'] ?? 'https://dashboard-noogo.quickdev-it.com/api';
 
-  //  Base URL pour les images
-  static const String imageBaseUrl = 'https://dashboard-noogo.quickdev-it.com';
+  /// Base URL pour les images
+  static String get imageBaseUrl => 
+      dotenv.env['IMAGE_BASE_URL'] ?? 'https://dashboard-noogo.quickdev-it.com';
 
-  // 🖼️ Image de remplacement
+  /// Base URL pour les QR codes
+  static String get qrBaseUrl => 
+      dotenv.env['QR_BASE_URL'] ?? 'https://dashboard-noogo.quickdev-it.com';
+
+  // ============================================
+  // 🔌 CONFIGURATION PUSHER
+  // ============================================
+  
+  /// Clé API Pusher
+  static String get pusherKey => 
+      dotenv.env['PUSHER_APP_KEY'] ?? '';
+
+  /// Cluster Pusher
+  static String get pusherCluster => 
+      dotenv.env['PUSHER_CLUSTER'] ?? 'eu';
+
+  /// App ID Pusher
+  static String get pusherAppId => 
+      dotenv.env['PUSHER_APP_ID'] ?? '';
+
+  /// Endpoint d'authentification Pusher
+  static String get pusherAuthEndpoint => 
+      dotenv.env['PUSHER_AUTH_ENDPOINT'] ?? '$baseUrl/broadcasting/auth';
+
+  // ============================================
+  // 🛠️ CONFIGURATION ENVIRONNEMENT
+  // ============================================
+  
+  /// Mode debug actif
+  static bool get isDebugMode => 
+      dotenv.env['DEBUG_MODE']?.toLowerCase() == 'true' || kDebugMode;
+
+  /// Environnement actuel (development, staging, production)
+  static String get environment => 
+      dotenv.env['ENVIRONMENT'] ?? 'development';
+
+  /// Vérifie si en production
+  static bool get isProduction => environment == 'production';
+
+  // ============================================
+  // 🖼️ CONFIGURATION IMAGES
+  // ============================================
+
+  /// Image de remplacement par défaut
   static const String defaultImageUrl =
       'https://via.placeholder.com/400x300/CCCCCC/666666?text=Restaurant+Image';
 
@@ -132,8 +182,11 @@ class ApiConfig {
   static String getApiUrl(String endpoint) {
     final cleanEndpoint =
     endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
-    return '$baseUrl/api/$cleanEndpoint';
+    return '$baseUrl/$cleanEndpoint';
   }
+
+  /// URL de base pour l'authentification
+  static String get authBaseUrl => '$baseUrl/auth';
 
   // ✅ Vérifie si l'API est joignable
   static Future<bool> checkApiConnection() async {
