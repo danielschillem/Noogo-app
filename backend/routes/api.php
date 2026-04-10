@@ -36,6 +36,12 @@ Route::prefix('restaurant')->group(function () {
 // Offres actives (endpoint public pour Flutter)
 Route::get('/offres/actives/{restaurantId}', [FlashInfoController::class, 'actives']);
 
+// ============================================================================
+// ENDPOINT PUBLIC COMMANDES (app mobile Flutter, sans authentification)
+// Limité à 30 commandes/minute par IP pour contrer les abus
+// ============================================================================
+Route::middleware('throttle:30,1')->post('/commandes', [OrderController::class, 'storeMobile']);
+
 
 // ============================================================================
 // ROUTES PROTÉGÉES (authentification requise)

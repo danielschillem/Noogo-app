@@ -270,4 +270,112 @@ class OrderController extends Controller
             'data' => $counts
         ]);
     }
+
+    /**
+     * Endpoint public pour l'app mobile Flutter.
+     * Accepte le format de payload natif Flutter (champs FR).
+     *
+     * Payload attendu :
+     *   restaurant_id, telephone, type, moyen_paiement, table (opt),
+     *   mobile_money_provider (opt), plats: [{id, quantite}]
+     */
+    public function storeMobile(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'restaurant_id' => 'required|integer|exists:restaurants,id',
+            'telephone' => 'nullable|string|max:20',
+            'type' => 'required|string',
+            'moyen_paiement' => 'required|string|max:50',
+            'table' => 'nullable|string|max:20',
+            'mobile_money_provider' => 'nullable|string|max:50',
+            'plats' => 'required|array|min:1',
+            'plats.*.id' => 'required|integer|exists:dishes,id',
+            'plats.*.quantite' => 'required|integer|min:1',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Données invalides',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        // Normaliser le type de commande (FR → snake_case)
+        $typeMap = [
+            'sur place' => 'sur_place',
+            'surplace' => 'sur_place',
+            'à emporter' => 'a_emporter',
+            'a emporter' => 'a_emporter',
+            'aemporter' => 'a_emporter',
+            'livraison' => 'livraison',
+            'delivery' => 'livraison',
+            'sur_place' => 'sur_place',
+            'a_emporter' => 'a_emporter',
+        ];
+
+        $typeRaw = strtolower(trim($request->type));
+        $orderType = $typeMap[$typeRaw] ?? null;
+
+        if (!$orderType) {
+            return response()->json([
+                'success' => false,
+                'message' => "Type de commande invalide : {$request->type}",
+            ], 422);
+        }
+
+        $restaurant = Restaurant::findOrFail($request->restaurant_id);
+
+        try {
+            DB::beginTransaction();
+
+            $order = Order::create([
+                'restaurant_id' => $restaurant->id,
+                'user_id' => null,   // commande anonyme
+                'customer_phone' => $request->telephone,
+                'order_type' => $orderType,
+                'table_number' => $request->table,
+                'payment_method' => $request->moyen_paiement,
+                'mobile_money_provider' => $request->mobile_money_provider,
+                'status' => 'pending',
+            ]);
+
+            foreach ($request->plats as $plat) {
+                $dish = Dish::findOrFail($plat['id']);
+
+                if ($dish->restaurant_id !== $restaurant->id) {
+                    throw new \Exception("Le plat '{$dish->nom}' n'appartient pas à ce restaurant.");
+                }
+
+                if (!$dish->disponibilite) {
+                    throw new \Exception("Le plat '{$dish->nom}' n'est plus disponible.");
+                }
+
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'dish_id' => $dish->id,
+                    'quantity' => $plat['quantite'],
+                    'unit_price' => $dish->prix,
+                ]);
+            }
+
+            $order->calculateTotal();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Commande créée avec succès',
+                'id' => $order->id,
+                'data' => $order->load(['items.dish:id,nom,prix']),
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
 }

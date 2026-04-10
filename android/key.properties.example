@@ -1,0 +1,15 @@
+# ============================================================
+# NOOGO — Android Signing Config
+# ============================================================
+# 1. Copiez ce fichier en "key.properties" (même dossier)
+# 2. Ne committez JAMAIS key.properties (déjà dans .gitignore)
+# 3. Générez le keystore avec :
+#    keytool -genkey -v -keystore noogo-release.jks \
+#            -storetype JKS -keyalg RSA -keysize 2048 \
+#            -validity 10000 -alias noogo
+# ============================================================
+
+storePassword=VOTRE_MOT_DE_PASSE_KEYSTORE
+keyPassword=VOTRE_MOT_DE_PASSE_CLE
+keyAlias=noogo
+storeFile=../noogo-release.jks

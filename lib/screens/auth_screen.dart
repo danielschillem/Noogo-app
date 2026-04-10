@@ -27,8 +27,9 @@ class _AuthScreenState extends State<AuthScreen> {
 
   /// Numéro Burkina Faso : 8 chiffres optionnellement précédés de +226 ou 00226
   String? _validatePhone(String? value) {
-    if (value == null || value.trim().isEmpty)
+    if (value == null || value.trim().isEmpty) {
       return 'Entrez votre numéro de téléphone';
+    }
     final cleaned = value.replaceAll(RegExp(r'[\s\-\.]'), '');
     final regex = RegExp(r'^(?:\+?226|00226)?[0-9]{8}$');
     if (!regex.hasMatch(cleaned)) return 'Numéro invalide (ex: 70 12 34 56)';
@@ -95,7 +96,9 @@ class _AuthScreenState extends State<AuthScreen> {
           isError: false,
         );
 
-        // ✅ Redirection vers la page d'accueil
+        if (!mounted) return;
+
+        // Redirection vers la page d'accueil
         if (_isLogin) {
           Navigator.pushReplacementNamed(context, '/home');
         } else {
@@ -222,10 +225,12 @@ class _AuthScreenState extends State<AuthScreen> {
                         label: 'Nom complet',
                         icon: Icons.person,
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty)
+                          if (value == null || value.trim().isEmpty) {
                             return 'Entrez votre nom';
-                          if (value.trim().length < 2)
+                          }
+                          if (value.trim().length < 2) {
                             return 'Nom trop court (min. 2 caractères)';
+                          }
                           return null;
                         },
                       ),

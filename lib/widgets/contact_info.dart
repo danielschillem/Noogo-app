@@ -29,18 +29,19 @@ class _ContactInfoState extends State<ContactInfo> {
       return;
     }
 
+    final messenger = ScaffoldMessenger.of(context);
     final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
 
     try {
       if (await canLaunchUrl(phoneUri)) {
         await launchUrl(phoneUri);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           const SnackBar(content: Text("Impossible de lancer l'appel.")),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(content: Text("Erreur lors de l'appel : $e")),
       );
     }

@@ -20,7 +20,7 @@ class RestaurantProvider with ChangeNotifier {
 
   // NOUVEAU: Timer et tracking des statuts
   Timer? _autoRefreshTimer;
-  Map<int, OrderStatus> _lastOrderStatuses = {};
+  final Map<int, OrderStatus> _lastOrderStatuses = {};
 
   // --- États généraux ---
   bool _isLoading = false;
@@ -1084,7 +1084,7 @@ class RestaurantProvider with ChangeNotifier {
     debugPrint('Restaurant: ${_restaurant?.name ?? "Aucun"}');
     debugPrint('Commandes: ${_orders.length}');
     debugPrint(
-        'Notifications: ${_notifications.length} (${unreadNotificationsCount} non lues)');
+        'Notifications: ${_notifications.length} ($unreadNotificationsCount non lues)');
     debugPrint('Pusher connecté: $_isRealtimeConnected');
     debugPrint(
         'Auto-refresh: ${_autoRefreshTimer?.isActive ?? false ? "Actif" : "Inactif"}');

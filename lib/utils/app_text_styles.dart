@@ -92,9 +92,24 @@ class AppTextStyles {
     fontFamily: 'Roboto',
   );
 
-  static get headlineLarge => null;
+  static const TextStyle headlineLarge = TextStyle(
+    fontSize: 28,
+    fontWeight: FontWeight.bold,
+    color: AppColors.textPrimary,
+    fontFamily: 'Roboto',
+  );
 
-  static get buttonLarge => null;
+  static const TextStyle buttonLarge = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textLight,
+    fontFamily: 'Roboto',
+  );
 
-  static get buttonMedium => null;
+  static const TextStyle buttonMedium = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textLight,
+    fontFamily: 'Roboto',
+  );
 }

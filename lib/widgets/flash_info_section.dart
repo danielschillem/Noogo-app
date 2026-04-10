@@ -157,7 +157,7 @@ class FlashInfoSection extends StatelessWidget {
                 ),
                 child: Text(
                   '${flashInfos.length} ${flashInfos.length > 1 ? 'offres' : 'offre'}',
-                  style: (AppTextStyles.caption ?? const TextStyle()).copyWith(
+                  style: AppTextStyles.caption.copyWith(
                     color: AppColors.error,
                     fontWeight: FontWeight.bold,
                   ),
@@ -260,7 +260,7 @@ class FlashInfoSection extends StatelessWidget {
                                 const SizedBox(width: 4),
                                 Text(
                                   flashInfo.discountBadge,
-                                  style: (AppTextStyles.caption ?? const TextStyle()).copyWith(
+                                  style: AppTextStyles.caption.copyWith(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -293,7 +293,7 @@ class FlashInfoSection extends StatelessWidget {
                                   const SizedBox(width: 4),
                                   Text(
                                     '${flashInfo.daysUntilExpiry}j',
-                                    style: (AppTextStyles.caption ?? const TextStyle()).copyWith(
+                                    style: AppTextStyles.caption.copyWith(
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -309,7 +309,7 @@ class FlashInfoSection extends StatelessWidget {
                       // Titre
                       Text(
                         flashInfo.name,
-                        style: (AppTextStyles.heading2 ?? const TextStyle()).copyWith(
+                        style: AppTextStyles.heading2.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                           shadows: [
@@ -329,7 +329,7 @@ class FlashInfoSection extends StatelessWidget {
                       // Description
                       Text(
                         flashInfo.description,
-                        style: (AppTextStyles.bodyMedium ?? const TextStyle()).copyWith(
+                        style: AppTextStyles.bodyMedium.copyWith(
                           color: Colors.white.withValues(alpha: 0.95),
                           shadows: [
                             Shadow(
@@ -369,7 +369,7 @@ class FlashInfoSection extends StatelessWidget {
                               Flexible(
                                 child: Text(
                                   flashInfo.validityPeriod!,
-                                  style: (AppTextStyles.caption ?? const TextStyle()).copyWith(
+                                  style: AppTextStyles.caption.copyWith(
                                     color: Colors.white,
                                   ),
                                   maxLines: 1,
@@ -401,7 +401,7 @@ class FlashInfoSection extends StatelessWidget {
                             children: [
                               Text(
                                 'Voir les détails',
-                                style: (AppTextStyles.buttonMedium ?? const TextStyle()).copyWith(
+                                style: AppTextStyles.buttonMedium.copyWith(
                                   color: Colors.black87,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -624,7 +624,7 @@ class _OfferDetailsSheet extends StatelessWidget {
                                   const SizedBox(width: 8),
                                   Text(
                                     flashInfo.discountBadge,
-                                    style: (AppTextStyles.bodyMedium ?? const TextStyle()).copyWith(
+                                    style: AppTextStyles.bodyMedium.copyWith(
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -647,7 +647,7 @@ class _OfferDetailsSheet extends StatelessWidget {
                             // Titre
                             Text(
                               flashInfo.name,
-                              style: (AppTextStyles.heading1 ?? const TextStyle()).copyWith(
+                              style: AppTextStyles.heading1.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -673,7 +673,7 @@ class _OfferDetailsSheet extends StatelessWidget {
                                     Expanded(
                                       child: Text(
                                         flashInfo.description,
-                                        style: (AppTextStyles.bodyLarge ?? const TextStyle()).copyWith(
+                                        style: AppTextStyles.bodyLarge.copyWith(
                                           color: AppColors.textPrimary,
                                           height: 1.5,
                                         ),
@@ -688,7 +688,7 @@ class _OfferDetailsSheet extends StatelessWidget {
                             // Section: Détails de l'offre
                             Text(
                               'Détails de l\'offre',
-                              style: (AppTextStyles.heading3 ?? const TextStyle()).copyWith(
+                              style: AppTextStyles.heading3.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -742,7 +742,7 @@ class _OfferDetailsSheet extends StatelessWidget {
                                 flashInfo.conditions!.isNotEmpty) ...[
                               Text(
                                 'Conditions d\'éligibilité',
-                                style: (AppTextStyles.heading3 ?? const TextStyle()).copyWith(
+                                style: AppTextStyles.heading3.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -769,7 +769,7 @@ class _OfferDetailsSheet extends StatelessWidget {
                                     Expanded(
                                       child: Text(
                                         flashInfo.conditions!,
-                                        style: (AppTextStyles.bodyMedium ?? const TextStyle()).copyWith(
+                                        style: AppTextStyles.bodyMedium.copyWith(
                                           color: AppColors.textPrimary,
                                           height: 1.5,
                                         ),
@@ -801,7 +801,7 @@ class _OfferDetailsSheet extends StatelessWidget {
                                   Expanded(
                                     child: Text(
                                       'Cette offre est disponible uniquement dans notre restaurant',
-                                      style: (AppTextStyles.bodyMedium ?? const TextStyle()).copyWith(
+                                      style: AppTextStyles.bodyMedium.copyWith(
                                         color: AppColors.textPrimary,
                                         height: 1.5,
                                       ),
@@ -852,7 +852,7 @@ class _OfferDetailsSheet extends StatelessWidget {
                       ),
                       child: Text(
                         flashInfo.buttonText,
-                        style: (AppTextStyles.buttonLarge ?? const TextStyle()).copyWith(
+                        style: AppTextStyles.buttonLarge.copyWith(
                           color: Colors.white,
                         ),
                       ),
@@ -900,14 +900,14 @@ class _OfferDetailsSheet extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: (AppTextStyles.bodySmall ?? const TextStyle()).copyWith(
+                  style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   value,
-                  style: (AppTextStyles.bodyMedium ?? const TextStyle()).copyWith(
+                  style: AppTextStyles.bodyMedium.copyWith(
                     fontWeight: FontWeight.w600,
                     color: isWarning ? Colors.orange : AppColors.textPrimary,
                   ),

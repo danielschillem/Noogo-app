@@ -178,8 +178,7 @@ class NooqoApp extends StatelessWidget {
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.textPrimary,
-        contentTextStyle:
-            (AppTextStyles.bodyMedium).copyWith(
+        contentTextStyle: (AppTextStyles.bodyMedium).copyWith(
           color: AppColors.textLight,
         ),
         shape: RoundedRectangleBorder(
@@ -198,8 +197,7 @@ class NooqoApp extends StatelessWidget {
         selectedColor: AppColors.primary.withValues(alpha: 0.2),
         disabledColor: AppColors.surface.withValues(alpha: 0.5),
         labelStyle: AppTextStyles.bodySmall,
-        secondaryLabelStyle:
-            (AppTextStyles.bodySmall).copyWith(
+        secondaryLabelStyle: (AppTextStyles.bodySmall).copyWith(
           color: AppColors.primary,
         ),
         shape: RoundedRectangleBorder(

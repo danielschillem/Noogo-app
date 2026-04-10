@@ -13,6 +13,7 @@ import 'orders_screen.dart';
 import 'profile_screen.dart';
 import '../utils/qr_helper.dart';
 import '../models/category.dart';
+import '../models/dish.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -440,7 +441,7 @@ class _HomePage extends StatelessWidget {
   }
 
   static Widget _buildDishCard(
-      dish, RestaurantProvider provider, BuildContext context) {
+      Dish dish, RestaurantProvider provider, BuildContext context) {
     return Container(
       width: 160,
       margin: const EdgeInsets.only(right: 12),

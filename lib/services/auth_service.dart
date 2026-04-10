@@ -196,8 +196,9 @@ class AuthService {
           final errs = data['errors'];
           if (errs is Map && errs.isNotEmpty) {
             final first = errs.values.first;
-            if (first is List && first.isNotEmpty)
+            if (first is List && first.isNotEmpty) {
               return first.first.toString();
+            }
             if (first is String) return first;
           }
           if (errs is List && errs.isNotEmpty) return errs.first.toString();
