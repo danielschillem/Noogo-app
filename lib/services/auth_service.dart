@@ -1,9 +1,9 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:noogo/models/user.dart';
 import 'package:noogo/config/api_config.dart';
-
 
 class AuthService {
   /// URL de base pour l'authentification - depuis ApiConfig (.env)
@@ -47,7 +47,7 @@ class AuthService {
       );
 
       final data = jsonDecode(response.body);
-      print('Login response: $data');
+      debugPrint('Login response status: ${response.statusCode}');
 
       if (response.statusCode == 200 && data['data'] != null) {
         final user = User.fromJson(data['data']['user']);
@@ -90,8 +90,7 @@ class AuthService {
         }),
       );
 
-      print('Statut: ${response.statusCode}');
-      print('Réponse: ${response.body}');
+      debugPrint('Register status: ${response.statusCode}');
 
       final data = jsonDecode(response.body);
 
@@ -108,7 +107,7 @@ class AuthService {
 
         if (payload != null) {
           try {
-            final userJson = payload['user'] ?? payload['user'] ?? null;
+            final userJson = payload['user'];
             final token = payload['token'] ??
                 (payload['data'] is Map ? payload['data']['token'] : null);
             final user = userJson != null

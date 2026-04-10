@@ -67,6 +67,7 @@ export const restaurantsApi = {
   delete: (id: number) => api.delete(`/restaurants/${id}`),
   toggleActive: (id: number) => api.post(`/restaurants/${id}/toggle-active`),
   getStatistics: (id: number) => api.get(`/restaurants/${id}/statistics`),
+  generateQrCode: (id: number) => api.post(`/restaurants/${id}/generate-qr`),
 };
 
 // Categories API

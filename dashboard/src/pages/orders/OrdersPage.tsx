@@ -1,42 +1,63 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { 
+import {
   Clock,
   CheckCircle,
   XCircle,
   ChefHat,
   Package,
-  Filter
+  Filter,
+  RefreshCw
 } from 'lucide-react';
 import { ordersApi } from '../../services/api';
 import type { Order, OrderStatus } from '../../types';
+
+const POLL_INTERVAL = 15_000; // 15 secondes
 
 export default function OrdersPage() {
   const { restaurantId } = useParams();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [newCount, setNewCount] = useState(0);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const prevIdsRef = useRef<Set<number>>(new Set());
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
-    if (restaurantId) {
-      fetchOrders();
-    }
-  }, [restaurantId, statusFilter]);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async (silent = false) => {
     if (!restaurantId) return;
     try {
+      if (!silent) setIsRefreshing(true);
       const params: Record<string, unknown> = {};
-      if (statusFilter !== 'all') {
-        params.status = statusFilter;
-      }
+      if (statusFilter !== 'all') params.status = statusFilter;
       const response = await ordersApi.getAll(parseInt(restaurantId), params);
-      setOrders(response.data.data.data || response.data.data);
+      const fetched: Order[] = response.data.data.data || response.data.data;
+
+      // Détecter les nouvelles commandes (pending non vues)
+      const incoming = fetched.filter(o => o.status === 'pending' && !prevIdsRef.current.has(o.id));
+      if (incoming.length > 0) setNewCount(c => c + incoming.length);
+      fetched.forEach(o => prevIdsRef.current.add(o.id));
+
+      setOrders(fetched);
     } catch (error) {
       console.error('Error fetching orders:', error);
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
+  }, [restaurantId, statusFilter]);
+
+  useEffect(() => {
+    if (restaurantId) {
+      fetchOrders();
+      intervalRef.current = setInterval(() => fetchOrders(true), POLL_INTERVAL);
+    }
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [fetchOrders, restaurantId]);
+
+  const handleManualRefresh = () => {
+    setNewCount(0);
+    fetchOrders();
   };
 
   const handleUpdateStatus = async (orderId: number, newStatus: OrderStatus) => {
@@ -88,6 +109,21 @@ export default function OrdersPage() {
           <h1 className="text-2xl font-bold text-gray-900">Commandes</h1>
           <p className="text-gray-600">Gérez les commandes en cours</p>
         </div>
+        <div className="flex items-center gap-3">
+          {newCount > 0 && (
+            <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-semibold animate-pulse">
+              🔔 {newCount} nouvelle{newCount > 1 ? 's' : ''}
+            </span>
+          )}
+          <button
+            onClick={handleManualRefresh}
+            disabled={isRefreshing}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Actualiser
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -97,18 +133,17 @@ export default function OrdersPage() {
           <button
             key={status}
             onClick={() => setStatusFilter(status)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-              statusFilter === status
+            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${statusFilter === status
                 ? 'bg-orange-500 text-white'
                 : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-            }`}
+              }`}
           >
-            {status === 'all' ? 'Toutes' : 
+            {status === 'all' ? 'Toutes' :
               status === 'pending' ? 'En attente' :
-              status === 'confirmed' ? 'Confirmées' :
-              status === 'preparing' ? 'En préparation' :
-              status === 'ready' ? 'Prêtes' :
-              status === 'completed' ? 'Terminées' : 'Annulées'}
+                status === 'confirmed' ? 'Confirmées' :
+                  status === 'preparing' ? 'En préparation' :
+                    status === 'ready' ? 'Prêtes' :
+                      status === 'completed' ? 'Terminées' : 'Annulées'}
           </button>
         ))}
       </div>

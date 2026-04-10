@@ -6,6 +6,8 @@ import LoginPage from './pages/auth/LoginPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import RestaurantsPage from './pages/restaurants/RestaurantsPage';
 import OrdersPage from './pages/orders/OrdersPage';
+import MenuPage from './pages/menu/MenuPage';
+import PromotionsPage from './pages/promotions/PromotionsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -70,6 +72,8 @@ function AppRoutes() {
         <Route path="restaurants" element={<RestaurantsPage />} />
         <Route path="orders" element={<OrdersPage />} />
         <Route path="restaurants/:restaurantId/orders" element={<OrdersPage />} />
+        <Route path="menu" element={<MenuPage />} />
+        <Route path="promotions" element={<PromotionsPage />} />
       </Route>
 
       {/* Redirect unknown routes */}

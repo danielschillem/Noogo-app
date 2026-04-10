@@ -10,7 +10,8 @@ import {
   Eye,
   Pencil,
   Trash2,
-  Power
+  Power,
+  QrCode,
 } from 'lucide-react';
 import { restaurantsApi } from '../../services/api';
 import type { Restaurant } from '../../types';
@@ -136,6 +137,24 @@ interface RestaurantCardProps {
 
 function RestaurantCard({ restaurant, onToggleActive, onDelete }: RestaurantCardProps) {
   const [showMenu, setShowMenu] = useState(false);
+  const [qrUrl, setQrUrl] = useState<string | null>(restaurant.qr_code ?? null);
+  const [isGeneratingQr, setIsGeneratingQr] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
+
+  const handleGenerateQr = async () => {
+    setIsGeneratingQr(true);
+    try {
+      const response = await restaurantsApi.generateQrCode(restaurant.id);
+      const data = response.data?.data ?? response.data;
+      setQrUrl(data?.qr_code_url ?? data?.qr_code ?? null);
+      setShowQrModal(true);
+    } catch (e) {
+      console.error('Erreur génération QR:', e);
+    } finally {
+      setIsGeneratingQr(false);
+      setShowMenu(false);
+    }
+  };
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
@@ -211,6 +230,14 @@ function RestaurantCard({ restaurant, onToggleActive, onDelete }: RestaurantCard
                     {restaurant.is_active ? 'Désactiver' : 'Activer'}
                   </button>
                   <button
+                    onClick={handleGenerateQr}
+                    disabled={isGeneratingQr}
+                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    <QrCode className="h-4 w-4" />
+                    {isGeneratingQr ? 'Génération...' : 'Générer QR Code'}
+                  </button>
+                  <button
                     onClick={() => { onDelete(restaurant.id); setShowMenu(false); }}
                     className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                   >
@@ -251,8 +278,44 @@ function RestaurantCard({ restaurant, onToggleActive, onDelete }: RestaurantCard
             <p className="font-semibold text-gray-900">{restaurant.orders_count || 0}</p>
             <p className="text-gray-500">Commandes</p>
           </div>
+          <div className="ml-auto">
+            <button
+              onClick={handleGenerateQr}
+              disabled={isGeneratingQr}
+              title="Générer / Voir QR Code"
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs hover:bg-orange-50 hover:text-orange-600 disabled:opacity-50"
+            >
+              <QrCode className="h-4 w-4" />
+              QR Code
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* QR Code Modal */}
+      {showQrModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowQrModal(false)}>
+          <div className="bg-white rounded-xl p-6 text-center shadow-xl max-w-sm w-full" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold mb-2">QR Code — {restaurant.nom}</h3>
+            <p className="text-sm text-gray-500 mb-4">Affichez ce QR code sur les tables pour permettre aux clients de commander</p>
+            {qrUrl ? (
+              <img src={qrUrl} alt={`QR Code ${restaurant.nom}`} className="w-48 h-48 mx-auto border-2 border-gray-200 rounded-lg" />
+            ) : (
+              <p className="text-gray-400 py-8">QR Code non disponible</p>
+            )}
+            {qrUrl && (
+              <a
+                href={qrUrl}
+                download={`qr-${restaurant.nom}.png`}
+                className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 text-sm"
+              >
+                Télécharger
+              </a>
+            )}
+            <button onClick={() => setShowQrModal(false)} className="mt-2 block w-full px-4 py-2 text-gray-500 text-sm">Fermer</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
