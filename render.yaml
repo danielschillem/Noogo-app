@@ -4,14 +4,15 @@
 # Déposer à la RACINE du repo GitHub.
 # Render détecte ce fichier et crée les services automatiquement.
 # Doc : https://render.com/docs/blueprint-spec
+#
+# ⚠️  BASE DE DONNÉES : Render n'autorise qu'1 PostgreSQL free par compte.
+#     Options (choisir une) :
+#     A) Utiliser votre PostgreSQL Render existant → copiez la "Internal
+#        Database URL" depuis Render Dashboard et collez-la dans DB_URL
+#        (variable marquée sync:false ci-dessous).
+#     B) Créer une DB gratuite sur https://neon.tech ou https://supabase.com
+#        (5 GB gratuit, PostgreSQL managed) et coller l'URL dans DB_URL.
 # ============================================================
-
-databases:
-  - name: noogo-db
-    databaseName: noogo_production
-    user: noogo_user
-    plan: free               # Passer à "starter" pour la prod réelle
-    region: frankfurt        # Choisir la région la plus proche de vos users
 
 services:
   - type: web
@@ -37,14 +38,13 @@ services:
       - key: APP_URL
         value: https://noogo-backend.onrender.com
 
-      # ── Base de données PostgreSQL ────────────────────────
+      # ── Base de données (à configurer manuellement) ───────
+      # Collez ici votre connection string PostgreSQL
+      # Format : postgresql://user:password@host:5432/dbname
       - key: DB_CONNECTION
         value: pgsql
-      # Laravel lit DB_URL pour parser la connection string complète
       - key: DB_URL
-        fromDatabase:
-          name: noogo-db
-          property: connectionString
+        sync: false           # ← À renseigner dans Render Dashboard
 
       # ── Session / Cache ───────────────────────────────────
       - key: SESSION_DRIVER
