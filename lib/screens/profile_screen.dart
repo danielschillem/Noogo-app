@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/user.dart';
 import '../services/restaurant_provider.dart';
@@ -144,7 +144,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -160,7 +160,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -177,14 +177,14 @@ class _ProfileScreenState extends State<ProfileScreen>
           Text(
             _currentUser?.phone ?? '+226 54 05 90 90',
             style: AppTextStyles.bodyMedium
-                .copyWith(color: AppColors.textLight.withOpacity(0.9)),
+                .copyWith(color: AppColors.textLight.withValues(alpha: 0.9)),
           ),
           if (_currentUser?.email != null) ...[
             const SizedBox(height: 2),
             Text(
               _currentUser!.email!,
               style: AppTextStyles.caption
-                  .copyWith(color: AppColors.textLight.withOpacity(0.8)),
+                  .copyWith(color: AppColors.textLight.withValues(alpha: 0.8)),
             ),
           ],
           const SizedBox(height: 16),
@@ -256,7 +256,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           width: 50,
           height: 50,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: color, size: 24),
@@ -291,7 +291,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 6,
                     offset: const Offset(0, 3)),
               ],
@@ -301,7 +301,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(opt['icon'] as IconData,
@@ -410,7 +410,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             color: AppColors.cardBackground,
             borderRadius: BorderRadius.circular(10),
             border:
-            Border.all(color: AppColors.primary.withOpacity(0.1)),
+            Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
           ),
           child: Row(
             children: [
@@ -418,7 +418,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(benefit['icon'] as IconData,

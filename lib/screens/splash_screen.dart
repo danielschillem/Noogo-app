@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import '../utils/app_colors.dart';
 
@@ -141,7 +141,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 20,
             spreadRadius: 5,
             offset: const Offset(0, 10),

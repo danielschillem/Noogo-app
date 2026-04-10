@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/app_notification.dart';
 import '../services/restaurant_provider.dart';
@@ -169,11 +169,11 @@ class _NotificationsScreenState extends State<NotificationsScreen>
       decoration: BoxDecoration(
         color: notification.isRead
             ? AppColors.cardBackground
-            : AppColors.primary.withOpacity(0.05),
+            : AppColors.primary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
         border: notification.isRead
             ? null
-            : Border.all(color: AppColors.primary.withOpacity(0.2)),
+            : Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
         boxShadow: [
           BoxShadow(
             color: AppColors.shadowColor,
@@ -189,7 +189,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
           height: 48,
           decoration: BoxDecoration(
             color:
-            _getNotificationIconColor(notification.title).withOpacity(0.1),
+            _getNotificationIconColor(notification.title).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../widgets/qr_scanner_overlay.dart';
 import '../utils/app_colors.dart';
@@ -200,7 +200,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                         Icon(
                           Icons.qr_code_scanner,
                           size: 48,
-                          color: AppColors.primary.withOpacity(0.5),
+                          color: AppColors.primary.withValues(alpha: 0.5),
                         ),
                         const SizedBox(height: 8),
                         Text(

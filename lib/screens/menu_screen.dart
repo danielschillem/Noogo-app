@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/category.dart';
@@ -146,7 +146,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                     if (provider.hasApiError)
                       Container(
                         width: double.infinity,
-                        color: AppColors.secondary.withOpacity(0.12),
+                        color: AppColors.secondary.withValues(alpha: 0.12),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 10),
                         child: Row(
@@ -492,7 +492,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                   Container(
                     height: 200,
                     width: double.infinity,
-                    color: Colors.black.withOpacity(0.6),
+                    color: Colors.black.withValues(alpha: 0.6),
                     child: Center(
                       child: Text(
                         'Non disponible',
@@ -555,7 +555,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
+                        color: AppColors.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(

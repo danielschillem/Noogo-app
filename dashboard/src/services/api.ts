@@ -77,7 +77,7 @@ export const categoriesApi = {
   create: (restaurantId: number, data: FormData) => api.post(`/restaurants/${restaurantId}/categories`, data, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
-  update: (restaurantId: number, id: number, data: FormData) => 
+  update: (restaurantId: number, id: number, data: FormData) =>
     api.post(`/restaurants/${restaurantId}/categories/${id}?_method=PUT`, data, {
       headers: { 'Content-Type': 'multipart/form-data' }
     }),
@@ -90,13 +90,13 @@ export const categoriesApi = {
 
 // Dishes API
 export const dishesApi = {
-  getAll: (restaurantId: number, params?: Record<string, unknown>) => 
+  getAll: (restaurantId: number, params?: Record<string, unknown>) =>
     api.get(`/restaurants/${restaurantId}/dishes`, { params }),
   getById: (restaurantId: number, id: number) => api.get(`/restaurants/${restaurantId}/dishes/${id}`),
   create: (restaurantId: number, data: FormData) => api.post(`/restaurants/${restaurantId}/dishes`, data, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
-  update: (restaurantId: number, id: number, data: FormData) => 
+  update: (restaurantId: number, id: number, data: FormData) =>
     api.post(`/restaurants/${restaurantId}/dishes/${id}?_method=PUT`, data, {
       headers: { 'Content-Type': 'multipart/form-data' }
     }),
@@ -110,10 +110,10 @@ export const dishesApi = {
 
 // Orders API
 export const ordersApi = {
-  getAll: (restaurantId: number, params?: Record<string, unknown>) => 
+  getAll: (restaurantId: number, params?: Record<string, unknown>) =>
     api.get(`/restaurants/${restaurantId}/orders`, { params }),
   getById: (restaurantId: number, id: number) => api.get(`/restaurants/${restaurantId}/orders/${id}`),
-  create: (restaurantId: number, data: Record<string, unknown>) => 
+  create: (restaurantId: number, data: Record<string, unknown>) =>
     api.post(`/restaurants/${restaurantId}/orders`, data),
   updateStatus: (restaurantId: number, id: number, status: string) =>
     api.patch(`/restaurants/${restaurantId}/orders/${id}/status`, { status }),
@@ -127,19 +127,19 @@ export const ordersApi = {
 
 // Flash Infos API
 export const flashInfosApi = {
-  getAll: (restaurantId: number, params?: Record<string, unknown>) => 
+  getAll: (restaurantId: number, params?: Record<string, unknown>) =>
     api.get(`/restaurants/${restaurantId}/flash-infos`, { params }),
-  getById: (restaurantId: number, id: number) => 
+  getById: (restaurantId: number, id: number) =>
     api.get(`/restaurants/${restaurantId}/flash-infos/${id}`),
-  create: (restaurantId: number, data: FormData) => 
+  create: (restaurantId: number, data: FormData) =>
     api.post(`/restaurants/${restaurantId}/flash-infos`, data, {
       headers: { 'Content-Type': 'multipart/form-data' }
     }),
-  update: (restaurantId: number, id: number, data: FormData) => 
+  update: (restaurantId: number, id: number, data: FormData) =>
     api.post(`/restaurants/${restaurantId}/flash-infos/${id}?_method=PUT`, data, {
       headers: { 'Content-Type': 'multipart/form-data' }
     }),
-  delete: (restaurantId: number, id: number) => 
+  delete: (restaurantId: number, id: number) =>
     api.delete(`/restaurants/${restaurantId}/flash-infos/${id}`),
   toggleActive: (restaurantId: number, id: number) =>
     api.post(`/restaurants/${restaurantId}/flash-infos/${id}/toggle-active`),

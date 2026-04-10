@@ -1,11 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/restaurant_header.dart';
 import '../widgets/contact_info.dart';
 import '../widgets/flash_info_section.dart';
 import '../widgets/custom_bottom_navigation.dart';
 import '../services/restaurant_provider.dart';
-import '../screens/notification_screen.dart';
 import '../utils/app_colors.dart';
 import '../utils/app_text_styles.dart';
 import 'menu_screen.dart';
@@ -24,7 +23,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
   late PageController _pageController;
 
   // ✅ Flag pour éviter les navigations concurrentes
@@ -43,10 +41,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    );
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
@@ -57,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       // ✅ Charger les données si besoin
       if (provider.restaurant == null && provider.scannedQRCode != null) {
         final restaurantId =
-        QRHelper.parseRestaurantId(provider.scannedQRCode!);
+            QRHelper.parseRestaurantId(provider.scannedQRCode!);
         if (restaurantId != null) {
           provider.loadAllInitialData(restaurantId: restaurantId);
         }
@@ -216,9 +210,9 @@ class _HomePage extends StatelessWidget {
             if (provider.hasApiError)
               Container(
                 width: double.infinity,
-                color: AppColors.secondary.withOpacity(0.12),
+                color: AppColors.secondary.withValues(alpha: 0.12),
                 padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 child: Row(
                   children: [
                     const Icon(Icons.wifi_off,
@@ -289,7 +283,8 @@ class _HomePage extends StatelessWidget {
             children: [
               Text('Catégories', style: AppTextStyles.heading3),
               TextButton(
-                onPressed: () => context.read<RestaurantProvider>().setNavIndex(1),
+                onPressed: () =>
+                    context.read<RestaurantProvider>().setNavIndex(1),
                 child: Text(
                   'Voir tout',
                   style: AppTextStyles.bodySmall.copyWith(
@@ -345,7 +340,7 @@ class _HomePage extends StatelessWidget {
               flex: 3,
               child: ClipRRect(
                 borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(12)),
+                    const BorderRadius.vertical(top: Radius.circular(12)),
                 child: Image.network(
                   category.imageUrl,
                   width: double.infinity,
@@ -405,7 +400,8 @@ class _HomePage extends StatelessWidget {
             children: [
               Text('Plats populaires', style: AppTextStyles.heading3),
               TextButton(
-                onPressed: () => context.read<RestaurantProvider>().setNavIndex(1),
+                onPressed: () =>
+                    context.read<RestaurantProvider>().setNavIndex(1),
                 child: Text(
                   'Voir tout',
                   style: AppTextStyles.bodySmall.copyWith(
@@ -465,7 +461,7 @@ class _HomePage extends StatelessWidget {
             flex: 3,
             child: ClipRRect(
               borderRadius:
-              const BorderRadius.vertical(top: Radius.circular(12)),
+                  const BorderRadius.vertical(top: Radius.circular(12)),
               child: Image.network(
                 dish.imageUrl,
                 width: double.infinity,

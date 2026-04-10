@@ -1,23 +1,28 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/app_notification.dart';
 
 class NotificationService {
   static const String _notificationsKey = 'notifications';
-  static const int _maxNotifications = 100; // Limite pour éviter une liste trop longue
+  static const int _maxNotifications =
+      100; // Limite pour éviter une liste trop longue
 
   // Sauvegarder les notifications
-  static Future<void> saveNotifications(List<AppNotification> notifications) async {
+  static Future<void> saveNotifications(
+      List<AppNotification> notifications) async {
     try {
       final prefs = await SharedPreferences.getInstance();
 
       // Limiter le nombre de notifications sauvegardées
-      final limitedNotifications = notifications.take(_maxNotifications).toList();
+      final limitedNotifications =
+          notifications.take(_maxNotifications).toList();
 
-      final notificationsJson = limitedNotifications.map((n) => n.toJson()).toList();
+      final notificationsJson =
+          limitedNotifications.map((n) => n.toJson()).toList();
       await prefs.setString(_notificationsKey, jsonEncode(notificationsJson));
     } catch (e) {
-      print('❌ Erreur lors de la sauvegarde des notifications: $e');
+      debugPrint('❌ Erreur lors de la sauvegarde des notifications: $e');
     }
   }
 
@@ -36,7 +41,7 @@ class NotificationService {
           .map((json) => AppNotification.fromJson(json))
           .toList();
     } catch (e) {
-      print('❌ Erreur lors du chargement des notifications: $e');
+      debugPrint('❌ Erreur lors du chargement des notifications: $e');
       return [];
     }
   }
@@ -49,21 +54,22 @@ class NotificationService {
       // Vérifier si la notification existe déjà (éviter les doublons)
       final exists = notifications.any((n) => n.id == notification.id);
       if (exists) {
-        print('⚠️ Notification déjà existante: ${notification.id}');
+        debugPrint('⚠️ Notification déjà existante: ${notification.id}');
         return;
       }
 
       notifications.insert(0, notification); // Ajouter en premier (plus récent)
       await saveNotifications(notifications);
 
-      print('✅ Notification ajoutée: ${notification.title}');
+      debugPrint('✅ Notification ajoutée: ${notification.title}');
     } catch (e) {
-      print('❌ Erreur lors de l\'ajout de notification: $e');
+      debugPrint('❌ Erreur lors de l\'ajout de notification: $e');
     }
   }
 
   // Créer une notification depuis les données du backend
-  static Future<void> addNotificationFromBackend(Map<String, dynamic> data) async {
+  static Future<void> addNotificationFromBackend(
+      Map<String, dynamic> data) async {
     try {
       // Nettoyer les données pour éviter les erreurs de type
       final cleanData = _cleanNotificationData(data);
@@ -97,7 +103,7 @@ class NotificationService {
           timestamp = DateTime.now();
         }
       } catch (e) {
-        print('⚠️ Erreur de parsing de date: $e');
+        debugPrint('⚠️ Erreur de parsing de date: $e');
         timestamp = DateTime.now();
       }
 
@@ -114,16 +120,18 @@ class NotificationService {
 
       await addNotification(notification);
 
-      print('✅ Notification backend ajoutée: $title');
+      debugPrint('✅ Notification backend ajoutée: $title');
     } catch (e, stackTrace) {
-      print('❌ Erreur lors de la création de notification depuis backend: $e');
-      print('Stack trace: $stackTrace');
-      print('Données reçues: $data');
+      debugPrint(
+          '❌ Erreur lors de la création de notification depuis backend: $e');
+      debugPrint('Stack trace: $stackTrace');
+      debugPrint('Données reçues: $data');
     }
   }
 
   // Nettoyer les données pour éviter les erreurs de type
-  static Map<String, dynamic> _cleanNotificationData(Map<String, dynamic> data) {
+  static Map<String, dynamic> _cleanNotificationData(
+      Map<String, dynamic> data) {
     final cleaned = <String, dynamic>{};
 
     data.forEach((key, value) {
@@ -132,7 +140,8 @@ class NotificationService {
         if (value is num) {
           cleaned[key] = value.toString();
         } else if (value is Map) {
-          cleaned[key] = _cleanNotificationData(Map<String, dynamic>.from(value));
+          cleaned[key] =
+              _cleanNotificationData(Map<String, dynamic>.from(value));
         } else if (value is List) {
           cleaned[key] = value.map((item) {
             if (item is Map) {
@@ -144,7 +153,7 @@ class NotificationService {
           cleaned[key] = value;
         }
       } catch (e) {
-        print('⚠️ Erreur nettoyage clé $key: $e');
+        debugPrint('⚠️ Erreur nettoyage clé $key: $e');
         cleaned[key] = value?.toString();
       }
     });
@@ -161,10 +170,10 @@ class NotificationService {
       if (index != -1) {
         notifications[index] = notifications[index].copyWith(isRead: true);
         await saveNotifications(notifications);
-        print('✅ Notification marquée comme lue: $notificationId');
+        debugPrint('✅ Notification marquée comme lue: $notificationId');
       }
     } catch (e) {
-      print('❌ Erreur lors du marquage comme lu: $e');
+      debugPrint('❌ Erreur lors du marquage comme lu: $e');
     }
   }
 
@@ -172,13 +181,12 @@ class NotificationService {
   static Future<void> markAllAsRead() async {
     try {
       final notifications = await loadNotifications();
-      final updatedNotifications = notifications
-          .map((n) => n.copyWith(isRead: true))
-          .toList();
+      final updatedNotifications =
+          notifications.map((n) => n.copyWith(isRead: true)).toList();
       await saveNotifications(updatedNotifications);
-      print('✅ Toutes les notifications marquées comme lues');
+      debugPrint('✅ Toutes les notifications marquées comme lues');
     } catch (e) {
-      print('❌ Erreur lors du marquage global: $e');
+      debugPrint('❌ Erreur lors du marquage global: $e');
     }
   }
 
@@ -188,9 +196,9 @@ class NotificationService {
       final notifications = await loadNotifications();
       notifications.removeWhere((n) => n.id == notificationId);
       await saveNotifications(notifications);
-      print('✅ Notification supprimée: $notificationId');
+      debugPrint('✅ Notification supprimée: $notificationId');
     } catch (e) {
-      print('❌ Erreur lors de la suppression: $e');
+      debugPrint('❌ Erreur lors de la suppression: $e');
     }
   }
 
@@ -199,9 +207,9 @@ class NotificationService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_notificationsKey);
-      print('✅ Toutes les notifications supprimées');
+      debugPrint('✅ Toutes les notifications supprimées');
     } catch (e) {
-      print('❌ Erreur lors de la suppression globale: $e');
+      debugPrint('❌ Erreur lors de la suppression globale: $e');
     }
   }
 
@@ -211,7 +219,7 @@ class NotificationService {
       final notifications = await loadNotifications();
       return notifications.where((n) => !n.isRead).length;
     } catch (e) {
-      print('❌ Erreur lors du comptage: $e');
+      debugPrint('❌ Erreur lors du comptage: $e');
       return 0;
     }
   }
@@ -222,18 +230,17 @@ class NotificationService {
       final notifications = await loadNotifications();
       final cutoffDate = DateTime.now().subtract(Duration(days: daysToKeep));
 
-      final recentNotifications = notifications
-          .where((n) => n.timestamp.isAfter(cutoffDate))
-          .toList();
+      final recentNotifications =
+          notifications.where((n) => n.timestamp.isAfter(cutoffDate)).toList();
 
       await saveNotifications(recentNotifications);
 
       final deletedCount = notifications.length - recentNotifications.length;
       if (deletedCount > 0) {
-        print('✅ $deletedCount anciennes notifications supprimées');
+        debugPrint('✅ $deletedCount anciennes notifications supprimées');
       }
     } catch (e) {
-      print('❌ Erreur lors du nettoyage: $e');
+      debugPrint('❌ Erreur lors du nettoyage: $e');
     }
   }
 
@@ -247,7 +254,8 @@ class NotificationService {
         return AppNotification(
           id: id,
           title: 'Commande confirmée',
-          body: 'Votre commande #${now.millisecondsSinceEpoch} a été confirmée et est en préparation.',
+          body:
+              'Votre commande #${now.millisecondsSinceEpoch} a été confirmée et est en préparation.',
           timestamp: now,
           type: 'order',
           data: {'orderId': '${now.millisecondsSinceEpoch}'},
@@ -266,7 +274,8 @@ class NotificationService {
         return AppNotification(
           id: id,
           title: 'Offre spéciale 🎉',
-          body: '-20% sur tous les plats aujourd\'hui ! Ne ratez pas cette occasion.',
+          body:
+              '-20% sur tous les plats aujourd\'hui ! Ne ratez pas cette occasion.',
           timestamp: now,
           type: 'promo',
         );
@@ -285,7 +294,8 @@ class NotificationService {
         return AppNotification(
           id: id,
           title: 'Commande annulée',
-          body: 'Votre commande a été annulée. Veuillez contacter le support si nécessaire.',
+          body:
+              'Votre commande a été annulée. Veuillez contacter le support si nécessaire.',
           timestamp: now,
           type: 'order',
           data: {'status': 'cancelled'},

@@ -24,7 +24,6 @@ dependencies:
   qr_flutter: ^4.1.0
   mobile_scanner: ^7.1.4
   pusher_channels_flutter: ^2.5.0
-  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
@@ -32,71 +31,21 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
 
-
-
 # ==========================================
 # 🎨 CONFIGURATION DES ICÔNES D'APPLICATION
 # ==========================================
 flutter_icons:
-  # Plateformes ciblées
   android: true
   ios: true
   web:
     generate: true
+
   image_path: "assets/icons/03.png"
   background_color: "#FF6B35"
   theme_color: "#FF6B35"
 
-
-  # ========================================
-  # 📱 ANDROID - Icône adaptative (moderne)
-  # ========================================
-  # L'icône adaptative s'adapte aux différents launchers Android
-  # Elle nécessite deux éléments :
-  # 1. Foreground : Votre logo (avec marges)
-  # 2. Background : Couleur ou image de fond
-
   adaptive_icon_foreground: "assets/icons/03.png"
-  adaptive_icon_background: "#FFFFFF" # Fond blanc
-
-  # Alternative avec image de fond :
-  # adaptive_icon_background: "assets/icons/icon_background.png"
-
-  # ========================================
-  # 🍎 iOS - Configuration
-  # ========================================
-  # iOS utilise directement l'image_path
-  # L'image sera automatiquement redimensionnée
-
-  # ========================================
-  # 🌐 Web - Favicon (optionnel)
-  # ========================================
-  # web:
-  #   generate: true
-  #   image_path: "assets/icons/03.png"
-  #   background_color: "#FFFFFF"
-  #   theme_color: "#FF6B6B"
-
-  # ========================================
-  # 🪟 Windows - Icône (optionnel)
-  # ========================================
-  # windows:
-  #   generate: true
-  #   image_path: "assets/icons/03.png"
-
-  # ========================================
-  # 🐧 Linux - Icône (optionnel)
-  # ========================================
-  # linux:
-  #   generate: true
-  #   image_path: "assets/icons/03.png"
-
-  # ========================================
-  # 🍎 macOS - Icône (optionnel)
-  # ========================================
-  # macos:
-  #   generate: true
-  #   image_path: "assets/icons/03.png"
+  adaptive_icon_background: "#FFFFFF"
 
 # ==========================================
 # 📦 CONFIGURATION FLUTTER
@@ -104,17 +53,7 @@ flutter_icons:
 flutter:
   uses-material-design: true
 
-  # Assets de l'application
   assets:
-    - .env
+    - assets/env/.env
     - assets/images/
     - assets/icons/
-    - assets/fonts/
-
-  # Fonts personnalisées (décommentez si nécessaire)
-  # fonts:
-  #   - family: Roboto
-  #     fonts:
-  #       - asset: assets/fonts/static/Roboto-Regular.ttf
-  #       - asset: assets/fonts/static/Roboto-Bold.ttf
-  #         weight: 700

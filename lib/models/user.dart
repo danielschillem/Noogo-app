@@ -29,7 +29,8 @@ class User {
     return {
       'id': id,
       'name': name,
-      'phone': phone,
+      'telephone':
+          phone, // le backend attend "telephone" (même champ que register/login)
       'email': email,
       'created_at': createdAt?.toIso8601String(),
     };

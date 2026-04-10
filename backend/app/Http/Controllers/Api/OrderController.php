@@ -96,7 +96,7 @@ class OrderController extends Controller
             // Create order items
             foreach ($request->items as $item) {
                 $dish = Dish::findOrFail($item['dish_id']);
-                
+
                 // Verify dish belongs to restaurant
                 if ($dish->restaurant_id !== $restaurant->id) {
                     throw new \Exception("Le plat {$dish->nom} n'appartient pas à ce restaurant");
@@ -115,6 +115,9 @@ class OrderController extends Controller
                     'special_instructions' => $item['special_instructions'] ?? null,
                 ]);
             }
+
+            // Calculer et sauvegarder le total de la commande
+            $order->calculateTotal();
 
             DB::commit();
 
@@ -232,10 +235,10 @@ class OrderController extends Controller
                 ->groupBy('status')
                 ->pluck('count', 'status'),
             'top_dishes' => OrderItem::whereHas('order', function ($q) use ($restaurant, $dateFrom, $dateTo) {
-                    $q->where('restaurant_id', $restaurant->id)
-                        ->whereBetween('order_date', [$dateFrom, $dateTo])
-                        ->whereIn('status', ['delivered', 'completed']);
-                })
+                $q->where('restaurant_id', $restaurant->id)
+                    ->whereBetween('order_date', [$dateFrom, $dateTo])
+                    ->whereIn('status', ['delivered', 'completed']);
+            })
                 ->selectRaw('dish_id, SUM(quantity) as total_quantity, SUM(total_price) as total_revenue')
                 ->groupBy('dish_id')
                 ->with('dish:id,nom')

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
@@ -14,29 +13,30 @@ class AuthController extends Controller
 {
     /**
      * Register a new user
+     * Accepte "telephone" (app mobile) mappé sur la colonne "phone"
      */
     public function register(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'phone' => 'nullable|string|max:20',
+            'telephone' => 'required|string|max:20|unique:users,phone',
+            'email' => 'nullable|string|email|max:255|unique:users',
+            'password' => 'required|string|min:6|confirmed',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validation errors',
+                'message' => 'Erreur de validation',
                 'errors' => $validator->errors()
             ], 422);
         }
 
         $user = User::create([
             'name' => $request->name,
+            'phone' => $request->telephone,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'phone' => $request->phone,
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -54,30 +54,35 @@ class AuthController extends Controller
 
     /**
      * Login user
+     * Accepte "telephone" + "password" (app mobile)
      */
     public function login(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required',
+            'telephone' => 'required|string',
+            'password' => 'required|string',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validation errors',
+                'message' => 'Erreur de validation',
                 'errors' => $validator->errors()
             ], 422);
         }
 
-        if (!Auth::attempt($request->only('email', 'password'))) {
+        $user = User::where('phone', $request->telephone)->first();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Identifiants invalides'
+                'message' => 'Numéro de téléphone ou mot de passe incorrect'
             ], 401);
         }
 
-        $user = User::where('email', $request->email)->firstOrFail();
+        // Révoquer les anciens tokens pour éviter l'accumulation
+        $user->tokens()->delete();
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -130,6 +135,42 @@ class AuthController extends Controller
                 'token' => $token,
                 'token_type' => 'Bearer',
             ]
+        ]);
+    }
+
+    /**
+     * Update user profile (nom, telephone, email)
+     */
+    public function updateUser(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'sometimes|string|max:255',
+            'telephone' => 'sometimes|string|max:20|unique:users,phone,' . $user->id,
+            'email' => 'sometimes|nullable|string|email|max:255|unique:users,email,' . $user->id,
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur de validation',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        if ($request->has('name'))
+            $user->name = $request->name;
+        if ($request->has('telephone'))
+            $user->phone = $request->telephone;
+        if ($request->has('email'))
+            $user->email = $request->email;
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profil mis à jour',
+            'user' => $user->fresh()
         ]);
     }
 }

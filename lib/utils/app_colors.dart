@@ -71,10 +71,10 @@ class AppColors {
   );
   
   // Couleurs avec opacité
-  static Color get primaryWithOpacity10 => primary.withOpacity(0.1);
-  static Color get primaryWithOpacity20 => primary.withOpacity(0.2);
-  static Color get secondaryWithOpacity10 => secondary.withOpacity(0.1);
-  static Color get secondaryWithOpacity20 => secondary.withOpacity(0.2);
+  static Color get primaryWithOpacity10 => primary.withValues(alpha: 0.1);
+  static Color get primaryWithOpacity20 => primary.withValues(alpha: 0.2);
+  static Color get secondaryWithOpacity10 => secondary.withValues(alpha: 0.1);
+  static Color get secondaryWithOpacity20 => secondary.withValues(alpha: 0.2);
   static Color get shadowWithOpacity => const Color(0x0F000000);
   
   // Couleurs pour les thèmes sombres (pour usage futur)

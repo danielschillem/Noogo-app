@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/dish.dart';
 import '../utils/app_colors.dart';
@@ -130,7 +130,7 @@ class DishesGrid extends StatelessWidget {
               Icon(
                 Icons.restaurant,
                 size: 64,
-                color: AppColors.textSecondary.withOpacity(0.5),
+                color: AppColors.textSecondary.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 16),
               Text(
@@ -161,7 +161,7 @@ class DishesGrid extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -260,8 +260,8 @@ class _AnimatedDishCardState extends State<_AnimatedDishCard>
                 boxShadow: [
                   BoxShadow(
                     color: _hovered
-                        ? AppColors.primary.withOpacity(0.25)
-                        : AppColors.shadowColor.withOpacity(0.15),
+                        ? AppColors.primary.withValues(alpha: 0.25)
+                        : AppColors.shadowColor.withValues(alpha: 0.15),
                     blurRadius: _hovered ? 10 : 6,
                     offset: const Offset(0, 3),
                   ),
@@ -303,13 +303,13 @@ class _AnimatedDishCardState extends State<_AnimatedDishCard>
                                   gradient: LinearGradient(
                                     colors: [
                                       AppColors.secondary,
-                                      AppColors.secondary.withOpacity(0.8),
+                                      AppColors.secondary.withValues(alpha: 0.8),
                                     ],
                                   ),
                                   borderRadius: BorderRadius.circular(8),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
+                                      color: Colors.black.withValues(alpha: 0.2),
                                       blurRadius: 4,
                                       offset: const Offset(0, 2),
                                     ),
@@ -341,7 +341,7 @@ class _AnimatedDishCardState extends State<_AnimatedDishCard>
                             Positioned.fill(
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.7),
+                                  color: Colors.black.withValues(alpha: 0.7),
                                   borderRadius: const BorderRadius.only(
                                     topLeft: Radius.circular(14),
                                     topRight: Radius.circular(14),

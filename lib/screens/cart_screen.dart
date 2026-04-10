@@ -208,7 +208,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Text(
@@ -324,7 +324,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
@@ -354,7 +354,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                 onPressed: () => _decreaseQuantity(provider, item),
                 backgroundColor: item.quantity > 1
                     ? AppColors.primary
-                    : AppColors.error.withOpacity(0.7),
+                    : AppColors.error.withValues(alpha: 0.7),
               ),
               Container(
                 constraints: const BoxConstraints(minWidth: 40),
@@ -381,7 +381,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
           child: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.error.withOpacity(0.1),
+              color: AppColors.error.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(Icons.delete_outline, color: AppColors.error, size: 18),
@@ -716,9 +716,9 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          border: Border.all(color: color.withOpacity(0.3), width: 2),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
           borderRadius: BorderRadius.circular(12),
-          color: color.withOpacity(0.05),
+          color: color.withValues(alpha: 0.05),
         ),
         child: Row(
           children: [
@@ -814,7 +814,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                   ),
                 );
               }
-              print("TABLE SAISIE: $tableNumber");
+              debugPrint("TABLE SAISIE: $tableNumber");
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
@@ -957,7 +957,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, color: color, size: 28),
@@ -1033,9 +1033,9 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          border: Border.all(color: color.withOpacity(0.3), width: 2),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
           borderRadius: BorderRadius.circular(12),
-          color: color.withOpacity(0.05),
+          color: color.withValues(alpha: 0.05),
         ),
         child: Row(
           children: [
@@ -1161,8 +1161,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => WillPopScope(
-        onWillPop: () async => false,
+      builder: (context) => PopScope(
+        canPop: false,
         child: const Center(
           child: Card(
             child: Padding(
@@ -1340,8 +1340,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => WillPopScope(
-        onWillPop: () async => false,
+      builder: (context) => PopScope(
+        canPop: false,
         child: const Center(
           child: Card(
             child: Padding(
@@ -1385,7 +1385,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppColors.success.withOpacity(0.1),
+                color: AppColors.success.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -1526,8 +1526,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => WillPopScope(
-        onWillPop: () async => false,
+      builder: (context) => PopScope(
+        canPop: false,
         child: const Center(
           child: Card(
             child: Padding(
@@ -1603,8 +1603,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
     return showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => WillPopScope(
-        onWillPop: () async => false,
+      builder: (context) => PopScope(
+        canPop: false,
         child: AlertDialog(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -1620,7 +1620,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                     child: Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: AppColors.success.withOpacity(0.1),
+                        color: AppColors.success.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(

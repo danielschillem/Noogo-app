@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -62,7 +62,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             end: Alignment.bottomRight,
             colors: [
               Colors.white,
-              _pages[_currentPage].color.withOpacity(0.1),
+              _pages[_currentPage].color.withValues(alpha: 0.1),
             ],
           ),
         ),
@@ -189,7 +189,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               height: 280,
               width: 280,
               decoration: BoxDecoration(
-                color: page.color.withOpacity(0.1),
+                color: page.color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Center(

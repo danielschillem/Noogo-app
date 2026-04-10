@@ -1,5 +1,4 @@
-import 'dart:async';
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/order.dart';
@@ -15,13 +14,12 @@ class OrdersScreen extends StatefulWidget {
   State<OrdersScreen> createState() => _OrdersScreenState();
 }
 
-class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMixin {
+class _OrdersScreenState extends State<OrdersScreen>
+    with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
-  // Animation pour l'indicateur de connexion
   late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
@@ -42,10 +40,6 @@ class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMix
       vsync: this,
     )..repeat(reverse: true);
 
-    _pulseAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-
     // ✅ Charger les commandes au démarrage
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -61,7 +55,8 @@ class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMix
     super.dispose();
   }
 
-  Widget _buildImage(String imageUrl, {double? width, double? height, BoxFit? fit}) {
+  Widget _buildImage(String imageUrl,
+      {double? width, double? height, BoxFit? fit}) {
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
       return CachedNetworkImage(
         imageUrl: imageUrl,
@@ -104,7 +99,6 @@ class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMix
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -125,7 +119,8 @@ class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMix
           return FadeTransition(
             opacity: _fadeAnimation,
             child: RefreshIndicator(
-              onRefresh: () => provider.forceRefreshOrders(), // ✅ Refresh manuel
+              onRefresh: () =>
+                  provider.forceRefreshOrders(), // ✅ Refresh manuel
               color: AppColors.primary,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,7 +145,7 @@ class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMix
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
+                            color: AppColors.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Text(
@@ -188,7 +183,6 @@ class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMix
   Widget _buildAutoRefreshIndicator() {
     return Tooltip(
       message: 'Mises à jour automatiques toutes les 30s',
-
     );
   }
 
@@ -251,7 +245,7 @@ class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMix
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: _getStatusColor(order.status).withOpacity(0.1),
+              color: _getStatusColor(order.status).withValues(alpha: 0.1),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(12),
                 topRight: Radius.circular(12),
@@ -275,7 +269,8 @@ class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMix
                   ],
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: _getStatusColor(order.status),
                     borderRadius: BorderRadius.circular(16),
@@ -291,7 +286,6 @@ class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMix
               ],
             ),
           ),
-
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -306,7 +300,6 @@ class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMix
                 const SizedBox(height: 12),
                 ...order.items.map((item) => _buildOrderItem(item)),
                 const SizedBox(height: 16),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -355,7 +348,6 @@ class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMix
                     ),
                   ],
                 ),
-
                 if (order.status == OrderStatus.pending) ...[
                   const SizedBox(height: 16),
                   Row(
@@ -517,7 +509,8 @@ class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMix
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Annuler la commande'),
-        content: Text('Voulez-vous vraiment annuler la commande #${order.id} ?'),
+        content:
+            Text('Voulez-vous vraiment annuler la commande #${order.id} ?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -591,5 +584,4 @@ class _OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMix
 
     provider.setNavIndex(2);
   }
-
 }

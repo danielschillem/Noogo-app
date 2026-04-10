@@ -111,13 +111,15 @@ class Order {
   factory Order.fromJson(Map<String, dynamic> json) {
     var itemsList = json['items'] as List;
     List<OrderItem> orderItems =
-    itemsList.map((i) => OrderItem.fromJson(i)).toList();
+        itemsList.map((i) => OrderItem.fromJson(i)).toList();
 
     OrderType parseOrderType(String? type) {
       switch (type?.toLowerCase()) {
+        case 'sur_place': // backend
         case 'sur place':
         case 'surplace':
           return OrderType.surPlace;
+        case 'a_emporter': // backend
         case 'à emporter':
         case 'a emporter':
         case 'aemporter':
@@ -135,14 +137,14 @@ class Order {
       id: json['id'] ?? 0,
       items: orderItems,
       status: OrderStatus.values.firstWhere(
-            (e) => e.toString().split('.').last == (json['status'] ?? 'pending'),
+        (e) => e.toString().split('.').last == (json['status'] ?? 'pending'),
         orElse: () => OrderStatus.pending,
       ),
       orderDate: DateTime.parse(
           json['order_date'] ?? DateTime.now().toIso8601String()),
       paymentMethod: json['payment_method'] ?? 'cash',
       orderType: parseOrderType(json['order_type']),
-      table: json['table'],
+      table: json['table_number'] ?? json['table'],
       transactionId: json['transaction_id'],
       mobileMoneyProvider: json['mobile_money_provider'],
       phoneNumber: json['phone_number'],
@@ -151,15 +153,16 @@ class Order {
     );
   }
 
-  get totalPrice => null;
+  /// Alias pour compatibilité — utiliser [totalAmount]
+  double get totalPrice => totalAmount;
 
   Map<String, dynamic> toJson() {
     String orderTypeToString() {
       switch (orderType) {
         case OrderType.surPlace:
-          return 'sur place';
+          return 'sur_place'; // format attendu par le backend
         case OrderType.aEmporter:
-          return 'à emporter';
+          return 'a_emporter'; // format attendu par le backend
         case OrderType.livraison:
           return 'livraison';
       }
@@ -172,7 +175,7 @@ class Order {
       'order_date': orderDate.toIso8601String(),
       'payment_method': paymentMethod,
       'order_type': orderTypeToString(),
-      'table': table,
+      'table_number': table, // clé correcte pour le backend
       'transaction_id': transactionId,
       'mobile_money_provider': mobileMoneyProvider,
       'phone_number': phoneNumber,

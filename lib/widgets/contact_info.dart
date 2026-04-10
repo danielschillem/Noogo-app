@@ -1,12 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import '../models/restaurant.dart';
 import '../services/restaurant_provider.dart';
 import '../screens/qr_scanner_screen.dart';
 import '../utils/app_colors.dart';
-import '../utils/app_text_styles.dart';
 
 class ContactInfo extends StatefulWidget {
   final Restaurant restaurant;
@@ -19,6 +17,7 @@ class ContactInfo extends StatefulWidget {
   @override
   State<ContactInfo> createState() => _ContactInfoState();
 }
+
 class _ContactInfoState extends State<ContactInfo> {
   bool _isValidating = false;
 
@@ -114,9 +113,11 @@ class _ContactInfoState extends State<ContactInfo> {
         throw Exception('Restaurant invalide');
       }
 
-      await provider.loadAllInitialData(
+      await provider
+          .loadAllInitialData(
         restaurantId: newRestaurant.id,
-      ).timeout(
+      )
+          .timeout(
         const Duration(seconds: 15),
         onTimeout: () {
           throw Exception('Timeout chargement restaurant');
@@ -140,7 +141,6 @@ class _ContactInfoState extends State<ContactInfo> {
       );
 
       provider.setNavIndex(0);
-
     } catch (e) {
       if (!mounted) return;
 
@@ -152,7 +152,6 @@ class _ContactInfoState extends State<ContactInfo> {
         'Erreur',
         e.toString().replaceAll('Exception: ', ''),
       );
-
     } finally {
       if (mounted) {
         setState(() => _isValidating = false);
@@ -241,8 +240,8 @@ class _ContactInfoState extends State<ContactInfo> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: isOpen
-                  ? AppColors.success.withOpacity(0.08)
-                  : AppColors.error.withOpacity(0.08),
+                  ? AppColors.success.withValues(alpha: 0.08)
+                  : AppColors.error.withValues(alpha: 0.08),
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(16),
               ),
@@ -250,7 +249,8 @@ class _ContactInfoState extends State<ContactInfo> {
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: isOpen ? AppColors.success : AppColors.error,
                     borderRadius: BorderRadius.circular(20),
@@ -276,7 +276,6 @@ class _ContactInfoState extends State<ContactInfo> {
               ],
             ),
           ),
-
           Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -287,7 +286,8 @@ class _ContactInfoState extends State<ContactInfo> {
                 GestureDetector(
                   onTap: () => _makePhoneCall(context, widget.restaurant.phone),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       color: AppColors.primary,
                       borderRadius: BorderRadius.circular(20),

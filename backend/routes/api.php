@@ -22,8 +22,8 @@ use App\Http\Controllers\Api\DashboardController;
 // ROUTES PUBLIQUES (pas d'authentification requise)
 // ============================================================================
 
-// Authentication
-Route::prefix('auth')->group(function () {
+// Authentication — limitées à 10 tentatives par minute pour contrer le brute-force
+Route::middleware('throttle:10,1')->prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
 });
@@ -42,12 +42,13 @@ Route::get('/offres/actives/{restaurantId}', [FlashInfoController::class, 'activ
 // ============================================================================
 
 Route::middleware('auth:sanctum')->group(function () {
-    
+
     // Auth
     Route::prefix('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/refresh', [AuthController::class, 'refresh']);
+        Route::put('/user/update', [AuthController::class, 'updateUser']);
     });
 
     // Dashboard

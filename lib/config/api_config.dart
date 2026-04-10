@@ -6,50 +6,48 @@ class ApiConfig {
   // ============================================
   // 🔐 CONFIGURATION DEPUIS .env
   // ============================================
-  
+
   /// Base URL de l'API
-  static String get baseUrl => 
-      dotenv.env['API_BASE_URL'] ?? 'https://dashboard-noogo.quickdev-it.com/api';
+  static String get baseUrl =>
+      dotenv.env['API_BASE_URL'] ??
+      'https://dashboard-noogo.quickdev-it.com/api';
 
   /// Base URL pour les images
-  static String get imageBaseUrl => 
+  static String get imageBaseUrl =>
       dotenv.env['IMAGE_BASE_URL'] ?? 'https://dashboard-noogo.quickdev-it.com';
 
   /// Base URL pour les QR codes
-  static String get qrBaseUrl => 
-      dotenv.env['QR_BASE_URL'] ?? 'https://dashboard-noogo.quickdev-it.com';
+  static String get qrBaseUrl =>
+      dotenv.env['QR_BASE_URL'] ??
+      'https://dashboard-noogo.quickdev-it.com/api';
 
   // ============================================
   // 🔌 CONFIGURATION PUSHER
   // ============================================
-  
+
   /// Clé API Pusher
-  static String get pusherKey => 
-      dotenv.env['PUSHER_APP_KEY'] ?? '';
+  static String get pusherKey => dotenv.env['PUSHER_APP_KEY'] ?? '';
 
   /// Cluster Pusher
-  static String get pusherCluster => 
-      dotenv.env['PUSHER_CLUSTER'] ?? 'eu';
+  static String get pusherCluster => dotenv.env['PUSHER_CLUSTER'] ?? 'eu';
 
   /// App ID Pusher
-  static String get pusherAppId => 
-      dotenv.env['PUSHER_APP_ID'] ?? '';
+  static String get pusherAppId => dotenv.env['PUSHER_APP_ID'] ?? '';
 
   /// Endpoint d'authentification Pusher
-  static String get pusherAuthEndpoint => 
+  static String get pusherAuthEndpoint =>
       dotenv.env['PUSHER_AUTH_ENDPOINT'] ?? '$baseUrl/broadcasting/auth';
 
   // ============================================
   // 🛠️ CONFIGURATION ENVIRONNEMENT
   // ============================================
-  
+
   /// Mode debug actif
-  static bool get isDebugMode => 
+  static bool get isDebugMode =>
       dotenv.env['DEBUG_MODE']?.toLowerCase() == 'true' || kDebugMode;
 
   /// Environnement actuel (development, staging, production)
-  static String get environment => 
-      dotenv.env['ENVIRONMENT'] ?? 'development';
+  static String get environment => dotenv.env['ENVIRONMENT'] ?? 'development';
 
   /// Vérifie si en production
   static bool get isProduction => environment == 'production';
@@ -58,9 +56,9 @@ class ApiConfig {
   // 🖼️ CONFIGURATION IMAGES
   // ============================================
 
-  /// Image de remplacement par défaut
+  /// Image de remplacement par défaut — utilise placehold.co qui est actif
   static const String defaultImageUrl =
-      'https://via.placeholder.com/400x300/CCCCCC/666666?text=Restaurant+Image';
+      'https://placehold.co/400x300/CCCCCC/666666/png?text=Noogo';
 
   static final Map<String, bool> _urlValidationCache = {};
 
@@ -98,11 +96,13 @@ class ApiConfig {
         cleanPath = 'storage/$cleanPath';
       }
       // ✅ Plats
-      else if (cleanPath.startsWith('plats/') || cleanPath.startsWith('dishes/')) {
+      else if (cleanPath.startsWith('plats/') ||
+          cleanPath.startsWith('dishes/')) {
         cleanPath = 'storage/$cleanPath';
       }
       // ✅ Images génériques
-      else if (cleanPath.startsWith('images/') || cleanPath.startsWith('uploads/')) {
+      else if (cleanPath.startsWith('images/') ||
+          cleanPath.startsWith('uploads/')) {
         cleanPath = 'storage/$cleanPath';
       }
       // ✅ Contient un slash mais non reconnu
@@ -155,8 +155,8 @@ class ApiConfig {
 
     try {
       final response = await http.head(Uri.parse(url)).timeout(
-        const Duration(seconds: 5),
-      );
+            const Duration(seconds: 5),
+          );
 
       final isAccessible = response.statusCode == 200;
       _urlValidationCache[url] = isAccessible;
@@ -181,7 +181,7 @@ class ApiConfig {
   // ✅ Construit une URL d'API à partir d'un endpoint
   static String getApiUrl(String endpoint) {
     final cleanEndpoint =
-    endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+        endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
     return '$baseUrl/$cleanEndpoint';
   }
 
@@ -193,8 +193,8 @@ class ApiConfig {
     try {
       final uri = Uri.parse(baseUrl);
       final response = await http.head(uri).timeout(
-        const Duration(seconds: 10),
-      );
+            const Duration(seconds: 10),
+          );
 
       if (kDebugMode) {
         debugPrint('🔍 Vérification connexion API: $uri');

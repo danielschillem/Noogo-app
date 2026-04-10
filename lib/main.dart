@@ -12,12 +12,10 @@ import 'utils/app_colors.dart';
 import 'utils/app_text_styles.dart';
 import 'screens/splash_screen.dart';
 
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Charger les variables d'environnement depuis .env
-  await dotenv.load(fileName: ".env");
+  await dotenv.load(fileName: "assets/env/.env");
 
   // Configuration de la barre de statut
   SystemChrome.setSystemUIOverlayStyle(
@@ -163,8 +161,8 @@ class NooqoApp extends StatelessWidget {
           borderSide: const BorderSide(color: AppColors.error),
         ),
         contentPadding:
-        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        hintStyle: (AppTextStyles.bodyMedium ?? const TextStyle()).copyWith(
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        hintStyle: (AppTextStyles.bodyMedium).copyWith(
           color: AppColors.textSecondary,
         ),
       ),
@@ -180,7 +178,8 @@ class NooqoApp extends StatelessWidget {
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.textPrimary,
-        contentTextStyle: (AppTextStyles.bodyMedium ?? const TextStyle()).copyWith(
+        contentTextStyle:
+            (AppTextStyles.bodyMedium).copyWith(
           color: AppColors.textLight,
         ),
         shape: RoundedRectangleBorder(
@@ -199,7 +198,8 @@ class NooqoApp extends StatelessWidget {
         selectedColor: AppColors.primary.withValues(alpha: 0.2),
         disabledColor: AppColors.surface.withValues(alpha: 0.5),
         labelStyle: AppTextStyles.bodySmall,
-        secondaryLabelStyle: (AppTextStyles.bodySmall ?? const TextStyle()).copyWith(
+        secondaryLabelStyle:
+            (AppTextStyles.bodySmall).copyWith(
           color: AppColors.primary,
         ),
         shape: RoundedRectangleBorder(
@@ -233,7 +233,9 @@ class NooqoApp extends StatelessWidget {
   MaterialColor _createMaterialColor(Color color) {
     List strengths = <double>[.05];
     Map<int, Color> swatch = {};
-    final int r = color.red, g = color.green, b = color.blue;
+    final int r = (color.r * 255).round();
+    final int g = (color.g * 255).round();
+    final int b = (color.b * 255).round();
 
     for (int i = 1; i < 10; i++) {
       strengths.add(0.1 * i);
@@ -249,7 +251,7 @@ class NooqoApp extends StatelessWidget {
       );
     }
 
-    return MaterialColor(color.value, swatch);
+    return MaterialColor(color.toARGB32(), swatch);
   }
 }
 
@@ -263,8 +265,6 @@ class SplashChecker extends StatefulWidget {
 
 class _SplashCheckerState extends State<SplashChecker> {
   bool _showSplash = true;
-  bool _isInitialized = false;
-
   @override
   void initState() {
     super.initState();
@@ -279,10 +279,11 @@ class _SplashCheckerState extends State<SplashChecker> {
       final onboardingComplete = prefs.getBool('onboarding_complete') ?? false;
 
       // Vérifier si un restaurant a déjà été scanné
-      final isRestaurantScanned = await RestaurantStorageService.isRestaurantScanned();
+      final isRestaurantScanned =
+          await RestaurantStorageService.isRestaurantScanned();
       final restaurantId = await RestaurantStorageService.getRestaurantId();
 
-      if (!mounted) return;  // ✅ Vérification early return
+      if (!mounted) return; // ✅ Vérification early return
 
       final provider = Provider.of<RestaurantProvider>(context, listen: false);
 
@@ -296,23 +297,25 @@ class _SplashCheckerState extends State<SplashChecker> {
         authToken: authToken,
       );
 
-      if (!mounted) return;  // ✅ Vérification après async
+      if (!mounted) return; // ✅ Vérification après async
 
       // Si restaurant scanné, charger les données
       if (isRestaurantScanned && restaurantId != null) {
         debugPrint('✅ Restaurant déjà scanné (ID: $restaurantId)');
 
         try {
-          await provider.loadAllInitialData(
+          await provider
+              .loadAllInitialData(
             restaurantId: int.parse(restaurantId),
-          ).timeout(
+          )
+              .timeout(
             const Duration(seconds: 20),
             onTimeout: () {
               throw Exception('Timeout lors du chargement');
             },
           );
 
-          if (!mounted) return;  // ✅ Vérification après async
+          if (!mounted) return; // ✅ Vérification après async
 
           if (provider.restaurant == null) {
             throw Exception('Restaurant non chargé');
@@ -322,38 +325,31 @@ class _SplashCheckerState extends State<SplashChecker> {
 
           // Marquer comme initialisé
           if (mounted) {
-            setState(() {
-              _isInitialized = true;
-            });
+            setState(() {});
           }
 
           // Attendre la fin du splash screen
           await _waitForSplash();
 
-          if (!mounted) return;  // ✅ Vérification avant navigation
+          if (!mounted) return; // ✅ Vérification avant navigation
 
           // Naviguer vers l'accueil
           Navigator.of(context).pushReplacementNamed('/home');
           return;
-
         } catch (e) {
           debugPrint('❌ Erreur chargement restaurant: $e');
           await RestaurantStorageService.clearRestaurantData();
-          if (!mounted) return;  // ✅ Vérification après async
+          if (!mounted) return; // ✅ Vérification après async
         }
       }
 
       // Marquer comme initialisé
-      if (mounted) {
-        setState(() {
-          _isInitialized = true;
-        });
-      }
+      if (mounted) setState(() {});
 
       // Attendre la fin du splash screen
       await _waitForSplash();
 
-      if (!mounted) return;  // ✅ Vérification avant navigation
+      if (!mounted) return; // ✅ Vérification avant navigation
 
       // Navigation normale
       if (onboardingComplete) {
@@ -361,24 +357,19 @@ class _SplashCheckerState extends State<SplashChecker> {
       } else {
         Navigator.of(context).pushReplacementNamed('/onboarding');
       }
-
     } catch (e) {
       debugPrint('❌ Erreur initialisation: $e');
 
-      if (mounted) {
-        setState(() {
-          _isInitialized = true;
-        });
-      }
+      if (mounted) setState(() {});
 
       await _waitForSplash();
 
-      if (!mounted) return;  // ✅ Vérification avant navigation
+      if (!mounted) return; // ✅ Vérification avant navigation
 
       final prefs = await SharedPreferences.getInstance();
       final onboardingComplete = prefs.getBool('onboarding_complete') ?? false;
 
-      if (!mounted) return;  // ✅ Dernière vérification
+      if (!mounted) return; // ✅ Dernière vérification
 
       if (onboardingComplete) {
         Navigator.of(context).pushReplacementNamed('/welcome');
@@ -390,7 +381,8 @@ class _SplashCheckerState extends State<SplashChecker> {
 
   Future<void> _waitForSplash() async {
     // Attendre que le splash screen soit terminé
-    while (_showSplash && mounted) {  // ✅ Vérifier mounted
+    while (_showSplash && mounted) {
+      // ✅ Vérifier mounted
       await Future.delayed(const Duration(milliseconds: 100));
     }
   }

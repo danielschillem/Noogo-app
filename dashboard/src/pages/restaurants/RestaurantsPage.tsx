@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Plus, 
-  Search, 
-  MapPin, 
-  Phone, 
+import {
+  Plus,
+  Search,
+  MapPin,
+  Phone,
   Clock,
   MoreVertical,
   Eye,
@@ -55,7 +55,7 @@ export default function RestaurantsPage() {
     }
   };
 
-  const filteredRestaurants = restaurants.filter(r => 
+  const filteredRestaurants = restaurants.filter(r =>
     r.nom.toLowerCase().includes(search.toLowerCase()) ||
     r.adresse.toLowerCase().includes(search.toLowerCase())
   );
@@ -173,11 +173,10 @@ function RestaurantCard({ restaurant, onToggleActive, onDelete }: RestaurantCard
             </span>
           </div>
         )}
-        <div className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium ${
-          restaurant.is_active 
-            ? 'bg-green-100 text-green-700' 
+        <div className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium ${restaurant.is_active
+            ? 'bg-green-100 text-green-700'
             : 'bg-gray-100 text-gray-700'
-        }`}>
+          }`}>
           {restaurant.is_active ? 'Actif' : 'Inactif'}
         </div>
       </div>
@@ -203,9 +202,9 @@ function RestaurantCard({ restaurant, onToggleActive, onDelete }: RestaurantCard
             </button>
             {showMenu && (
               <>
-                <div 
-                  className="fixed inset-0 z-10" 
-                  onClick={() => setShowMenu(false)} 
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setShowMenu(false)}
                 />
                 <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
                   <Link

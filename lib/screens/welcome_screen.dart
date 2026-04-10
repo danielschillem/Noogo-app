@@ -1,12 +1,10 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/restaurant_provider.dart';
 import '../services/restaurant_storage_service.dart';
 import 'qr_scanner_screen.dart';
 import 'home_screen.dart';
 import '../utils/app_colors.dart';
-import '../utils/qr_helper.dart';
 import '../utils/app_text_styles.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -119,7 +117,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       await provider.validateRestaurantQRCode(qrCode).timeout(
         const Duration(seconds: 15),
         onTimeout: () {
-          throw Exception('Timeout: Le serveur met trop de temps à répondre. Vérifiez votre connexion internet.');
+          throw Exception(
+              'Timeout: Le serveur met trop de temps à répondre. Vérifiez votre connexion internet.');
         },
       );
 
@@ -127,7 +126,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
       // ✅ Vérifier que les données sont bien chargées
       if (provider.restaurant == null) {
-        throw Exception('Les données du restaurant n\'ont pas pu être chargées');
+        throw Exception(
+            'Les données du restaurant n\'ont pas pu être chargées');
       }
 
       // ✅ Sauvegarder les données du restaurant
@@ -147,7 +147,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
         restaurantData: restaurantData,
       );
 
-      debugPrint('✅ Validation réussie! Restaurant: ${provider.restaurant?.name}');
+      debugPrint(
+          '✅ Validation réussie! Restaurant: ${provider.restaurant?.name}');
       debugPrint('   - Plats: ${provider.dishes.length}');
       debugPrint('   - Catégories: ${provider.categories.length}');
 
@@ -186,9 +187,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
         MaterialPageRoute(
           builder: (context) => const HomeScreen(),
         ),
-            (route) => false, // Supprime toutes les routes précédentes
+        (route) => false, // Supprime toutes les routes précédentes
       );
-
     } catch (e) {
       debugPrint('❌ Erreur lors de la validation: $e');
 
@@ -197,28 +197,39 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       String errorMessage = e.toString().replaceAll('Exception: ', '');
       String errorTitle = 'Erreur de validation';
 
-      if (errorMessage.contains('Timeout') || errorMessage.contains('timeout')) {
+      if (errorMessage.contains('Timeout') ||
+          errorMessage.contains('timeout')) {
         errorTitle = 'Délai d\'attente dépassé';
-        errorMessage = 'Le serveur met trop de temps à répondre. Vérifiez votre connexion internet et réessayez.';
-      } else if (errorMessage.contains('Format de QR code invalide') || errorMessage.contains('n\'est pas valide')) {
+        errorMessage =
+            'Le serveur met trop de temps à répondre. Vérifiez votre connexion internet et réessayez.';
+      } else if (errorMessage.contains('Format de QR code invalide') ||
+          errorMessage.contains('n\'est pas valide')) {
         errorTitle = 'QR code invalide';
-        errorMessage = 'Ce QR code n\'est pas valide pour notre application. Veuillez scanner le QR code du restaurant.';
-      } else if (errorMessage.contains('connexion') || errorMessage.contains('Connection') || errorMessage.contains('SocketException')) {
+        errorMessage =
+            'Ce QR code n\'est pas valide pour notre application. Veuillez scanner le QR code du restaurant.';
+      } else if (errorMessage.contains('connexion') ||
+          errorMessage.contains('Connection') ||
+          errorMessage.contains('SocketException')) {
         errorTitle = 'Problème de connexion';
-        errorMessage = 'Impossible de se connecter au serveur. Vérifiez votre connexion internet.';
-      } else if (errorMessage.contains('restaurant invalide') || errorMessage.contains('non trouvé') || errorMessage.contains('introuvable')) {
+        errorMessage =
+            'Impossible de se connecter au serveur. Vérifiez votre connexion internet.';
+      } else if (errorMessage.contains('restaurant invalide') ||
+          errorMessage.contains('non trouvé') ||
+          errorMessage.contains('introuvable')) {
         errorTitle = 'Restaurant introuvable';
-        errorMessage = 'Ce restaurant n\'existe pas ou n\'est plus disponible dans notre système.';
+        errorMessage =
+            'Ce restaurant n\'existe pas ou n\'est plus disponible dans notre système.';
       } else if (errorMessage.contains('404')) {
         errorTitle = 'Restaurant introuvable';
-        errorMessage = 'Le restaurant avec cet ID n\'existe pas dans notre système.';
+        errorMessage =
+            'Le restaurant avec cet ID n\'existe pas dans notre système.';
       } else if (errorMessage.contains('500')) {
         errorTitle = 'Erreur serveur';
-        errorMessage = 'Le serveur rencontre un problème. Veuillez réessayer dans quelques instants.';
+        errorMessage =
+            'Le serveur rencontre un problème. Veuillez réessayer dans quelques instants.';
       }
 
       _showErrorDialog(errorTitle, errorMessage);
-
     } finally {
       if (mounted) {
         setState(() {
@@ -246,7 +257,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('Annuler', style: TextStyle(color: AppColors.textSecondary)),
+            child: Text('Annuler',
+                style: TextStyle(color: AppColors.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -369,7 +381,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 width: 2,
                               ),
                             ),
@@ -378,10 +390,10 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                             width: 180,
                             height: 180,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
+                              color: Colors.white.withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.3),
+                                color: Colors.white.withValues(alpha: 0.3),
                                 width: 3,
                               ),
                             ),
@@ -394,8 +406,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.white
-                                      .withOpacity(_isPressed ? 0.6 : 0.4),
+                                  color: Colors.white.withValues(
+                                      alpha: _isPressed ? 0.6 : 0.4),
                                   blurRadius: _isPressed ? 40 : 30,
                                   spreadRadius: _isPressed ? 8 : 5,
                                 ),
@@ -439,16 +451,19 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildAnimatedStep(icon: Icons.qr_code_scanner, label: 'Scanner', delay: 0),
-              _buildAnimatedStep(icon: Icons.restaurant_menu, label: 'Commander', delay: 200),
-              _buildAnimatedStep(icon: Icons.payment, label: 'Payer', delay: 400),
+              _buildAnimatedStep(
+                  icon: Icons.qr_code_scanner, label: 'Scanner', delay: 0),
+              _buildAnimatedStep(
+                  icon: Icons.restaurant_menu, label: 'Commander', delay: 200),
+              _buildAnimatedStep(
+                  icon: Icons.payment, label: 'Payer', delay: 400),
             ],
           ),
           const SizedBox(height: 16),
           Text(
             'Simple. Rapide. Sécurisé.',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               fontSize: 18,
               fontWeight: FontWeight.w500,
               fontStyle: FontStyle.italic,
@@ -467,7 +482,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                 foregroundColor: const Color(0xFF1B975B),
                 disabledBackgroundColor: Colors.white70,
                 elevation: 12,
-                shadowColor: Colors.black.withOpacity(0.3),
+                shadowColor: Colors.black.withValues(alpha: 0.3),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -485,7 +500,6 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           ),
 
           const SizedBox(height: 40),
-
         ],
       ),
     );
@@ -512,15 +526,15 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.3),
+                      color: Colors.white.withValues(alpha: 0.3),
                       width: 2,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         blurRadius: 15,
                         spreadRadius: 2,
                       ),
