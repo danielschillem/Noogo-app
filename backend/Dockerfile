@@ -4,10 +4,13 @@ FROM php:8.3-cli
 RUN apt-get update && apt-get install -y \
     git curl libzip-dev zip unzip \
     libpng-dev libonig-dev libxml2-dev \
-    libpq-dev \
+    libpq-dev libcurl4-openssl-dev \
+    libssl-dev libjpeg-dev libfreetype6-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
-    pdo pdo_mysql pdo_pgsql \
-    mbstring exif pcntl bcmath gd zip \
+       pdo pdo_mysql pdo_pgsql \
+       mbstring exif pcntl bcmath zip \
+       gd curl dom xml tokenizer \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # ── Composer ─────────────────────────────────────────────────
@@ -17,7 +20,7 @@ WORKDIR /app
 
 # ── Dépendances PHP (séparé pour le cache Docker) ────────────
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts --ignore-platform-reqs
 
 # ── Code source ───────────────────────────────────────────────
 COPY . .
