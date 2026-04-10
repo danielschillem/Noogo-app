@@ -51,10 +51,12 @@ class _ContactInfoState extends State<ContactInfo> {
     if (_isValidating) return;
 
     final provider = context.read<RestaurantProvider>();
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
 
     if (provider.hasCartItems) {
       provider.clearCart();
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         const SnackBar(
           content: Text('Panier vidé'),
           backgroundColor: AppColors.info,
@@ -65,8 +67,7 @@ class _ContactInfoState extends State<ContactInfo> {
     try {
       if (!mounted) return;
 
-      final String? qrCode = await Navigator.push<String>(
-        context,
+      final String? qrCode = await navigator.push<String>(
         MaterialPageRoute(
           builder: (context) => const QRScannerScreen(),
         ),
@@ -85,6 +86,7 @@ class _ContactInfoState extends State<ContactInfo> {
       setState(() => _isValidating = true);
 
       // Loader dialog
+      if (!mounted) return;
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -128,11 +130,11 @@ class _ContactInfoState extends State<ContactInfo> {
       if (!mounted) return;
 
       // Fermer loader
-      if (Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
+      if (navigator.canPop()) {
+        navigator.pop();
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           backgroundColor: AppColors.success,
           content: Text(
@@ -145,8 +147,8 @@ class _ContactInfoState extends State<ContactInfo> {
     } catch (e) {
       if (!mounted) return;
 
-      if (Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
+      if (navigator.canPop()) {
+        navigator.pop();
       }
 
       _showErrorDialog(
@@ -183,7 +185,8 @@ class _ContactInfoState extends State<ContactInfo> {
             onPressed: () {
               Navigator.pop(context);
               Future.delayed(const Duration(milliseconds: 300), () {
-                _openQRScanner(context);
+                if (!mounted) return;
+                _openQRScanner(this.context);
               });
             },
             child: const Text('Réessayer'),
