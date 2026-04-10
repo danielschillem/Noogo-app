@@ -1,0 +1,80 @@
+# ============================================================
+# render.yaml — Infrastructure Noogo sur Render.com
+# ============================================================
+# Déposer à la RACINE du repo GitHub.
+# Render détecte ce fichier et crée les services automatiquement.
+# Doc : https://render.com/docs/blueprint-spec
+# ============================================================
+
+databases:
+  - name: noogo-db
+    databaseName: noogo_production
+    user: noogo_user
+    plan: free               # Passer à "starter" pour la prod réelle
+    region: frankfurt        # Choisir la région la plus proche de vos users
+
+services:
+  - type: web
+    name: noogo-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free               # Passer à "starter" pour 0 cold-start
+    region: frankfurt
+    healthCheckPath: /up     # Laravel health endpoint
+    envVars:
+      # ── Application ──────────────────────────────────────
+      - key: APP_NAME
+        value: Noogo
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        generateValue: true   # Render génère une clé unique
+
+      # ── URL — À mettre à jour après le 1er déploiement ──
+      - key: APP_URL
+        value: https://noogo-backend.onrender.com
+
+      # ── Base de données PostgreSQL ────────────────────────
+      - key: DB_CONNECTION
+        value: pgsql
+      # Laravel lit DB_URL pour parser la connection string complète
+      - key: DB_URL
+        fromDatabase:
+          name: noogo-db
+          property: connectionString
+
+      # ── Session / Cache ───────────────────────────────────
+      - key: SESSION_DRIVER
+        value: cookie
+      - key: CACHE_STORE
+        value: file
+      - key: FILESYSTEM_DISK
+        value: public
+
+      # ── Logs ─────────────────────────────────────────────
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: error
+
+      # ── CORS / Sanctum ───────────────────────────────────
+      # Renseigner les vrais domaines Netlify et mobile après déploiement
+      - key: SANCTUM_STATEFUL_DOMAINS
+        value: noogo-dashboard.netlify.app
+      - key: FRONTEND_URL
+        value: https://noogo-dashboard.netlify.app
+
+      # ── Pusher (temps réel) — À renseigner manuellement ──
+      - key: BROADCAST_CONNECTION
+        value: pusher
+      - key: PUSHER_APP_ID
+        sync: false
+      - key: PUSHER_APP_KEY
+        sync: false
+      - key: PUSHER_APP_SECRET
+        sync: false
+      - key: PUSHER_APP_CLUSTER
+        value: eu

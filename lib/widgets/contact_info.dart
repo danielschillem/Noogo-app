@@ -47,8 +47,9 @@ class _ContactInfoState extends State<ContactInfo> {
     }
   }
 
-  Future<void> _proceedToScanner(BuildContext context) async {
+  Future<void> _proceedToScanner() async {
     if (_isValidating) return;
+    if (!mounted) return;
 
     final provider = context.read<RestaurantProvider>();
     final messenger = ScaffoldMessenger.of(context);
@@ -65,8 +66,6 @@ class _ContactInfoState extends State<ContactInfo> {
     }
 
     try {
-      if (!mounted) return;
-
       final String? qrCode = await navigator.push<String>(
         MaterialPageRoute(
           builder: (context) => const QRScannerScreen(),
@@ -86,7 +85,6 @@ class _ContactInfoState extends State<ContactInfo> {
       setState(() => _isValidating = true);
 
       // Loader dialog
-      if (!mounted) return;
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -186,7 +184,7 @@ class _ContactInfoState extends State<ContactInfo> {
               Navigator.pop(context);
               Future.delayed(const Duration(milliseconds: 300), () {
                 if (!mounted) return;
-                _openQRScanner(this.context);
+                _openQRScanner(context);
               });
             },
             child: const Text('Réessayer'),
@@ -212,7 +210,7 @@ class _ContactInfoState extends State<ContactInfo> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              _proceedToScanner(context);
+              _proceedToScanner();
             },
             child: const Text('Continuer'),
           ),
@@ -223,7 +221,7 @@ class _ContactInfoState extends State<ContactInfo> {
 
   @override
   Widget build(BuildContext context) {
-    final isOpen = widget.restaurant.isOpen ?? false;
+    final isOpen = widget.restaurant.isOpen;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),

@@ -75,9 +75,8 @@ class Category {
         'photo',
         'picture',
         'img'
-        'image_path',
+            'image_path',
         'image_chemin'
-
       ];
 
       for (final key in imageKeys) {
@@ -97,20 +96,30 @@ class Category {
 
           // Si c'est une liste d'images
           if (value is List && value.isNotEmpty) {
-            if (kDebugMode) debugPrint('     → C\'est une liste de ${value.length} éléments');
+            if (kDebugMode) {
+              debugPrint('     → C\'est une liste de ${value.length} éléments');
+            }
 
             final first = value[0];
             if (first is String && first.isNotEmpty) {
               relativePath = first;
-              if (kDebugMode) debugPrint('     → Premier élément (String): $relativePath');
+              if (kDebugMode) {
+                debugPrint('     → Premier élément (String): $relativePath');
+              }
               break;
             } else if (first is Map && first.containsKey('url')) {
               relativePath = first['url']?.toString();
-              if (kDebugMode) debugPrint('     → Premier élément (Map) avec url: $relativePath');
+              if (kDebugMode) {
+                debugPrint(
+                    '     → Premier élément (Map) avec url: $relativePath');
+              }
               break;
             } else if (first is Map && first.containsKey('chemin')) {
               relativePath = first['chemin']?.toString();
-              if (kDebugMode) debugPrint('     → Premier élément (Map) avec chemin: $relativePath');
+              if (kDebugMode) {
+                debugPrint(
+                    '     → Premier élément (Map) avec chemin: $relativePath');
+              }
               break;
             }
           }
@@ -130,7 +139,9 @@ class Category {
               break;
             } else if (value.containsKey('chemin')) {
               relativePath = value['chemin']?.toString();
-              if (kDebugMode) debugPrint('     → Map avec chemin: $relativePath');
+              if (kDebugMode) {
+                debugPrint('     → Map avec chemin: $relativePath');
+              }
               break;
             }
           }
@@ -148,13 +159,11 @@ class Category {
 
       final fullUrl = ApiConfig.getSafeImageUrl(relativePath);
 
-      if (kDebugMode) {
-      }
+      if (kDebugMode) {}
 
       return fullUrl;
-    } catch (e, stackTrace) {
-      if (kDebugMode) {
-      }
+    } catch (e) {
+      if (kDebugMode) {}
       return ApiConfig.defaultImageUrl;
     }
   }
