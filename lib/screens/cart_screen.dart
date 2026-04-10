@@ -7,7 +7,6 @@ import '../utils/app_colors.dart';
 import '../utils/app_text_styles.dart';
 import '../widgets/custom_app_bar.dart';
 
-
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
 
@@ -34,7 +33,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<RestaurantProvider>();
-      debugPrint('CartScreen initState: ${provider.cartItems.length} articles dans le panier');
+      debugPrint(
+          'CartScreen initState: ${provider.cartItems.length} articles dans le panier');
       provider.debugPrintState();
       _animationController.forward();
     });
@@ -50,7 +50,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  Widget _buildImage(String imageUrl, {double? width, double? height, BoxFit? fit}) {
+  Widget _buildImage(String imageUrl,
+      {double? width, double? height, BoxFit? fit}) {
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
       return CachedNetworkImage(
         imageUrl: imageUrl,
@@ -97,10 +98,13 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const CustomAppBar(title: 'Panier',),
+      appBar: const CustomAppBar(
+        title: 'Panier',
+      ),
       body: Consumer<RestaurantProvider>(
         builder: (context, provider, child) {
-          debugPrint('CartScreen rebuild: ${provider.cartItems.length} articles');
+          debugPrint(
+              'CartScreen rebuild: ${provider.cartItems.length} articles');
 
           return AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
@@ -155,8 +159,10 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: AppColors.textLight,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
             ),
           ],
@@ -311,7 +317,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
         const SizedBox(height: 4),
         Text(
           '${item.dish.price.toStringAsFixed(0)} FCFA / plat',
-          style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+          style:
+              AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
         ),
         const SizedBox(height: 8),
         Container(
@@ -354,7 +361,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                 alignment: Alignment.center,
                 child: Text(
                   '${item.quantity}',
-                  style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                  style: AppTextStyles.bodyMedium
+                      .copyWith(fontWeight: FontWeight.w600),
                 ),
               ),
               _buildQuantityButton(
@@ -485,24 +493,25 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
         child: provider.isLoading
             ? const SizedBox(
-          height: 20,
-          width: 20,
-          child: CircularProgressIndicator(
-            color: Colors.white,
-            strokeWidth: 2,
-          ),
-        )
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
             : Text(
-          'Commander • ${provider.cartTotal.toStringAsFixed(0)} FCFA',
-          style: AppTextStyles.button.copyWith(
-            fontSize: 16,
-            color: Colors.white,
-          ),
-        ),
+                'Commander • ${provider.cartTotal.toStringAsFixed(0)} FCFA',
+                style: AppTextStyles.button.copyWith(
+                  fontSize: 16,
+                  color: Colors.white,
+                ),
+              ),
       ),
     );
   }
@@ -527,7 +536,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Retirer du panier'),
-        content: Text('Voulez-vous vraiment retirer ${item.dish.name} du panier ?'),
+        content:
+            Text('Voulez-vous vraiment retirer ${item.dish.name} du panier ?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -599,7 +609,6 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       if (tableNumber == null) return;
     }
 
-
     // Étape 3: Demander le numéro de téléphone
     final phoneNumber = await _askPhoneNumber();
     if (phoneNumber == null) return;
@@ -616,7 +625,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       if (mobileMoneyProvider == null) return;
 
       // Étape 5.1: Demander le numéro Mobile Money
-      final mobileMoneyNumber = await _askMobileMoneyNumber(mobileMoneyProvider);
+      final mobileMoneyNumber =
+          await _askMobileMoneyNumber(mobileMoneyProvider);
       if (mobileMoneyNumber == null) return;
 
       // Étape 5.2: Générer et saisir l'OTP
@@ -659,7 +669,6 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-
             const SizedBox(width: 8),
             const Text('Type de commande'),
           ],
@@ -672,7 +681,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
               Icons.table_restaurant,
               'Manger au restaurant',
               AppColors.primary,
-                  () => Navigator.pop(context, 'sur place'),
+              () => Navigator.pop(context, 'sur place'),
             ),
             const SizedBox(height: 12),
             _buildOrderTypeOption(
@@ -680,7 +689,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
               Icons.shopping_bag,
               'Emporter votre commande',
               AppColors.secondary,
-                  () => Navigator.pop(context, 'a emporter'),
+              () => Navigator.pop(context, 'a emporter'),
             ),
           ],
         ),
@@ -695,12 +704,12 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildOrderTypeOption(
-      String title,
-      IconData icon,
-      String subtitle,
-      Color color,
-      VoidCallback onTap,
-      ) {
+    String title,
+    IconData icon,
+    String subtitle,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -742,7 +751,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textSecondary),
+            Icon(Icons.arrow_forward_ios,
+                size: 16, color: AppColors.textSecondary),
           ],
         ),
       ),
@@ -806,14 +816,12 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
               }
               print("TABLE SAISIE: $tableNumber");
             },
-
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
             ),
             child: const Text('Valider'),
           ),
-
         ],
       ),
     );
@@ -862,12 +870,16 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
           ElevatedButton(
             onPressed: () {
               final phone = _phoneNumberController.text.trim();
-              if (phone.isNotEmpty && phone.length >= 8) {
+              final cleaned = phone.replaceAll(RegExp(r'[\s\-\.]'), '');
+              final isValid =
+                  RegExp(r'^(?:\+?226|00226)?[0-9]{8}$').hasMatch(cleaned);
+              if (isValid) {
                 Navigator.pop(context, phone);
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Numéro de téléphone invalide'),
+                    content:
+                        Text('Numéro invalide (ex: 70 12 34 56 — 8 chiffres)'),
                     backgroundColor: AppColors.error,
                   ),
                 );
@@ -904,14 +916,14 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
               'Mobile Money',
               Icons.phone_android,
               Colors.orange,
-                  () => Navigator.pop(context, 'mobile_money'),
+              () => Navigator.pop(context, 'mobile_money'),
             ),
             const SizedBox(height: 12),
             _buildPaymentMethodOption(
               'Espèces',
               Icons.money,
               Colors.green,
-                  () => Navigator.pop(context, 'cash'),
+              () => Navigator.pop(context, 'cash'),
             ),
           ],
         ),
@@ -926,11 +938,11 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildPaymentMethodOption(
-      String title,
-      IconData icon,
-      Color color,
-      VoidCallback onTap,
-      ) {
+    String title,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -953,10 +965,12 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
             const SizedBox(width: 16),
             Text(
               title,
-              style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600),
+              style:
+                  AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600),
             ),
             const Spacer(),
-            Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textSecondary),
+            Icon(Icons.arrow_forward_ios,
+                size: 16, color: AppColors.textSecondary),
           ],
         ),
       ),
@@ -982,15 +996,14 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
             _buildMobileMoneyProviderOption(
               'Orange Money',
               Colors.orange,
-                  () => _showFeatureUnavailable(context),
+              () => Navigator.pop(context, 'orange'),
             ),
-
-            /*const SizedBox(height: 12),
+            const SizedBox(height: 12),
             _buildMobileMoneyProviderOption(
               'Moov Africa',
               Colors.blue,
-                  () => Navigator.pop(context, 'moov'),
-            ),*/
+              () => Navigator.pop(context, 'moov'),
+            ),
             /*const SizedBox(height: 12),
             _buildMobileMoneyProviderOption(
               'Telecel Money',
@@ -1010,10 +1023,10 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildMobileMoneyProviderOption(
-      String title,
-      Color color,
-      VoidCallback onTap,
-      ) {
+    String title,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -1039,10 +1052,12 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
             Expanded(
               child: Text(
                 title,
-                style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                style: AppTextStyles.bodyMedium
+                    .copyWith(fontWeight: FontWeight.w600),
               ),
             ),
-            Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textSecondary),
+            Icon(Icons.arrow_forward_ios,
+                size: 16, color: AppColors.textSecondary),
           ],
         ),
       ),
@@ -1093,12 +1108,16 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
           ElevatedButton(
             onPressed: () {
               final number = _mobileMoneyNumberController.text.trim();
-              if (number.isNotEmpty && number.length >= 8) {
+              final cleaned = number.replaceAll(RegExp(r'[\s\-\.]'), '');
+              final isValid =
+                  RegExp(r'^(?:\+?226|00226)?[0-9]{8}$').hasMatch(cleaned);
+              if (isValid) {
                 Navigator.pop(context, number);
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Numéro invalide'),
+                    content:
+                        Text('Numéro invalide (ex: 70 12 34 56 — 8 chiffres)'),
                     backgroundColor: AppColors.error,
                   ),
                 );
@@ -1122,7 +1141,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
     required double amount,
   }) async {
     // Étape 1: Envoyer la demande de paiement (simulation)
-    final otpSent = await _sendPaymentRequest(mobileMoneyProvider, phoneNumber, amount);
+    final otpSent =
+        await _sendPaymentRequest(mobileMoneyProvider, phoneNumber, amount);
     if (!otpSent) return false;
 
     // Étape 2: Demander l'OTP
@@ -1135,7 +1155,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
   }
 
   // Envoyer la demande de paiement
-  Future<bool> _sendPaymentRequest(String provider, String phone, double amount) async {
+  Future<bool> _sendPaymentRequest(
+      String provider, String phone, double amount) async {
     // Afficher dialogue de chargement
     showDialog(
       context: context,
@@ -1381,7 +1402,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
             const SizedBox(height: 8),
             Text(
               'Votre paiement a été validé avec succès',
-              style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+              style: AppTextStyles.bodySmall
+                  .copyWith(color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
           ],
@@ -1429,17 +1451,20 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                   orderType == 'sur place'
                       ? 'Sur place'
                       : orderType == 'à emporter'
-                      ? 'À emporter'
-                      : 'Livraison'
-              ),
-              if (tableNumber != null) _buildConfirmationRow('Table', tableNumber),
+                          ? 'À emporter'
+                          : 'Livraison'),
+              if (tableNumber != null)
+                _buildConfirmationRow('Table', tableNumber),
               _buildConfirmationRow('Téléphone', phoneNumber),
               _buildConfirmationRow(
                 'Paiement',
-                paymentMethod == 'cash' ? 'Espèces' : 'Mobile Money${mobileMoneyProvider != null ? ' ($mobileMoneyProvider)' : ''}',
+                paymentMethod == 'cash'
+                    ? 'Espèces'
+                    : 'Mobile Money${mobileMoneyProvider != null ? ' ($mobileMoneyProvider)' : ''}',
               ),
               const Divider(height: 24),
-              _buildConfirmationRow('Total', '${total.toStringAsFixed(0)} FCFA', isTotal: true),
+              _buildConfirmationRow('Total', '${total.toStringAsFixed(0)} FCFA',
+                  isTotal: true),
             ],
           ),
         ),
@@ -1461,7 +1486,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildConfirmationRow(String label, String value, {bool isTotal = false}) {
+  Widget _buildConfirmationRow(String label, String value,
+      {bool isTotal = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -1570,17 +1596,18 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
 
   // Dialog de succès
   Future<void> _showSuccessDialog(
-      String orderType,
-      String? tableNumber,
-      String paymentMethod,
-      ) async {
+    String orderType,
+    String? tableNumber,
+    String paymentMethod,
+  ) async {
     return showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => WillPopScope(
         onWillPop: () async => false,
         child: AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1608,7 +1635,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
               const SizedBox(height: 24),
               Text(
                 'Commande confirmée !',
-                style: AppTextStyles.heading2.copyWith(color: AppColors.success),
+                style:
+                    AppTextStyles.heading2.copyWith(color: AppColors.success),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
@@ -1620,13 +1648,15 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                 ),
                 child: Column(
                   children: [
-                    _buildOrderDetailRow('Type', orderType == 'sur place' ? 'Sur place' : 'À emporter'),
+                    _buildOrderDetailRow('Type',
+                        orderType == 'sur place' ? 'Sur place' : 'À emporter'),
                     if (tableNumber != null) ...[
                       const Divider(height: 16),
                       _buildOrderDetailRow('Table', tableNumber),
                     ],
                     const Divider(height: 16),
-                    _buildOrderDetailRow('Paiement', paymentMethod == 'cash' ? 'Espèces' : 'Mobile Money'),
+                    _buildOrderDetailRow('Paiement',
+                        paymentMethod == 'cash' ? 'Espèces' : 'Mobile Money'),
                     const Divider(height: 16),
                     _buildOrderDetailRow('Statut', 'En préparation'),
                   ],
@@ -1637,7 +1667,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                 orderType == 'sur place'
                     ? 'Votre commande sera livrée à votre table dans quelques instants.'
                     : 'Vous serez notifié quand votre commande sera prête.',
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                style: AppTextStyles.bodySmall
+                    .copyWith(color: AppColors.textSecondary),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -1653,7 +1684,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                     child: const Text('Voir mes commandes'),
                   ),
@@ -1686,7 +1718,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       children: [
         Text(
           label,
-          style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+          style:
+              AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
         ),
         Text(
           value,
@@ -1705,29 +1738,4 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       ),
     );
   }
-
-  void _showFeatureUnavailable(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: const [
-            Icon(Icons.info_outline, color: Colors.orange),
-            SizedBox(width: 8),
-            Text('Indisponible'),
-          ],
-        ),
-        content: const Text(
-          "Orange Money n'est pas encore disponible pour le moment.",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
 }

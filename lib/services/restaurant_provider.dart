@@ -1,18 +1,18 @@
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart' hide Category;
+import 'package:http/http.dart' as http;
 import '../models/restaurant.dart';
 import '../models/dish.dart';
 import '../models/flash_info.dart';
 import '../models/category.dart';
 import '../models/order.dart';
 import '../models/app_notification.dart';
+import '../config/api_config.dart';
+import '../utils/qr_helper.dart';
 import 'api_service.dart';
 import 'notification_service.dart';
 import 'realtime_service.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'dart:async';
-import'../config/api_config.dart';
-import '../utils/qr_helper.dart';
 
 class RestaurantProvider with ChangeNotifier {
   final ApiService _apiService = ApiService.instance;
@@ -97,7 +97,7 @@ class RestaurantProvider with ChangeNotifier {
 
     _autoRefreshTimer = Timer.periodic(
       const Duration(seconds: 30), // Toutes les 30 secondes
-          (timer) async {
+      (timer) async {
         debugPrint('🔄 Auto-refresh des commandes...');
         await _autoLoadOrdersWithNotifications();
       },
@@ -119,8 +119,10 @@ class RestaurantProvider with ChangeNotifier {
         final oldStatus = _lastOrderStatuses[orderId];
 
         if (oldStatus != null && oldStatus != newStatus) {
-          debugPrint('📢 Changement: commande #$orderId: $oldStatus → $newStatus');
-          await _createNotificationForStatusChange(newOrder, oldStatus, newStatus);
+          debugPrint(
+              '📢 Changement: commande #$orderId: $oldStatus → $newStatus');
+          await _createNotificationForStatusChange(
+              newOrder, oldStatus, newStatus);
         }
 
         _lastOrderStatuses[orderId] = newStatus;
@@ -131,7 +133,6 @@ class RestaurantProvider with ChangeNotifier {
 
       debugPrint('✅ ${fetchedOrders.length} commandes mises à jour');
       notifyListeners();
-
     } catch (e) {
       debugPrint('⚠️ Erreur auto-refresh: $e');
     }
@@ -139,10 +140,10 @@ class RestaurantProvider with ChangeNotifier {
 
   /// Créer une notification pour un changement de statut
   Future<void> _createNotificationForStatusChange(
-      Order order,
-      OrderStatus oldStatus,
-      OrderStatus newStatus,
-      ) async {
+    Order order,
+    OrderStatus oldStatus,
+    OrderStatus newStatus,
+  ) async {
     try {
       String title = '';
       String body = '';
@@ -201,7 +202,6 @@ class RestaurantProvider with ChangeNotifier {
 
       await addNotification(notification);
       debugPrint('✅ Notification créée: $title');
-
     } catch (e) {
       debugPrint('❌ Erreur création notification: $e');
     }
@@ -294,7 +294,8 @@ class RestaurantProvider with ChangeNotifier {
       final notification = AppNotification(
         id: 'notif_order_${order.id}_${DateTime.now().millisecondsSinceEpoch}',
         title: '✅ Commande confirmée',
-        body: 'Votre commande #${order.id} a été confirmée. Total: ${order.totalPrice.toStringAsFixed(0)} FCFA',
+        body:
+            'Votre commande #${order.id} a été confirmée. Total: ${order.totalPrice.toStringAsFixed(0)} FCFA',
         timestamp: DateTime.now(),
         type: 'order',
         isRead: false,
@@ -316,7 +317,6 @@ class RestaurantProvider with ChangeNotifier {
 
   /// Initialiser le provider avec Pusher
   Future<void> initialize({String? userId, String? authToken}) async {
-
     await loadNotifications();
 
     // Initialiser Pusher si l'utilisateur est connecté
@@ -326,7 +326,6 @@ class RestaurantProvider with ChangeNotifier {
 
     // Démarrer l'auto-refresh
     _startAutoRefresh();
-
   }
 
   /// ✅ Initialiser Pusher avec les nouveaux credentials
@@ -374,7 +373,6 @@ class RestaurantProvider with ChangeNotifier {
       await _realtimeService.subscribeToPublicNotifications();
 
       debugPrint('✅ Pusher initialisé et canaux souscrits');
-
     } catch (e) {
       debugPrint('❌ Erreur initialisation Pusher: $e');
       _isRealtimeConnected = false;
@@ -396,9 +394,8 @@ class RestaurantProvider with ChangeNotifier {
       }
 
       // Trouver la commande dans la liste locale
-      final orderIndex = _orders.indexWhere(
-              (o) => o.id.toString() == orderId.toString()
-      );
+      final orderIndex =
+          _orders.indexWhere((o) => o.id.toString() == orderId.toString());
 
       if (orderIndex != -1) {
         final oldOrder = _orders[orderIndex];
@@ -406,7 +403,8 @@ class RestaurantProvider with ChangeNotifier {
         final newStatus = _mapStringToOrderStatus(newStatusStr);
 
         if (newStatus != null && oldStatus != newStatus) {
-          debugPrint('✅ Mise à jour: commande #$orderId: $oldStatus → $newStatus');
+          debugPrint(
+              '✅ Mise à jour: commande #$orderId: $oldStatus → $newStatus');
 
           // Mettre à jour la commande
           _orders[orderIndex] = oldOrder.copyWith(status: newStatus);
@@ -422,7 +420,8 @@ class RestaurantProvider with ChangeNotifier {
           notifyListeners();
         }
       } else {
-        debugPrint('⚠️ Commande #$orderId non trouvée localement, rechargement...');
+        debugPrint(
+            '⚠️ Commande #$orderId non trouvée localement, rechargement...');
         await loadOrders();
       }
     } catch (e) {
@@ -450,7 +449,6 @@ class RestaurantProvider with ChangeNotifier {
 
       await addNotification(notification);
       debugPrint('✅ Notification Pusher ajoutée: ${notification.title}');
-
     } catch (e) {
       debugPrint('❌ Erreur traitement notification Pusher: $e');
     }
@@ -511,7 +509,7 @@ class RestaurantProvider with ChangeNotifier {
   @override
   void dispose() {
     _autoRefreshTimer?.cancel();
-    disposeRealtime();
+    unawaited(disposeRealtime());
     super.dispose();
   }
 
@@ -540,7 +538,7 @@ class RestaurantProvider with ChangeNotifier {
       if (!QRHelper.isValidRestaurantQR(qrData)) {
         throw Exception(
           'Ce QR Code n\'est pas valide pour notre application.\n'
-              'URL attendue: ${ApiConfig.baseUrl}',
+          'URL attendue: ${ApiConfig.baseUrl}',
         );
       }
 
@@ -550,7 +548,7 @@ class RestaurantProvider with ChangeNotifier {
       if (restaurantId == null || restaurantId <= 0) {
         throw Exception(
           'Impossible d\'extraire un ID restaurant valide depuis le QR Code.\n'
-              'Format attendu: ${ApiConfig.baseUrl}/restaurant/{id}/menu',
+          'Format attendu: ${ApiConfig.baseUrl}/restaurant/{id}/menu',
         );
       }
 
@@ -581,7 +579,6 @@ class RestaurantProvider with ChangeNotifier {
       debugPrint('   Restaurant: ${_restaurant!.nom}');
       debugPrint('   Plats: ${_dishes.length}');
       debugPrint('');
-
     } catch (e, stackTrace) {
       debugPrint('');
       debugPrint('❌ === ERREUR validateRestaurantQRCode ===');
@@ -593,12 +590,12 @@ class RestaurantProvider with ChangeNotifier {
       _setError(e.toString());
 
       rethrow;
-
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
+
   /// ✅ Réinitialiser uniquement les données, SANS toucher à Pusher
   void _resetDataOnly() {
     debugPrint('🔄 Réinitialisation des données (Pusher conservé)...');
@@ -640,6 +637,7 @@ class RestaurantProvider with ChangeNotifier {
     _scannedQRCode = null;
     notifyListeners();
   }
+
   Future<void> loadAllInitialData({required int restaurantId}) async {
     // Si déjà en cours de chargement, on évite les doublons
     if (_isLoading) {
@@ -664,12 +662,15 @@ class RestaurantProvider with ChangeNotifier {
 
       // ===== MENU & RESTAURANT (BLOQUANT) =====
       debugPrint('📡 Chargement du menu...');
-      final menuData = await _apiService.getRestaurantMenu(
+      final menuData = await _apiService
+          .getRestaurantMenu(
         restaurantId: restaurantId,
-      ).timeout(
+      )
+          .timeout(
         const Duration(seconds: 15),
         onTimeout: () {
-          throw Exception('Timeout: Impossible de charger le menu du restaurant');
+          throw Exception(
+              'Timeout: Impossible de charger le menu du restaurant');
         },
       );
 
@@ -714,7 +715,6 @@ class RestaurantProvider with ChangeNotifier {
 
       _hasApiError = false;
       _clearError();
-
     } catch (e, stackTrace) {
       debugPrint('');
       debugPrint('❌ === ERREUR loadAllInitialData ===');
@@ -733,9 +733,9 @@ class RestaurantProvider with ChangeNotifier {
       _flashInfos = [];
 
       rethrow;
-
     } finally {
-      if (_isLoading) { // Seulement si pas déjà fait
+      if (_isLoading) {
+        // Seulement si pas déjà fait
         _isLoading = false;
         notifyListeners();
       }
@@ -770,7 +770,8 @@ class RestaurantProvider with ChangeNotifier {
     try {
       debugPrint('📡 [Background] Chargement des notifications...');
       await loadNotifications();
-      debugPrint('✅ [Background] ${_notifications.length} notifications chargées');
+      debugPrint(
+          '✅ [Background] ${_notifications.length} notifications chargées');
     } catch (e) {
       debugPrint("⚠️ [Background] Notifications non disponibles: $e");
       _notifications = [];
@@ -797,7 +798,6 @@ class RestaurantProvider with ChangeNotifier {
     }
   }
 
-
   Future<void> refreshAllData() async {
     if (_scannedQRCode == null) {
       debugPrint('⚠️ Impossible de rafraîchir : aucun QR code scanné');
@@ -821,7 +821,6 @@ class RestaurantProvider with ChangeNotifier {
       await loadAllInitialData(restaurantId: restaurantId);
 
       debugPrint('✅ Rafraîchissement terminé');
-
     } catch (e) {
       debugPrint('❌ Erreur lors du refresh: $e');
       _setError('Impossible de rafraîchir les données');
@@ -829,6 +828,7 @@ class RestaurantProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
   Future<void> loadOrders() async {
     _isLoadingOrders = true;
     notifyListeners();
@@ -930,7 +930,8 @@ class RestaurantProvider with ChangeNotifier {
       if (_cartItems.isEmpty) throw Exception('Panier vide');
       if (_restaurant == null) throw Exception('Restaurant non défini');
 
-      if (orderType == 'sur place' && (tableNumber == null || tableNumber.trim().isEmpty)) {
+      if (orderType == 'sur place' &&
+          (tableNumber == null || tableNumber.trim().isEmpty)) {
         throw Exception('Numéro de table obligatoire');
       }
 
@@ -983,7 +984,7 @@ class RestaurantProvider with ChangeNotifier {
       }
 
       final response = await http.post(
-        Uri.parse('https://dashboard-noogo.quickdev-it.com/api/commandes'),
+        Uri.parse(ApiConfig.getApiUrl('commandes')),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'Accept': 'application/json',
@@ -996,10 +997,12 @@ class RestaurantProvider with ChangeNotifier {
 
         final newOrder = Order(
           id: responseData['id'] ?? DateTime.now().millisecondsSinceEpoch,
-          items: _cartItems.map((item) => OrderItem(
-            dish: item.dish,
-            quantity: item.quantity,
-          )).toList(),
+          items: _cartItems
+              .map((item) => OrderItem(
+                    dish: item.dish,
+                    quantity: item.quantity,
+                  ))
+              .toList(),
           status: OrderStatus.pending,
           orderDate: DateTime.now(),
           paymentMethod: paymentMethod == 'cash' ? 'Espèces' : 'Mobile Money',
@@ -1019,7 +1022,6 @@ class RestaurantProvider with ChangeNotifier {
         notifyListeners();
 
         return newOrder.id;
-
       } else {
         String errorMessage = 'Erreur serveur ${response.statusCode}';
 
@@ -1036,7 +1038,6 @@ class RestaurantProvider with ChangeNotifier {
 
         throw Exception(errorMessage);
       }
-
     } catch (e) {
       rethrow;
     }
@@ -1051,7 +1052,7 @@ class RestaurantProvider with ChangeNotifier {
     if (_cartItems.isEmpty) return "Panier vide";
     return _cartItems
         .map((item) =>
-    "${item.dish.name} x${item.quantity} = ${item.totalPrice.toStringAsFixed(0)} FCFA")
+            "${item.dish.name} x${item.quantity} = ${item.totalPrice.toStringAsFixed(0)} FCFA")
         .join(', ');
   }
 
@@ -1082,9 +1083,11 @@ class RestaurantProvider with ChangeNotifier {
     debugPrint('=== ÉTAT DU PROVIDER ===');
     debugPrint('Restaurant: ${_restaurant?.name ?? "Aucun"}');
     debugPrint('Commandes: ${_orders.length}');
-    debugPrint('Notifications: ${_notifications.length} (${unreadNotificationsCount} non lues)');
+    debugPrint(
+        'Notifications: ${_notifications.length} (${unreadNotificationsCount} non lues)');
     debugPrint('Pusher connecté: $_isRealtimeConnected');
-    debugPrint('Auto-refresh: ${_autoRefreshTimer?.isActive ?? false ? "Actif" : "Inactif"}');
+    debugPrint(
+        'Auto-refresh: ${_autoRefreshTimer?.isActive ?? false ? "Actif" : "Inactif"}');
     debugPrint('========================');
   }
 
@@ -1092,6 +1095,7 @@ class RestaurantProvider with ChangeNotifier {
     _isLoading = value;
     notifyListeners();
   }
+
   /// ✅ Réinitialisation COMPLÈTE (y compris Pusher) - utilisé lors de la déconnexion
   void resetAllData() {
     debugPrint('🔄 Réinitialisation COMPLÈTE (avec déconnexion Pusher)...');

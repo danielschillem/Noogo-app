@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:http/http.dart' as http;
 import '../models/restaurant.dart';
@@ -8,75 +9,108 @@ import '../models/category.dart';
 import '../models/order.dart';
 import '../models/app_notification.dart';
 import '../config/api_config.dart';
+import 'auth_service.dart';
 
 class ApiService {
-
   static String get baseUrl => ApiConfig.baseUrl;
-
-  static const Map<String, String> headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  };
 
   ApiService._internal();
   static final ApiService instance = ApiService._internal();
   factory ApiService() => instance;
 
-  get stackTrace => null;
+  /// Construit les headers avec le token Bearer si l'utilisateur est connecté
+  Future<Map<String, String>> _buildHeaders() async {
+    final token = await AuthService.getToken();
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    };
+  }
 
   // Méthodes génériques GET / POST
   Future<Map<String, dynamic>?> _get(String endpoint) async {
     final uri = Uri.parse('$baseUrl$endpoint');
-    try {
-      debugPrint('📡 API GET: $uri');
+    const maxRetries = 2;
+    int attempt = 0;
 
-      final response = await http.get(uri, headers: headers).timeout(
-        const Duration(seconds: 15),
-        onTimeout: () {
-          throw Exception('Timeout: Impossible de se connecter à l\'API');
-        },
-      );
+    while (true) {
+      try {
+        debugPrint('📡 API GET: $uri${attempt > 0 ? ' (retry $attempt)' : ''}');
 
-      debugPrint('📡 Réponse: ${response.statusCode}');
+        final headers = await _buildHeaders();
+        final response = await http.get(uri, headers: headers).timeout(
+          const Duration(seconds: 15),
+          onTimeout: () {
+            throw Exception('Timeout: Impossible de se connecter à l\'API');
+          },
+        );
 
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        if (response.body.isEmpty) return {};
-        return json.decode(response.body) as Map<String, dynamic>;
-      } else {
+        debugPrint('📡 Réponse: ${response.statusCode}');
+
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          if (response.body.isEmpty) return {};
+          return json.decode(response.body) as Map<String, dynamic>;
+        } else {
+          debugPrint(
+              'Erreur HTTP GET: ${response.statusCode} - ${response.body}');
+          throw Exception('Erreur API (GET): ${response.statusCode}');
+        }
+      } on SocketException catch (e) {
+        attempt++;
         debugPrint(
-            'Erreur HTTP GET: ${response.statusCode} - ${response.body}');
-        throw Exception('Erreur API (GET): ${response.statusCode}');
+            '⚠️ Réseau indisponible GET (tentative $attempt/$maxRetries): $e');
+        if (attempt > maxRetries) {
+          throw Exception(
+              'Impossible de se connecter au serveur. Vérifiez votre connexion.');
+        }
+        await Future.delayed(Duration(seconds: attempt * 2));
+      } catch (e) {
+        debugPrint('Erreur GET: $e');
+        rethrow;
       }
-    } catch (e) {
-      debugPrint('Erreur GET: $e');
-      rethrow;
     }
   }
 
   Future<Map<String, dynamic>?> _post(
       String endpoint, Map<String, dynamic> data) async {
     final uri = Uri.parse('$baseUrl$endpoint');
-    try {
-      final response = await http
-          .post(uri, headers: headers, body: json.encode(data))
-          .timeout(
-        const Duration(seconds: 15),
-        onTimeout: () {
-          throw Exception('Timeout: Impossible de se connecter à l\'API');
-        },
-      );
+    const maxRetries = 2;
+    int attempt = 0;
 
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        if (response.body.isEmpty) return {};
-        return json.decode(response.body) as Map<String, dynamic>;
-      } else {
+    while (true) {
+      try {
+        final headers = await _buildHeaders();
+        final response = await http
+            .post(uri, headers: headers, body: json.encode(data))
+            .timeout(
+          const Duration(seconds: 15),
+          onTimeout: () {
+            throw Exception('Timeout: Impossible de se connecter à l\'API');
+          },
+        );
+
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          if (response.body.isEmpty) return {};
+          return json.decode(response.body) as Map<String, dynamic>;
+        } else {
+          debugPrint(
+              'Erreur HTTP POST: ${response.statusCode} - ${response.body}');
+          throw Exception('Erreur API (POST): ${response.statusCode}');
+        }
+      } on SocketException catch (e) {
+        attempt++;
         debugPrint(
-            'Erreur HTTP POST: ${response.statusCode} - ${response.body}');
-        throw Exception('Erreur API (POST): ${response.statusCode}');
+            '⚠️ Réseau indisponible POST (tentative $attempt/$maxRetries): $e');
+        if (attempt > maxRetries) {
+          throw Exception(
+              'Impossible de se connecter au serveur. Vérifiez votre connexion.');
+        }
+        await Future.delayed(Duration(seconds: attempt * 2));
+      } catch (e) {
+        debugPrint('Erreur POST: $e');
+        rethrow;
       }
-    } catch (e) {
-      debugPrint('Erreur POST: $e');
-      rethrow;
     }
   }
 
@@ -86,7 +120,6 @@ class ApiService {
   Future<RestaurantMenuData> getRestaurantMenu(
       {required int restaurantId}) async {
     try {
-
       debugPrint('📡 === API getRestaurantMenu ===');
       debugPrint('   - Restaurant ID: $restaurantId');
       debugPrint('   - URL complète: $baseUrl/restaurant/$restaurantId/menu');
@@ -153,14 +186,12 @@ class ApiService {
         dishesOfTheDay: dishesOfTheDay,
         categories: categories,
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('❌ ERREUR ApiService.getRestaurantMenu: $e');
       debugPrint('📍 Stack: $stackTrace');
-      debugPrint('ApiService-getRestaurantMenu: $e');
       rethrow;
     }
   }
-
 
 // Flash infos (offres actives)
 
@@ -192,7 +223,6 @@ class ApiService {
       }
 
       return list.map((json) => FlashInfo.fromJson(json)).toList();
-
     } catch (e, stackTrace) {
       debugPrint('⚠️ ApiService-getFlashInfos: Erreur ($e)');
       debugPrint('📍 Stack: $stackTrace');

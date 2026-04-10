@@ -118,7 +118,9 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const CustomAppBar(title: 'Menu',),
+      appBar: const CustomAppBar(
+        title: 'Menu',
+      ),
       body: Consumer<RestaurantProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading && !provider.hasData) {
@@ -323,7 +325,8 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
               child: Text(
                 name,
                 style: AppTextStyles.caption.copyWith(
-                  color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                  color:
+                      isSelected ? AppColors.primary : AppColors.textSecondary,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 ),
                 textAlign: TextAlign.center,
@@ -345,6 +348,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
             .toList();
 
     if (filteredDishes.isEmpty) {
+      final isFiltered = _selectedCategoryId != 0;
       return Padding(
         padding: const EdgeInsets.all(32),
         child: Center(
@@ -357,10 +361,19 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
               ),
               const SizedBox(height: 16),
               Text(
-                'Aucun plat disponible dans cette catégorie',
+                isFiltered
+                    ? 'Aucun plat dans cette catégorie'
+                    : 'Le menu est vide pour le moment',
                 style: AppTextStyles.subtitle,
                 textAlign: TextAlign.center,
               ),
+              if (isFiltered) ...[
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => setState(() => _selectedCategoryId = 0),
+                  child: const Text('Voir tous les plats'),
+                ),
+              ],
             ],
           ),
         ),

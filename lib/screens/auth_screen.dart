@@ -1,9 +1,6 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 import '../utils/app_colors.dart';
-import '../models/user.dart';
 import '../utils/app_text_styles.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -26,6 +23,25 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
+  // ===== VALIDATORS =====
+
+  /// Numéro Burkina Faso : 8 chiffres optionnellement précédés de +226 ou 00226
+  String? _validatePhone(String? value) {
+    if (value == null || value.trim().isEmpty)
+      return 'Entrez votre numéro de téléphone';
+    final cleaned = value.replaceAll(RegExp(r'[\s\-\.]'), '');
+    final regex = RegExp(r'^(?:\+?226|00226)?[0-9]{8}$');
+    if (!regex.hasMatch(cleaned)) return 'Numéro invalide (ex: 70 12 34 56)';
+    return null;
+  }
+
+  String? _validateEmail(String? value) {
+    if (value == null || value.trim().isEmpty) return null; // facultatif
+    final regex = RegExp(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$');
+    if (!regex.hasMatch(value.trim())) return 'Adresse email invalide';
+    return null;
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -45,43 +61,6 @@ class _AuthScreenState extends State<AuthScreen> {
         duration: const Duration(seconds: 2),
       ),
     );
-  }
-
-  /// ✅ Sauvegarde des infos utilisateur et du token
-  Future<void> _saveUserData(Map<String, dynamic> data) async {
-    final prefs = await SharedPreferences.getInstance();
-    try {
-      dynamic payload = data['data'] ?? data;
-
-      dynamic userObj = payload is Map && payload['user'] != null
-          ? payload['user']
-          : data['user'] ?? payload;
-
-      if (userObj != null) {
-        if (userObj is Map<String, dynamic>) {
-          await prefs.setString('user', jsonEncode(userObj));
-        } else {
-          try {
-            final json = (userObj as dynamic).toJson();
-            await prefs.setString('user', jsonEncode(json));
-          } catch (_) {
-
-            await prefs.setString('user', jsonEncode(userObj));
-          }
-        }
-      }
-
-      final tokenVal = (payload is Map && payload['token'] != null)
-          ? payload['token']
-          : data['token'];
-
-      if (tokenVal != null) {
-        await prefs.setString('token', tokenVal.toString());
-      }
-    } catch (e) {
-      // Do not crash saving user data; log if needed.
-      debugPrint('Warning: could not save user data: $e');
-    }
   }
 
   Future<void> _handleSubmit() async {
@@ -110,8 +89,7 @@ class _AuthScreenState extends State<AuthScreen> {
       }
 
       if (result['success'] == true) {
-        await _saveUserData(result); // ✅ Enregistrement local
-
+        // AuthService.login/register sauvegarde déjà le token et l'utilisateur
         _showMessage(
           _isLogin ? 'Connexion réussie ' : 'Inscription réussie ',
           isError: false,
@@ -243,16 +221,20 @@ class _AuthScreenState extends State<AuthScreen> {
                         controller: _nameController,
                         label: 'Nom complet',
                         icon: Icons.person,
-                        validator: (value) =>
-                            value!.isEmpty ? 'Entrez votre nom' : null,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty)
+                            return 'Entrez votre nom';
+                          if (value.trim().length < 2)
+                            return 'Nom trop court (min. 2 caractères)';
+                          return null;
+                        },
                       ),
                     const SizedBox(height: 16),
                     _buildTextField(
                       controller: _phoneController,
                       label: 'Téléphone',
                       icon: Icons.phone,
-                      validator: (value) =>
-                          value!.isEmpty ? 'Entrez votre numéro' : null,
+                      validator: _validatePhone,
                     ),
                     const SizedBox(height: 16),
                     if (!_isLogin)
@@ -260,6 +242,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         controller: _emailController,
                         label: 'Email (facultatif)',
                         icon: Icons.email,
+                        validator: _validateEmail,
                       ),
                     const SizedBox(height: 16),
                     _buildTextField(
