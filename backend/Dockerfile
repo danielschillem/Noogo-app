@@ -3,7 +3,7 @@
 # Optimisée pour Laravel en production
 # Docs : https://serversideup.net/open-source/docker-php/
 # ============================================================
-FROM serversideup/php:8.3-fpm-nginx
+FROM serversideup/php:8.4-fpm-nginx
 
 # Passer en root pour installer les dépendances
 USER root
