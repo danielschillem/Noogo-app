@@ -1,39 +1,43 @@
-FROM php:8.3-cli
+# ============================================================
+# Image serversideup/php — PHP 8.3 + FPM + Nginx
+# Optimisée pour Laravel en production
+# Docs : https://serversideup.net/open-source/docker-php/
+# ============================================================
+FROM serversideup/php:8.3-fpm-nginx
 
-# ── Dépendances système + extensions PHP ─────────────────────
-# Note: dom, xml, tokenizer, curl sont deja inclus dans l'image PHP officielle
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git zip unzip libzip-dev \
-    libpng-dev libonig-dev libxml2-dev \
-    libpq-dev \
-    && docker-php-ext-install \
-    pdo pdo_pgsql pdo_mysql \
-    mbstring bcmath pcntl zip \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Passer en root pour installer les dépendances
+USER root
+
+# ── Extensions supplémentaires (pgsql, redis optionnel) ──────
+RUN install-php-extensions pdo_pgsql pdo_mysql
 
 # ── Composer ─────────────────────────────────────────────────
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-WORKDIR /app
+WORKDIR /var/www/html
 
-# ── Dépendances PHP (séparé pour le cache Docker) ────────────
+# ── Dépendances PHP ──────────────────────────────────────────
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts --ignore-platform-reqs
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
-# ── Code source ───────────────────────────────────────────────
+# ── Code source ──────────────────────────────────────────────
 COPY . .
 
-# ── Post-install scripts ──────────────────────────────────────
-RUN composer run-script post-autoload-dump
+# ── Post-install ─────────────────────────────────────────────
+RUN composer run-script post-autoload-dump 2>/dev/null || true
 
-# ── Permissions ───────────────────────────────────────────────
+# ── Permissions Laravel ──────────────────────────────────────
 RUN mkdir -p storage/logs storage/framework/cache \
     storage/framework/sessions storage/framework/views \
     bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# ── Port exposé (Render injecte $PORT=10000 par défaut) ──────
-EXPOSE 10000
+# ── Script de démarrage ──────────────────────────────────────
+COPY start.sh /start-noogo.sh
+RUN chmod +x /start-noogo.sh
 
-# ── Démarrage ─────────────────────────────────────────────────
-CMD ["/bin/sh", "start.sh"]
+# Le port 8080 est le défaut de serversideup (Nginx interne)
+EXPOSE 8080
+
+CMD ["/start-noogo.sh"]
