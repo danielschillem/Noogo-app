@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Upload, X, MapPin, Phone, Mail, Clock, FileText, Image, Navigation } from 'lucide-react';
+import { ArrowLeft, Upload, X, MapPin, Phone, Mail, Clock, FileText, Image, Navigation, Plus } from 'lucide-react';
 import { restaurantsApi } from '../../services/api';
 import type { Restaurant } from '../../types';
 
@@ -52,9 +52,16 @@ export default function RestaurantFormPage() {
     const [isLoading, setIsLoading] = useState(isEdit);
     const [isSaving, setIsSaving] = useState(false);
     const [isLocating, setIsLocating] = useState(false);
-    const [errors, setErrors] = useState<Partial<FormData> & { logo?: string; general?: string }>({});
+    const [errors, setErrors] = useState<Partial<FormData> & { logo?: string; gallery?: string; general?: string }>({});
+
+    // ── Galerie ──────────────────────────────────────────────────────────
+    const [existingImages, setExistingImages] = useState<string[]>([]);
+    const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
+    const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
+    const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
 
     const logoInputRef = useRef<HTMLInputElement>(null);
+    const galleryInputRef = useRef<HTMLInputElement>(null);
 
     // ── Charger le restaurant en mode édition ──────────────────────────────
     useEffect(() => {
@@ -75,6 +82,7 @@ export default function RestaurantFormPage() {
                 });
                 if (r.logo_url) setExistingLogoUrl(buildImageUrl(r.logo_url));
                 else if (r.logo) setExistingLogoUrl(buildImageUrl(r.logo));
+                setExistingImages(Array.isArray(r.images) ? r.images : []);
             } catch {
                 setErrors({ general: 'Impossible de charger le restaurant.' });
             } finally {
@@ -109,6 +117,40 @@ export default function RestaurantFormPage() {
         setLogoPreview(null);
         setExistingLogoUrl(null);
         if (logoInputRef.current) logoInputRef.current.value = '';
+    };
+
+    // ── Gestion de la galerie ─────────────────────────────────────────────
+    const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files ?? []);
+        if (!files.length) return;
+
+        const remaining = 10 - existingImages.length - newImageFiles.length;
+        if (remaining <= 0) {
+            setErrors(prev => ({ ...prev, gallery: 'Maximum 10 photos autorisées.' }));
+            return;
+        }
+        const accepted = files.slice(0, remaining);
+        const oversized = accepted.filter(f => f.size > 2 * 1024 * 1024);
+        if (oversized.length > 0) {
+            setErrors(prev => ({ ...prev, gallery: `${oversized.length} photo(s) dépassent la limite de 2 Mo.` }));
+            return;
+        }
+        setErrors(prev => ({ ...prev, gallery: undefined }));
+        const previews = accepted.map(f => URL.createObjectURL(f));
+        setNewImageFiles(prev => [...prev, ...accepted]);
+        setNewImagePreviews(prev => [...prev, ...previews]);
+        if (galleryInputRef.current) galleryInputRef.current.value = '';
+    };
+
+    const removeExistingImage = (path: string) => {
+        setExistingImages(prev => prev.filter(p => p !== path));
+        setImagesToDelete(prev => [...prev, path]);
+    };
+
+    const removeNewImage = (index: number) => {
+        URL.revokeObjectURL(newImagePreviews[index]);
+        setNewImageFiles(prev => prev.filter((_, i) => i !== index));
+        setNewImagePreviews(prev => prev.filter((_, i) => i !== index));
     };
 
     // ── Validation ───────────────────────────────────────────────────────
@@ -153,6 +195,8 @@ export default function RestaurantFormPage() {
             if (form.latitude.trim()) fd.append('latitude', form.latitude.trim());
             if (form.longitude.trim()) fd.append('longitude', form.longitude.trim());
             if (logoFile) fd.append('logo', logoFile);
+            newImageFiles.forEach(f => fd.append('images[]', f));
+            imagesToDelete.forEach(p => fd.append('delete_images[]', p));
 
             if (isEdit && id) {
                 await restaurantsApi.update(parseInt(id), fd);
@@ -269,6 +313,76 @@ export default function RestaurantFormPage() {
                             <p className="text-xs text-gray-400 mt-2">JPEG, PNG, GIF ou WebP · Max 2 Mo</p>
                             {errors.logo && <p className="text-xs text-red-600 mt-1">{errors.logo}</p>}
                         </div>
+                    </div>
+                </section>
+
+                {/* ── Galerie Photos ── */}
+                <section className="bg-white rounded-xl border border-gray-200 p-6">
+                    <h2 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <Image className="h-4 w-4 text-orange-500" />
+                        Galerie photos
+                        <span className="ml-auto text-xs font-normal text-gray-400">
+                            {existingImages.length + newImageFiles.length}/10
+                        </span>
+                    </h2>
+
+                    {(existingImages.length > 0 || newImagePreviews.length > 0) && (
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-4">
+                            {existingImages.map((path) => (
+                                <div key={path} className="relative group aspect-square">
+                                    <img
+                                        src={buildImageUrl(path)}
+                                        alt=""
+                                        className="w-full h-full object-cover rounded-lg border border-gray-200"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => removeExistingImage(path)}
+                                        className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </button>
+                                </div>
+                            ))}
+                            {newImagePreviews.map((preview, i) => (
+                                <div key={i} className="relative group aspect-square">
+                                    <img
+                                        src={preview}
+                                        alt=""
+                                        className="w-full h-full object-cover rounded-lg border-2 border-orange-300"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => removeNewImage(i)}
+                                        className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </button>
+                                    <span className="absolute bottom-1 left-1 text-xs bg-orange-500 text-white px-1 py-0.5 rounded leading-tight">Nouveau</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    <div>
+                        <input
+                            ref={galleryInputRef}
+                            type="file"
+                            accept="image/jpeg,image/png,image/jpg,image/webp"
+                            multiple
+                            onChange={handleGalleryChange}
+                            className="hidden"
+                            id="gallery-upload"
+                        />
+                        <label
+                            htmlFor="gallery-upload"
+                            className="inline-flex items-center gap-2 px-4 py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50 cursor-pointer transition-colors"
+                        >
+                            <Plus className="h-4 w-4" />
+                            Ajouter des photos
+                        </label>
+                        <p className="text-xs text-gray-400 mt-2">JPEG, PNG ou WebP · Max 2 Mo par photo · 10 photos maximum</p>
+                        {errors.gallery && <p className="text-xs text-red-600 mt-1">{errors.gallery}</p>}
                     </div>
                 </section>
 

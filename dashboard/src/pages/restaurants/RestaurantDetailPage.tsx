@@ -15,6 +15,7 @@ import {
     Power,
     Download,
     Printer,
+    Image,
 } from 'lucide-react';
 import { restaurantsApi } from '../../services/api';
 import type { Restaurant } from '../../types';
@@ -278,6 +279,30 @@ export default function RestaurantDetailPage() {
                     </Link>
                 </div>
             </div>
+
+            {/* Galerie photos */}
+            {restaurant.images && restaurant.images.length > 0 && (
+                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                    <h2 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <Image className="h-4 w-4 text-orange-500" />
+                        Galerie photos
+                        <span className="ml-2 text-xs font-normal text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                            {restaurant.images.length} photo{restaurant.images.length > 1 ? 's' : ''}
+                        </span>
+                    </h2>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        {restaurant.images.map((path, i) => (
+                            <div key={i} className="aspect-square rounded-xl overflow-hidden border border-gray-100">
+                                <img
+                                    src={buildImageUrl(path)}
+                                    alt={`Photo ${i + 1}`}
+                                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* QR Code */}
             <div className="bg-white rounded-xl border border-gray-200 p-6">

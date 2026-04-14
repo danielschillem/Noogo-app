@@ -147,6 +147,8 @@ class RestaurantController extends Controller
             'is_open_override' => 'nullable|boolean',
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'delete_images' => 'nullable|array',
+            'delete_images.*' => 'nullable|string|max:500',
         ]);
 
         if ($validator->fails()) {
@@ -157,7 +159,7 @@ class RestaurantController extends Controller
             ], 422);
         }
 
-        $data = $request->except(['logo', 'images']);
+        $data = $request->except(['logo', 'images', 'delete_images']);
 
         // Handle logo upload
         if ($request->hasFile('logo')) {
@@ -168,19 +170,31 @@ class RestaurantController extends Controller
             $data['logo'] = $request->file('logo')->store('restaurants/logos', 'public');
         }
 
-        // Handle images upload
-        if ($request->hasFile('images')) {
-            // Delete old images
-            if ($restaurant->images) {
-                foreach ($restaurant->images as $oldImage) {
-                    Storage::disk('public')->delete($oldImage);
+        // Handle image gallery (append new + delete specified)
+        $currentImages = $restaurant->images ?? [];
+        $imagesModified = false;
+
+        // Delete specified images (security: only delete paths owned by this restaurant)
+        if ($request->has('delete_images') && is_array($request->delete_images)) {
+            foreach ($request->delete_images as $path) {
+                if (in_array($path, $currentImages, true)) {
+                    Storage::disk('public')->delete($path);
+                    $currentImages = array_values(array_filter($currentImages, fn($img) => $img !== $path));
+                    $imagesModified = true;
                 }
             }
-            $images = [];
+        }
+
+        // Append new images (do not replace existing)
+        if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
-                $images[] = $image->store('restaurants/images', 'public');
+                $currentImages[] = $image->store('restaurants/images', 'public');
             }
-            $data['images'] = $images;
+            $imagesModified = true;
+        }
+
+        if ($imagesModified) {
+            $data['images'] = $currentImages;
         }
 
         $restaurant->update($data);
