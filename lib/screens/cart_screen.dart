@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/order.dart';
+import '../screens/payment_screen.dart';
+import '../services/payment_service.dart';
 import '../services/restaurant_provider.dart';
 import '../utils/app_colors.dart';
 import '../utils/app_text_styles.dart';
@@ -24,7 +26,6 @@ class _CartScreenState extends State<CartScreen>
   final _tableNumberController = TextEditingController();
   final _phoneNumberController = TextEditingController();
   final _mobileMoneyNumberController = TextEditingController();
-  final _otpController = TextEditingController();
 
   // Form keys pour validation inline
   final _phoneFormKey = GlobalKey<FormState>();
@@ -53,7 +54,6 @@ class _CartScreenState extends State<CartScreen>
     _tableNumberController.dispose();
     _phoneNumberController.dispose();
     _mobileMoneyNumberController.dispose();
-    _otpController.dispose();
     super.dispose();
   }
 
@@ -389,7 +389,8 @@ class _CartScreenState extends State<CartScreen>
               color: AppColors.error.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.delete_outline, color: AppColors.error, size: 18),
+            child: const Icon(Icons.delete_outline,
+                color: AppColors.error, size: 18),
           ),
         ),
       ],
@@ -634,11 +635,12 @@ class _CartScreenState extends State<CartScreen>
           await _askMobileMoneyNumber(mobileMoneyProvider);
       if (mobileMoneyNumber == null) return;
 
-      // Étape 5.2: Générer et saisir l'OTP
+      // Étape 5.2: Paiement Mobile Money via PaymentScreen
       final otpConfirmed = await _processOTPPayment(
         mobileMoneyProvider: mobileMoneyProvider,
         phoneNumber: mobileMoneyNumber,
         amount: provider.cartTotal,
+        provider: provider,
       );
       if (otpConfirmed != true) return;
     }
@@ -1155,298 +1157,32 @@ class _CartScreenState extends State<CartScreen>
     );
   }
 
-  // Étape 5.2: Processus de paiement OTP
+  // Étape 5.2: Processus de paiement OTP — navigue vers PaymentScreen
   Future<bool?> _processOTPPayment({
     required String mobileMoneyProvider,
     required String phoneNumber,
     required double amount,
+    required RestaurantProvider provider,
   }) async {
-    // Étape 1: Envoyer la demande de paiement (simulation)
-    final otpSent =
-        await _sendPaymentRequest(mobileMoneyProvider, phoneNumber, amount);
-    if (!otpSent) return false;
-
-    // Étape 2: Demander l'OTP
-    final otp = await _askOTP(mobileMoneyProvider, phoneNumber);
-    if (otp == null) return false;
-
-    // Étape 3: Vérifier l'OTP (simulation)
-    final verified = await _verifyOTP(otp, mobileMoneyProvider);
-    return verified;
-  }
-
-  // Envoyer la demande de paiement
-  Future<bool> _sendPaymentRequest(
-      String provider, String phone, double amount) async {
-    // Afficher dialogue de chargement
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const PopScope(
-        canPop: false,
-        child: Center(
-          child: Card(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(color: AppColors.primary),
-                  SizedBox(height: 16),
-                  Text('Envoi de la demande de paiement...'),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-
-    // Simulation de l'envoi (remplacer par votre API réelle)
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (!mounted) return false;
-    Navigator.of(context).pop(); // Fermer le dialogue de chargement
-
-    // Afficher confirmation
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.check_circle, color: AppColors.success),
-            SizedBox(width: 8),
-            Text('Demande envoyée'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Une demande de paiement de ${amount.toStringAsFixed(0)} FCFA a été envoyée au numéro:',
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.phone_android, color: AppColors.primary),
-                  const SizedBox(width: 8),
-                  Text(
-                    phone,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Veuillez composer le code USSD affiché sur votre téléphone et entrer votre code PIN pour générer l\'OTP.',
-              style: TextStyle(
-                fontSize: 13,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('J\'ai reçu l\'OTP'),
-          ),
-        ],
-      ),
-    );
-
-    return true;
-  }
-
-  // Demander l'OTP
-  Future<String?> _askOTP(String provider, String phone) async {
-    _otpController.clear();
-    return showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.lock, color: AppColors.primary),
-            SizedBox(width: 8),
-            Text('Code OTP'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Entrez le code OTP reçu sur le $phone',
-              style: const TextStyle(fontSize: 14),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _otpController,
-              decoration: const InputDecoration(
-                labelText: 'Code OTP',
-                hintText: 'Ex: 123456',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.pin),
-              ),
-              keyboardType: TextInputType.number,
-              maxLength: 6,
-              autofocus: true,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 8,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextButton.icon(
-              onPressed: () async {
-                // Renvoyer l'OTP
-                _showSnackBar('Code OTP renvoyé', isError: false);
-              },
-              icon: const Icon(Icons.refresh),
-              label: const Text('Renvoyer le code'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, null),
-            child: const Text('Annuler'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final otp = _otpController.text.trim();
-              if (otp.length == 6) {
-                Navigator.pop(context, otp);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Le code OTP doit contenir 6 chiffres'),
-                    backgroundColor: AppColors.error,
-                  ),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Valider'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Vérifier l'OTP
-  Future<bool> _verifyOTP(String otp, String provider) async {
-    // Afficher dialogue de vérification
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const PopScope(
-        canPop: false,
-        child: Center(
-          child: Card(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(color: AppColors.primary),
-                  SizedBox(height: 16),
-                  Text('Vérification du paiement...'),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-
-    // Simulation de la vérification (remplacer par votre API réelle)
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (!mounted) return false;
-    Navigator.of(context).pop(); // Fermer le dialogue de vérification
-
-    // Pour la démo, on accepte tous les codes de 6 chiffres
-    // Dans votre implémentation réelle, vérifiez avec votre backend
-    final isValid = otp.length == 6;
-
-    if (!isValid) {
-      _showSnackBar('Code OTP invalide', isError: true);
+    final restaurantId = provider.restaurant?.id;
+    if (restaurantId == null) {
+      _showSnackBar('Restaurant non identifié. Veuillez rescanner le QR code.',
+          isError: true);
       return false;
     }
 
-    // Afficher confirmation de paiement réussi
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.success.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.check_circle,
-                color: AppColors.success,
-                size: 64,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Paiement réussi !',
-              style: AppTextStyles.heading2.copyWith(color: AppColors.success),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Votre paiement a été validé avec succès',
-              style: AppTextStyles.bodySmall
-                  .copyWith(color: AppColors.textSecondary),
-              textAlign: TextAlign.center,
-            ),
-          ],
+    final result = await Navigator.of(context).push<PaymentRecord?>(
+      MaterialPageRoute(
+        builder: (_) => PaymentScreen(
+          restaurantId: restaurantId,
+          provider: mobileMoneyProvider,
+          phone: phoneNumber,
+          amount: amount.toInt(),
         ),
-        actions: [
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              child: const Text('Continuer'),
-            ),
-          ),
-        ],
       ),
     );
 
-    return true;
+    return result != null && result.status.isCompleted;
   }
 
   // Étape 6: Confirmation finale

@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\FlashInfoController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\StaffController;
+use App\Http\Controllers\Api\PaymentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -38,6 +39,20 @@ Route::prefix('restaurant')->group(function () {
 
 // Offres actives (endpoint public pour Flutter)
 Route::get('/offres/actives/{restaurantId}', [FlashInfoController::class, 'actives']);
+
+// ============================================================================
+// PAIEMENT MOBILE MONEY (public — l'app Flutter envoie sans token)
+// ============================================================================
+// Webhook (callback opérateur/CinetPay) — exclu de CSRF automatiquement (api.php)
+Route::post('/payments/webhook', [PaymentController::class, 'webhook']);
+
+// Initiation + OTP + polling : accessible sans connexion (app mobile client)
+Route::middleware('throttle:30,1')->group(function () {
+    Route::post('/payments/initiate', [PaymentController::class, 'initiate']);
+    Route::post('/payments/{payment}/confirm-otp', [PaymentController::class, 'confirmOtp']);
+    Route::get('/payments/{payment}/status', [PaymentController::class, 'status']);
+    Route::delete('/payments/{payment}', [PaymentController::class, 'cancel']);
+});
 
 // ============================================================================
 // ENDPOINT PUBLIC COMMANDES (app mobile Flutter, sans authentification)
