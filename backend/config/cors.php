@@ -18,11 +18,15 @@ return [
         env('FRONTEND_URL', 'http://localhost:5173'),
         'http://localhost:5173',
         'http://localhost:3000',
+        'http://localhost:8080',
     ],
 
     // Autorise uniquement le sous-domaine Netlify exact défini dans NETLIFY_SUBDOMAIN (ex: noogo-dashboard)
+    // + tous les ports localhost pour le dev Flutter web
     'allowed_origins_patterns' => [
         '#^https://' . preg_quote(env('NETLIFY_SUBDOMAIN', 'noogo'), '#') . '\.netlify\.app$#',
+        '#^http://localhost(:\d+)?$#',
+        '#^http://127\.0\.0\.1(:\d+)?$#',
     ],
 
     'allowed_headers' => ['*'],
