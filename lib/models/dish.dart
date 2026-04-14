@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../config/api_config.dart';
+import '../utils/app_logger.dart';
 
 class Dish {
   final int id;
@@ -75,13 +76,12 @@ class Dish {
 
       return dish;
     } catch (e, stackTrace) {
-      // Debug uniquement en mode développement
-      if (kDebugMode) {
-        debugPrint('❌ ERREUR CRITIQUE parsing Dish');
-        debugPrint('JSON reçu: $json');
-        debugPrint('Erreur: $e');
-        debugPrint('StackTrace: $stackTrace');
-      }
+      AppLogger.error(
+        'Erreur critique parsing Dish — JSON: $json',
+        tag: 'Dish',
+        error: e,
+        stackTrace: stackTrace,
+      );
       rethrow;
     }
   }
@@ -103,13 +103,15 @@ class Dish {
       }
       // Si c'est une liste
       else if (images is List) {
-        if (kDebugMode) debugPrint('   - Liste détectée (${images.length} éléments)');
+        if (kDebugMode)
+          debugPrint('   - Liste détectée (${images.length} éléments)');
 
         if (images.isEmpty) {
           relativePath = null;
         } else {
           final first = images[0];
-          if (kDebugMode) debugPrint('   - Premier élément: $first (${first.runtimeType})');
+          if (kDebugMode)
+            debugPrint('   - Premier élément: $first (${first.runtimeType})');
 
           if (first is String && first.isNotEmpty) {
             relativePath = first;
@@ -143,6 +145,12 @@ class Dish {
         debugPrint('   - Chemin relatif extrait: $relativePath');
       }
 
+      if (relativePath == null || relativePath.isEmpty) {
+        AppLogger.warning(
+            'Image absente pour un plat, utilisation du placeholder',
+            tag: 'Dish');
+      }
+
       // ✅ Utiliser la méthode sécurisée de ApiConfig
       final fullUrl = ApiConfig.getSafeImageUrl(relativePath);
 
@@ -151,13 +159,8 @@ class Dish {
       }
 
       return fullUrl;
-
     } catch (e) {
-      // En cas d'erreur, retourner l'image par défaut
-      if (kDebugMode) {
-        debugPrint('   ❌ Erreur parsing image URL: $e');
-        debugPrint('   → Utilisation de l\'image par défaut');
-      }
+      AppLogger.error('Erreur parsing image URL', tag: 'Dish', error: e);
       return ApiConfig.defaultImageUrl;
     }
   }

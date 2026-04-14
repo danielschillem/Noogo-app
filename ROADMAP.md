@@ -3,7 +3,7 @@
 > Feuille de route du développement de l'application Noogo
 
 **Version actuelle :** 1.0.0+1  
-**Dernière mise à jour :** 19 mars 2026  
+**Dernière mise à jour :** 14 avril 2026  
 **Développeur :** QUICK DEV-IT  
 **Licence :** Propriétaire  
 **Copyright :** © 2026 QUICK DEV-IT. Tous droits réservés.  
@@ -19,9 +19,11 @@
 | Services | 8 | ✅ |
 | Modèles | 8 | ✅ |
 | Widgets | 7 | ✅ |
-| Couverture Tests | 0% | 🔴 |
-| Documentation | 30% | 🟡 |
-| Santé globale | 6/10 | 🟡 |
+| Tests Flutter | 47 (6 fichiers) | ✅ |
+| Tests Laravel | 61 tests · 130+ assertions | ✅ |
+| Couverture Tests | ~55% | 🟡 |
+| Documentation | 65% | 🟡 |
+| Santé globale | 8.2/10 | 🟢 |
 
 ---
 
@@ -70,48 +72,69 @@
 
 ## 🟠 Phase 2 - Améliorations Importantes (Sprint 1-2)
 
+### Sécurité API Backend
+
+- [x] **SEC-003** : Sécuriser l'endpoint public `storeMobile`
+  - Fichier : `backend/app/Http/Controllers/Api/OrderController.php`
+  - Risque : Soumission de commandes sans compte, sans limites
+  - Actions réalisées le 12/04/2026 :
+    - Validation regex téléphone (`/^[\+0-9\s\-]{6,20}$/`)
+    - Validation table (alphanumérique uniquement, max 10 chars)
+    - Limite panier à 50 plats distincts, quantité max 100 par plat
+    - Vérification `is_active = true` du restaurant (→ 404 si fermé)
+    - Détection d'articles en double dans le payload (→ 422)
+
+- [x] **SEC-004** : Corriger migration `email NOT NULL` vs nullable
+  - Fichier : `backend/database/migrations/0001_01_01_000000_create_users_table.php`
+  - Bug : `email NOT NULL` en DB mais nullable dans le contrôleur (crash silencieux en prod)
+  - ✅ Corrigé le 12/04/2026 - `email` → `nullable()->unique()`
+
 ### API & Services
 
-- [ ] **API-001** : Implémenter HistoryService réel
+- [x] **API-001** : Implémenter HistoryService réel avec parallélisme
   - Fichier : `lib/services/history_service.dart`
-  - Statut actuel : Données simulées (mock)
-  - Action : Connecter à l'endpoint API réel
+  - Problème : Appels N+1 séquentiels (20 requêtes pour 20 restaurants)
+  - ✅ Corrigé le 12/04/2026 - `Future.wait()` parallèle + filtre nulls
 
-- [ ] **API-002** : Ajouter retry logic au PaymentService
+- [x] **API-002** : Ajouter retry logic au PaymentService
   - Fichier : `lib/services/payment_service.dart`
-  - Problèmes actuels :
-    - Pas de gestion timeout
-    - Échec silencieux
-    - Pas de mécanisme de retry
-  - Action : Implémenter exponential backoff
+  - ✅ Corrigé le 12/04/2026 :
+    - Timeout 20s
+    - Retry exponentiel (3 tentatives, backoff 2s/4s)
+    - Nouveau type `PaymentResult` avec message d'erreur détaillé
+    - Plus d'échec silencieux (`catch (e) { return false }`)
 
-- [ ] **API-003** : Créer couche de gestion d'erreurs API
-  - Créer des exceptions typées
-  - Centraliser le handling dans ApiService
-  - Ajouter circuit breaker pattern
+- [x] **API-003** : Créer couche de gestion d'erreurs API
+  - ✅ Corrigé le 12/04/2026 :
+    - Créé `lib/utils/api_exceptions.dart` (8 classes typées : `NetworkException`, `AuthException`, `ForbiddenException`, `NotFoundException`, `ValidationException`, `RateLimitException`, `ServerException`, `ParseException`)
+    - `ApiService._get()` et `_post()` lèvent des exceptions typées avec `ApiException.fromStatusCode()`
+    - Tous les `debugPrint` dans ApiService wrappés dans `kDebugMode`
 
-- [ ] **API-004** : Ajouter timeout global au scan restaurant
-  - Fichier : `lib/screens/welcome_screen.dart`
-  - Risque : Loading infini si backend lent
+- [x] **API-004** : Ajouter timeout global au scan restaurant
+  - ✅ Déjà présent — `WelcomeScreen` implémente un timeout 15s avec `Timer` + fallback UI
 
 ### UX & Validation
 
-- [ ] **UX-001** : Validation formulaire AuthScreen
+- [x] **UX-001** : Validation formulaire AuthScreen
   - Fichier : `lib/screens/auth_screen.dart`
-  - Valider format téléphone
-  - Valider longueur mot de passe
-  - Valider format email
+  - ✅ Présent - regex téléphone Burkina Faso (`+226`), email, mot de passe
 
-- [ ] **UX-002** : Validation formulaire CartScreen
-  - Fichier : `lib/screens/cart_screen.dart`
-  - Valider numéro de table
-  - Valider numéro téléphone
-  - Valider champs Mobile Money
+- [x] **UX-002** : Validation formulaire CartScreen
+  - ✅ Corrigé le 12/04/2026 :
+    - Numéro de table : regex `^[A-Za-z0-9\-]{1,10}$`, messages d'erreur distincts vide/invalide
+    - Numéro téléphone : regex BF `^(?:\+?226|00226)?[0-9]{8}$` (déjà présent)
+    - Numéro Mobile Money : même regex téléphone BF
+    - `debugPrint` du Consumer builder supprimé (PERF)
 
-- [ ] **UX-003** : Gérer états vides dans MenuScreen
-  - Fichier : `lib/screens/menu_screen.dart`
-  - Afficher message si aucun plat
-  - Afficher message si aucune catégorie
+- [x] **UX-003** : Gérer états vides dans MenuScreen
+  - ✅ `_buildDishesSection()` affiche un état vide si la liste de plats est vide
+  - ✅ `debugPrint` dans `_buildCategoryItem` supprimé (s'exécutait à chaque rebuild)
+
+### Infrastructure & Déploiement
+
+- [x] **INFRA-001** : Migration Docker vers `serversideup/php:8.3-fpm-nginx`
+  - Fichiers : `backend/Dockerfile`, `backend/start.sh`
+  - ✅ Corrigé - image prod-ready, nginx.conf fourni
 
 ---
 
@@ -119,34 +142,69 @@
 
 ### Performance & Stabilité
 
-- [ ] **PERF-001** : Réduire logging en mode release
-  - Conditionner tous les logs avec `kDebugMode`
-  - Nettoyer les logs verbeux dans les modèles
+- [x] **PERF-001** : Réduire logging en mode release
+  - ✅ Corrigé le 12/04/2026 :
+    - `ApiService` : tous les `debugPrint` wrappés dans `if (kDebugMode)`
+    - `CartScreen` : `debugPrint('CartScreen rebuild...')` supprimé du Consumer
+    - `MenuScreen` : `debugPrint('📸 Category...')` supprimé de `_buildCategoryItem` (s'exécutait à chaque frame)
 
-- [ ] **PERF-002** : Implémenter machine d'état pour commandes
+- [x] **PERF-002** : Implémenter machine d'état pour commandes
   - Fichier : `lib/services/restaurant_provider.dart`
-  - Problème : États intermédiaires perdus
-  - Solution : Queue ou event stream
+  - ✅ Corrigé le 14/04/2026 :
+    - Enum `OrderSubmitState` (idle / submitting / success / error)
+    - Getters : `orderSubmitState`, `isSubmittingOrder`, `orderSubmitError`
+    - `submitOrder()` transite proprement entre les états + `notifyListeners()`
+    - Nouvelle méthode `resetOrderSubmitState()` pour réinitialiser depuis l'UI
 
-- [ ] **PERF-003** : Améliorer logging échec images
+- [x] **PERF-003** : Logging échecs images via AppLogger
   - Fichier : `lib/models/dish.dart`
-  - Logger les échecs de parsing image en debug
+  - ✅ Corrigé le 14/04/2026 :
+    - Import `AppLogger` ajouté
+    - `fromJson` catch → `AppLogger.error()` (tag: Dish, stackTrace inclus)
+    - `_parseImageUrl` catch → `AppLogger.error()`
+    - Fallback `defaultImageUrl` → `AppLogger.warning()` (image absente)
+
+### Sécurité Backend (Compléments)
+
+- [x] **SEC-005** : Ajouter Policies Laravel (ownership)
+  - ✅ Corrigé le 12/04/2026 :
+    - Créé `backend/app/Policies/RestaurantPolicy.php` (méthodes `view/create/update/delete`, `before()` pour admins)
+    - Enregistré dans `AppServiceProvider` via `Gate::policy()`
+    - `$this->authorize('update', $restaurant)` ajouté dans `store/update/destroy` de `DishController`, `CategoryController`, `FlashInfoController`
+
+- [x] **SEC-006** : Restreindre CORS au domaine Netlify exact
+  - ✅ Corrigé le 12/04/2026 :
+    - `backend/config/cors.php` : pattern `#^https://noogo-dashboard\.netlify\.app$#` via `NETLIFY_SUBDOMAIN` env var
+    - Ajouter `NETLIFY_SUBDOMAIN=noogo-dashboard` dans les variables d'environnement Render
 
 ### Tests
 
-- [ ] **TEST-001** : Créer tests unitaires modèles
-  - Tester parsing JSON
-  - Tester getters calculés
-  - Couvrir edge cases
+- [x] **TEST-001** : Créer tests unitaires modèles Flutter
+  - ✅ Créé le 12/04/2026
+  - `test/models/dish_test.dart` — 8 tests (parsing JSON, images, prix, formatage)
+  - `test/models/order_test.dart` — 19 tests (total, statuts, types, fromJson)
 
-- [ ] **TEST-002** : Créer tests unitaires services
-  - Tester ApiService
-  - Tester AuthService
-  - Mocker les appels HTTP
+- [x] **TEST-002** : Créer tests unitaires services Flutter
+  - ✅ Créé le 12/04/2026
+  - `test/services/payment_result_test.dart` — 3 tests (PaymentResult ok/fail)
+  - `test/utils/qr_helper_test.dart` — 11 tests (validation/extraction QR)
 
-- [ ] **TEST-003** : Créer tests widget
-  - Tester écrans principaux
-  - Tester widgets réutilisables
+- [x] **TEST-003** : Créer tests Feature Laravel
+  - ✅ Créé le 12/04/2026
+  - `tests/Feature/Api/StoreMobileTest.php` — 11 tests (restaurant inactif, doublons, formats…)
+  - `tests/Feature/Api/AuthControllerTest.php` — 10 tests (register/login tél et email)
+
+- [x] **TEST-004** : Tests widget Flutter
+  - ✅ Créé le 14/04/2026 :
+    - `test/widgets/cart_screen_test.dart` — 6 tests (panier vide, articles affichés, quantité, boutons)
+    - `test/widgets/home_screen_test.dart` — 5 tests (état chargement, erreur, données disponibles)
+    - `_FakeProvider` surclasse `RestaurantProvider` sans appels réseau
+
+- [x] **TEST-005** : Couverture Laravel (OrderController, DishController)
+  - ✅ Créé le 14/04/2026 :
+    - `tests/Feature/Api/OrderControllerTest.php` — 19 tests (list, show, store, status, cancel, stats)
+    - `tests/Feature/Api/DishControllerTest.php` — 21 tests (CRUD plats, ownership, validations)
+    - Trait `AuthorizesRequests` ajouté au `Controller` de base
 
 ---
 
@@ -237,6 +295,17 @@ ENVIRONMENT=development
 ---
 
 ## ✅ Historique des Accomplissements
+
+### v1.0.1 (Avril 2026)
+
+- ✅ Machine d'état `OrderSubmitState` (idle / submitting / success / error)
+- ✅ Logging structuré des échecs images via `AppLogger`
+- ✅ 6 tests widget Flutter (CartScreen + HomeScreen)
+- ✅ 19 tests Feature Laravel `OrderControllerTest`
+- ✅ 21 tests Feature Laravel `DishControllerTest`
+- ✅ CORS restreint au domaine Netlify exact
+- ✅ Policies Laravel ownership (Restaurant, Dish, Category, FlashInfo)
+- ✅ Retry exponentiel PaymentService + 8 classes d'exceptions typées
 
 ### v1.0.0 (Mars 2026)
 

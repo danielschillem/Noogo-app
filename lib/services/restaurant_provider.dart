@@ -15,6 +15,9 @@ import 'api_service.dart';
 import 'notification_service.dart';
 import 'realtime_service.dart';
 
+/// Machine d'état pour la soumission de commandes
+enum OrderSubmitState { idle, submitting, success, error }
+
 class RestaurantProvider with ChangeNotifier {
   final ApiService _apiService = ApiService.instance;
   final RealtimeService _realtimeService = RealtimeService();
@@ -38,6 +41,14 @@ class RestaurantProvider with ChangeNotifier {
 
   bool _isLoadingOrders = false;
   bool get isLoadingOrders => _isLoadingOrders;
+
+  // --- Machine d'état pour la soumission de commande ---
+  OrderSubmitState _orderSubmitState = OrderSubmitState.idle;
+  OrderSubmitState get orderSubmitState => _orderSubmitState;
+  bool get isSubmittingOrder =>
+      _orderSubmitState == OrderSubmitState.submitting;
+  String? _orderSubmitError;
+  String? get orderSubmitError => _orderSubmitError;
 
   bool _isRealtimeConnected = false;
   bool get isRealtimeConnected => _isRealtimeConnected;
@@ -978,6 +989,9 @@ class RestaurantProvider with ChangeNotifier {
     String? tableNumber,
     String? mobileMoneyProvider,
   }) async {
+    _orderSubmitState = OrderSubmitState.submitting;
+    _orderSubmitError = null;
+    notifyListeners();
     try {
       if (_cartItems.isEmpty) throw Exception('Panier vide');
       if (_restaurant == null) throw Exception('Restaurant non défini');
@@ -1070,6 +1084,7 @@ class RestaurantProvider with ChangeNotifier {
         await createOrderNotification(newOrder);
         await _saveOrdersLocally(_orders);
         _cartItems.clear();
+        _orderSubmitState = OrderSubmitState.success;
         notifyListeners();
 
         return newOrder.id;
@@ -1090,8 +1105,18 @@ class RestaurantProvider with ChangeNotifier {
         throw Exception(errorMessage);
       }
     } catch (e) {
+      _orderSubmitState = OrderSubmitState.error;
+      _orderSubmitError = e.toString();
+      notifyListeners();
       rethrow;
     }
+  }
+
+  /// Réinitialise l'état de soumission (à appeler avant de réouvrir le formulaire)
+  void resetOrderSubmitState() {
+    _orderSubmitState = OrderSubmitState.idle;
+    _orderSubmitError = null;
+    notifyListeners();
   }
 
   List<Dish> get availableDishes =>
