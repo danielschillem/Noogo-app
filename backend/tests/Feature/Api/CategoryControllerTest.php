@@ -36,18 +36,18 @@ class CategoryControllerTest extends TestCase
         $this->other = User::factory()->create(['is_admin' => false]);
 
         $this->restaurant = Restaurant::create([
-            'user_id'    => $this->owner->id,
-            'nom'        => 'Resto Test',
-            'telephone'  => '70000001',
-            'adresse'    => 'Ouagadougou',
-            'is_active'  => true,
+            'user_id' => $this->owner->id,
+            'nom' => 'Resto Test',
+            'telephone' => '70000001',
+            'adresse' => 'Ouagadougou',
+            'is_active' => true,
         ]);
 
         $this->category = Category::create([
             'restaurant_id' => $this->restaurant->id,
-            'nom'           => 'Entrées',
-            'is_active'     => true,
-            'ordre'         => 0,
+            'nom' => 'Entrées',
+            'is_active' => true,
+            'ordre' => 0,
         ]);
     }
 
@@ -59,9 +59,9 @@ class CategoryControllerTest extends TestCase
     {
         Category::create([
             'restaurant_id' => $this->restaurant->id,
-            'nom'           => 'Plats',
-            'is_active'     => true,
-            'ordre'         => 1,
+            'nom' => 'Plats',
+            'is_active' => true,
+            'ordre' => 1,
         ]);
 
         $response = $this->actingAs($this->owner)
@@ -76,9 +76,9 @@ class CategoryControllerTest extends TestCase
     {
         Category::create([
             'restaurant_id' => $this->restaurant->id,
-            'nom'           => 'Desserts',
-            'is_active'     => false,
-            'ordre'         => 1,
+            'nom' => 'Desserts',
+            'is_active' => false,
+            'ordre' => 1,
         ]);
 
         $response = $this->actingAs($this->owner)
@@ -102,7 +102,7 @@ class CategoryControllerTest extends TestCase
     {
         $response = $this->actingAs($this->owner)
             ->postJson("/api/restaurants/{$this->restaurant->id}/categories", [
-                'nom'         => 'Boissons',
+                'nom' => 'Boissons',
                 'description' => 'Toutes nos boissons',
             ]);
 
@@ -111,7 +111,7 @@ class CategoryControllerTest extends TestCase
             ->assertJsonPath('data.nom', 'Boissons');
 
         $this->assertDatabaseHas('categories', [
-            'nom'           => 'Boissons',
+            'nom' => 'Boissons',
             'restaurant_id' => $this->restaurant->id,
         ]);
     }
@@ -126,7 +126,7 @@ class CategoryControllerTest extends TestCase
 
         $response->assertStatus(201);
         $this->assertDatabaseHas('categories', [
-            'nom'   => 'Plats',
+            'nom' => 'Plats',
             'ordre' => 1,
         ]);
     }
@@ -176,9 +176,9 @@ class CategoryControllerTest extends TestCase
     {
         Dish::create([
             'restaurant_id' => $this->restaurant->id,
-            'category_id'   => $this->category->id,
-            'nom'           => 'Salade',
-            'prix'          => 1000,
+            'category_id' => $this->category->id,
+            'nom' => 'Salade',
+            'prix' => 1000,
             'disponibilite' => true,
         ]);
 
@@ -197,7 +197,7 @@ class CategoryControllerTest extends TestCase
     {
         $response = $this->actingAs($this->owner)
             ->putJson("/api/restaurants/{$this->restaurant->id}/categories/{$this->category->id}", [
-                'nom'       => 'Entrées modifiées',
+                'nom' => 'Entrées modifiées',
                 'is_active' => false,
             ]);
 
@@ -206,8 +206,8 @@ class CategoryControllerTest extends TestCase
             ->assertJsonPath('data.nom', 'Entrées modifiées');
 
         $this->assertDatabaseHas('categories', [
-            'id'        => $this->category->id,
-            'nom'       => 'Entrées modifiées',
+            'id' => $this->category->id,
+            'nom' => 'Entrées modifiées',
             'is_active' => false,
         ]);
     }
@@ -240,9 +240,9 @@ class CategoryControllerTest extends TestCase
     {
         Dish::create([
             'restaurant_id' => $this->restaurant->id,
-            'category_id'   => $this->category->id,
-            'nom'           => 'Plat bloquant',
-            'prix'          => 500,
+            'category_id' => $this->category->id,
+            'nom' => 'Plat bloquant',
+            'prix' => 500,
             'disponibilite' => true,
         ]);
 
@@ -269,9 +269,9 @@ class CategoryControllerTest extends TestCase
     {
         $cat2 = Category::create([
             'restaurant_id' => $this->restaurant->id,
-            'nom'           => 'Plats',
-            'is_active'     => true,
-            'ordre'         => 1,
+            'nom' => 'Plats',
+            'is_active' => true,
+            'ordre' => 1,
         ]);
 
         $response = $this->actingAs($this->owner)
@@ -313,7 +313,7 @@ class CategoryControllerTest extends TestCase
             ->assertJsonPath('success', true);
 
         $this->assertDatabaseHas('categories', [
-            'id'        => $this->category->id,
+            'id' => $this->category->id,
             'is_active' => false,
         ]);
     }
@@ -329,7 +329,7 @@ class CategoryControllerTest extends TestCase
             ->assertJsonPath('success', true);
 
         $this->assertDatabaseHas('categories', [
-            'id'        => $this->category->id,
+            'id' => $this->category->id,
             'is_active' => true,
         ]);
     }

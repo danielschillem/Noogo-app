@@ -2,8 +2,8 @@
 
 > Feuille de route du développement de l'application Noogo
 
-**Version actuelle :** 1.0.0+1  
-**Dernière mise à jour :** 14 avril 2026  
+**Version actuelle :** 1.2.0  
+**Dernière mise à jour :** 15 avril 2026  
 **Développeur :** QUICK DEV-IT  
 **Licence :** Propriétaire  
 **Copyright :** © 2026 QUICK DEV-IT. Tous droits réservés.  
@@ -15,15 +15,16 @@
 
 | Métrique | Valeur | Statut |
 | -------- | ------ | ------ |
-| Écrans | 11 | ✅ |
-| Services | 8 | ✅ |
-| Modèles | 8 | ✅ |
-| Widgets | 7 | ✅ |
-| Tests Flutter | 47 (6 fichiers) | ✅ |
+| Écrans | 14 | ✅ |
+| Services | 10 | ✅ |
+| Modèles | 9 | ✅ |
+| Widgets | 8 | ✅ |
+| Tests Flutter | 179 (16 fichiers) | ✅ |
 | Tests Laravel | 61 tests · 130+ assertions | ✅ |
-| Couverture Tests | ~55% | 🟡 |
-| Documentation | 65% | 🟡 |
-| Santé globale | 8.2/10 | 🟢 |
+| Couverture modèles/utils | ~80% | 🟢 |
+| Couverture globale (lcov) | ~17% | 🟡 |
+| Documentation | 85% | 🟢 |
+| Santé globale | 9.0/10 | 🟢 |
 
 ---
 
@@ -286,21 +287,112 @@
 
 ---
 
-## 📁 Structure Fichiers à Créer
+## � Phase 6 — Dashboard & Mobile v1.1/v1.2 (Avril 2026)
+
+### Dashboard (React + TypeScript)
+
+- [x] **DASH-01** : Coordonnées GPS dans la fiche restaurant
+  - ✅ Corrigé le 14/04/2026 :
+    - Champs `latitude` / `longitude` dans `RestaurantFormPage.tsx`
+    - Bouton **Utiliser ma position** (Geolocation API navigateur)
+    - Lien Google Maps en lecture (clickable)
+    - Validation côté backend (nullable decimal 10,7)
+
+- [x] **DASH-02** : Toggle ouverture/fermeture manuelle restaurant
+  - ✅ Corrigé le 14/04/2026 :
+    - Migration `is_open_override` (nullable boolean)
+    - Accessor `isOpen` dans le modèle `Restaurant` (override prioritaire sur horaires)
+    - Méthode `toggleOpen()` dans `RestaurantController`
+    - Route `POST /restaurants/{id}/toggle-open`
+    - Badge dual (API + override) dans la liste restaurants
+    - Hook API `toggleRestaurantOpen()` côté TypeScript
+
+- [x] **DASH-03** : Galerie images restaurant
+  - ✅ Corrigé le 14/04/2026 :
+    - Multi-upload galerie dans `RestaurantFormPage.tsx`
+    - Suppression individuelle de photo
+    - Stockage en mode append (ajout sans écraser)
+    - Affichage carrousel dans `RestaurantDetailPage.tsx`
+
+- [x] **DASH-04** : Export CSV des commandes
+  - ✅ Déjà présent dans `OrdersPage.tsx` (filtre + export natif)
+
+- [x] **DASH-05** : Auto-refresh Dashboard toutes les 30 secondes
+  - ✅ Corrigé le 14/04/2026 :
+    - `setInterval` 30 s dans `DashboardPage.tsx` avec `useCallback fetchData`
+    - Bouton **Actualiser** manuel + horodatage dernière MàJ
+    - Nettoyage de l'intervalle au démontage (`clearInterval`)
+
+- [x] **DASH-06** : Badge commandes en attente dans la Sidebar
+  - ✅ Corrigé le 14/04/2026 :
+    - Polling 30 s vers `GET /orders?status=pending`
+    - Badge rouge animé avec compteur dans la Sidebar
+    - Mise à jour automatique à chaque changement de statut
+
+- [x] **DASH-07** : Améliorations Sidebar et liste restaurants
+  - ✅ Corrigé le 15/04/2026 :
+    - Affichage multi-restaurant (jusqu'à 4 + « Voir N de plus »)
+    - Indicateurs statut ouvert/fermé dans la Sidebar
+    - `RestaurantsPage.tsx` : barre de stats, onglets Tous/Actifs/Inactifs, tri
+
+### Application Mobile (Flutter)
+
+- [x] **MOB-001** : Persistance multi-restaurants « Scan once, stay forever »
+  - ✅ Corrigé le 15/04/2026 :
+    - Nouveau modèle `SavedRestaurant` (id, name, imageUrl, address, phone, lastScannedAt)
+    - `RestaurantStorageService` refactorisé : `addOrUpdateRestaurant`, `getSavedRestaurants`, `removeRestaurant`
+    - Nouvel écran `MyRestaurantsScreen` (liste swipe-to-dismiss, FAB scan)
+    - `ClientPrefsService` : persistance téléphone + Mobile Money (SharedPreferences)
+    - `WelcomeScreen` : bouton **Mes restaurants** + pré-remplissage du panier
+    - Route `/my-restaurants` ajoutée dans `main.dart`
+
+- [x] **MOB-002** : Bouton Mode Démo restauré
+  - ✅ Corrigé le 15/04/2026 :
+    - Bouton **Mode Démo** visible uniquement en `kDebugMode` dans `WelcomeScreen`
+
+### API Backend (Laravel)
+
+- [x] **API-005** : Réinitialisation mot de passe
+  - ✅ Endpoint `POST /auth/forgot-password` + `POST /auth/reset-password`
+  - Token sécurisé, expiration 60 min, email Markdown BF
+
+- [x] **API-006** : Rôles & permissions staff (GérantStaff)
+  - ✅ Corrigé le 14/04/2026 :
+    - Modèle `StaffRole` + table `staff_roles` (owner/manager/server)
+    - `StaffController` : inviter/lister/révoquer staff par restaurant
+    - Policy `StaffPolicy` (seul le propriétaire gère son staff)
+    - 22 tests Feature `StaffControllerTest`
+
+- [x] **D11** : Notifications temps réel (Pusher / Laravel Events)
+  - ✅ Corrigé le 14/04/2026 :
+    - `OrderStatusChanged` Event → broadcast Pusher channel `orders.{restaurantId}`
+    - Hook `usePusher.ts` côté Dashboard React
+    - Toast notification en temps réel sur changement de statut commande
+
+---
+
+## �📁 Structure Fichiers à Créer
 
 ```text
 noogo-app/
-├── .env                          # À CRÉER - Variables environnement
-├── .env.example                  # À CRÉER - Template .env
-├── LICENSE                       # À CRÉER - Fichier licence MIT
-├── CHANGELOG.md                  # À CRÉER - Historique versions
+├── .env                          # ✅ Créé - Variables environnement
+├── assets/env/.env               # ✅ Créé - Variables Flutter dotenv
+├── LICENSE                       # ✅ Créé - Fichier licence
+├── ROADMAP.md                    # ✅ Créé - Feuille de route
 ├── test/
-│   ├── models/                   # À CRÉER - Tests modèles
-│   ├── services/                 # À CRÉER - Tests services
-│   └── widgets/                  # À CRÉER - Tests widgets
+│   ├── models/                   # ✅ 5 fichiers (dish, order, app_notification, restaurant, flash_info, saved_restaurant, user)
+│   ├── services/                 # ✅ 4 fichiers (favorites, geolocation, payment_result, rating)
+│   ├── utils/                    # ✅ 3 fichiers (qr_helper, menu_search, api_exceptions)
+│   └── widgets/                  # ✅ 2 fichiers (cart_screen, home_screen)
 └── lib/
-    └── utils/
-        └── logger.dart           # À CRÉER - Service logging
+    ├── models/
+    │   └── saved_restaurant.dart  # ✅ Créé - Multi-restaurant persistance
+    ├── services/
+    │   ├── client_prefs_service.dart  # ✅ Créé - Prefs client (phone + MoMo)
+    │   ├── analytics_service.dart     # ✅ Créé - Analytics custom
+    │   └── crash_reporting_service.dart # ✅ Créé - Sentry wrapper
+    └── screens/
+        └── my_restaurants_screen.dart  # ✅ Créé - Liste restaurants scannés
 ```
 
 ---
@@ -325,16 +417,41 @@ ENVIRONMENT=development
 
 ## 📅 Planning Estimé
 
-| Phase | Durée | Début | Fin |
-| ----- | ----- | ----- | --- |
-| Phase 1 - Critiques | 1 semaine | S12 | S12 |
-| Phase 2 - Importantes | 2 semaines | S13 | S14 |
-| Phase 3 - Optimisations | 2 semaines | S15 | S16 |
-| Phase 4 - Évolutions | Continu | S17+ | - |
+| Phase | Durée | Début | Fin | Statut |
+| ----- | ----- | ----- | --- | ------ |
+| Phase 1 - Critiques | 1 semaine | S12 | S12 | ✅ Terminé |
+| Phase 2 - Importantes | 2 semaines | S13 | S14 | ✅ Terminé |
+| Phase 3 - Optimisations | 2 semaines | S15 | S16 | ✅ Terminé |
+| Phase 4 - Évolutions | 1 semaine | S16 | S16 | ✅ Terminé |
+| Phase 5 - Monitoring & I18N | 1 semaine | S16 | S16 | ✅ Terminé |
+| Phase 6 - Dashboard & Mobile v1.2 | 1 semaine | S16 | S16 | ✅ Terminé |
 
 ---
 
 ## ✅ Historique des Accomplissements
+
+### v1.2.0 (15 Avril 2026)
+
+- ✅ **DASH-01-07** : Dashboard React — GPS, toggle ouverture, galerie images, export CSV, auto-refresh, badge commandes, multi-restaurant Sidebar
+- ✅ **MOB-001** : Persistance multi-restaurants (SavedRestaurant, ClientPrefsService, MyRestaurantsScreen, RestaurantStorageService)
+- ✅ **MOB-002** : Mode Démo restauré (kDebugMode uniquement)
+- ✅ **API-005** : Réinitialisation mot de passe
+- ✅ **API-006** : Rôles & permissions staff (StaffController, 22 tests)
+- ✅ **D11** : Notifications temps réel Pusher (OrderStatusChanged event + usePusher.ts)
+- ✅ 179 tests Flutter (16 fichiers) — +66 nouveaux tests modèles/utils
+- ✅ Couverture modèles/utils à ~80%
+- ✅ `dart analyze lib/` — 0 issues
+
+### v1.1.0 (14 Avril 2026)
+
+- ✅ Géolocalisation restaurant (`geolocator`, distance, itinéraire Google Maps)
+- ✅ Système de notation post-commande (`RatingService`, dialog 5 étoiles)
+- ✅ Cache menu hors-ligne (SharedPreferences)
+- ✅ Favoris plats avec onglet ❤️ dans MenuScreen
+- ✅ Analytics custom (`AnalyticsService`) + Sentry crash reporting
+- ✅ Internationalisation (ARB FR/EN, 52 chaînes)
+- ✅ Machine d'état `OrderSubmitState` (idle/submitting/success/error)
+- ✅ 113 tests Flutter (11 fichiers)
 
 ### v1.0.1 (Avril 2026)
 
@@ -366,11 +483,13 @@ ENVIRONMENT=development
 
 ## 📝 Notes
 
-- L'application est fonctionnelle mais nécessite un renforcement pour la production
-- Les plugins Pusher et Mobile Scanner ne fonctionnent pas sur Windows/Web
-- L'API backend doit implémenter la route `/api/orders`
-- Priorité : sécuriser les clés API avant déploiement
+- L'application est production-ready (v1.2.0)
+- Flutter 179 tests, 0 issues (`dart analyze`), coverage modèles/utils ~80%
+- Laravel 61 tests, 130+ assertions (40 tests de la suite principale)
+- Les plugins Pusher et Mobile Scanner ne fonctionnent pas sur Windows/Web (normal)
+- Dashboard React déployable sur Netlify, backend Laravel sur Render
+- Prochaine étape : tests d'intégration + coverage screens Flutter
 
 ---
 
-*Document généré suite à l'audit du 19 mars 2026*
+*Document mis à jour le 15 avril 2026 — v1.2.0*

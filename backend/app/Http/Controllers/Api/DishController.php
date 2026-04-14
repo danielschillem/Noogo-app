@@ -57,6 +57,8 @@ class DishController extends Controller
      */
     public function store(Request $request, Restaurant $restaurant): JsonResponse
     {
+        $this->authorize('update', $restaurant);
+
         $validator = Validator::make($request->all(), [
             'category_id' => 'required|exists:categories,id',
             'nom' => 'required|string|max:255',
@@ -130,6 +132,8 @@ class DishController extends Controller
      */
     public function update(Request $request, Restaurant $restaurant, Dish $dish): JsonResponse
     {
+        $this->authorize('update', $restaurant);
+
         $validator = Validator::make($request->all(), [
             'category_id' => 'sometimes|required|exists:categories,id',
             'nom' => 'sometimes|required|string|max:255',
@@ -193,6 +197,8 @@ class DishController extends Controller
      */
     public function destroy(Restaurant $restaurant, Dish $dish): JsonResponse
     {
+        $this->authorize('update', $restaurant);
+
         // Delete images
         if ($dish->images) {
             foreach ($dish->images as $image) {

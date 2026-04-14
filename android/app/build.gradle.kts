@@ -6,6 +6,7 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
 }
 
 // ── Signing config (release) ──────────────────────────────────────────────────
@@ -60,8 +61,15 @@ android {
             } else {
                 signingConfigs.getByName("debug") // fallback dev
             }
-            isMinifyEnabled = false
-            isShrinkResources = false
+            // CI/CD-001 : R8 activé en release — réduit la taille de l'APK/AAB
+            // et obfusque le code (noms de classes/méthodes raccourcis).
+            // L'obfuscation Dart (--obfuscate) est gérée côté flutter build.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }

@@ -9,6 +9,7 @@ import 'package:noogo/models/category.dart';
 import 'package:noogo/models/flash_info.dart';
 import 'package:noogo/screens/home_screen.dart';
 import 'package:noogo/services/restaurant_provider.dart';
+import 'package:noogo/widgets/skeleton.dart';
 
 // ---------------------------------------------------------------------------
 // Faux provider configurable
@@ -122,27 +123,28 @@ void main() {
 
   group('HomeScreen — état chargement', () {
     testWidgets(
-        'affiche un indicateur de chargement quand isLoading && !hasData',
+        'affiche des skeletons de chargement quand isLoading && !hasData',
         (tester) async {
       final provider = _FakeProvider(loading: true);
 
       await tester.pumpWidget(_wrapHome(provider));
       await tester.pump();
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      // L'écran utilise des Skeleton widgets, pas CircularProgressIndicator
+      expect(find.byType(Skeleton), findsWidgets);
     });
   });
 
   group('HomeScreen — état erreur', () {
     testWidgets(
-        'affiche "Erreur de chargement" quand error != null && !hasData',
+        'affiche "Impossible de charger" quand error != null && !hasData',
         (tester) async {
       final provider = _FakeProvider(error: 'Connexion impossible');
 
       await tester.pumpWidget(_wrapHome(provider));
       await tester.pump();
 
-      expect(find.text('Erreur de chargement'), findsOneWidget);
+      expect(find.text('Impossible de charger'), findsOneWidget);
     });
 
     testWidgets('affiche le bouton "Réessayer" en cas d\'erreur',
@@ -178,7 +180,7 @@ void main() {
       await tester.pump();
 
       // Quand les données sont chargées, l'écran d'erreur ne doit pas s'afficher
-      expect(find.text('Erreur de chargement'), findsNothing);
+      expect(find.text('Impossible de charger'), findsNothing);
     });
   });
 }

@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/restaurant_header.dart';
@@ -65,6 +66,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         if (restaurantId != null) {
           provider.loadAllInitialData(restaurantId: restaurantId);
         }
+      } else if (provider.restaurant == null && kDebugMode) {
+        // Mode démo : charger des données statiques pour prévisualiser les écrans
+        provider.loadDemoData();
       }
     });
   }

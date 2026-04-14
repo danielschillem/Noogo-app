@@ -413,11 +413,10 @@ export default function MenuPage() {
                         return (
                             <div
                                 key={cat.id}
-                                className={`bg-white rounded-xl border overflow-hidden transition-all duration-150 ${
-                                    dragOverCatIdx === catIdx && dragCatIdx !== catIdx
+                                className={`bg-white rounded-xl border overflow-hidden transition-all duration-150 ${dragOverCatIdx === catIdx && dragCatIdx !== catIdx
                                         ? 'border-orange-400 shadow-md'
                                         : 'border-gray-200'
-                                }`}
+                                    }`}
                                 draggable
                                 onDragStart={() => setDragCatIdx(catIdx)}
                                 onDragOver={e => { e.preventDefault(); setDragOverCatIdx(catIdx); }}
@@ -486,11 +485,10 @@ export default function MenuPage() {
                                         ) : catDishes.map(dish => (
                                             <div
                                                 key={dish.id}
-                                                className={`flex items-center gap-3 px-4 py-3 transition-colors duration-100 ${
-                                                    dragOverDishId === dish.id && dragDishId !== dish.id
+                                                className={`flex items-center gap-3 px-4 py-3 transition-colors duration-100 ${dragOverDishId === dish.id && dragDishId !== dish.id
                                                         ? 'bg-orange-50'
                                                         : ''
-                                                }`}
+                                                    }`}
                                                 draggable
                                                 onDragStart={() => setDragDishId(dish.id)}
                                                 onDragOver={e => { e.preventDefault(); setDragOverDishId(dish.id); }}

@@ -36,6 +36,8 @@ class CategoryController extends Controller
      */
     public function store(Request $request, Restaurant $restaurant): JsonResponse
     {
+        $this->authorize('update', $restaurant);
+
         $validator = Validator::make($request->all(), [
             'nom' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -79,9 +81,11 @@ class CategoryController extends Controller
     public function show(Restaurant $restaurant, Category $category): JsonResponse
     {
         $category->loadCount('dishes');
-        $category->load(['dishes' => function ($q) {
-            $q->available()->ordered();
-        }]);
+        $category->load([
+            'dishes' => function ($q) {
+                $q->available()->ordered();
+            }
+        ]);
 
         return response()->json([
             'success' => true,
@@ -94,6 +98,8 @@ class CategoryController extends Controller
      */
     public function update(Request $request, Restaurant $restaurant, Category $category): JsonResponse
     {
+        $this->authorize('update', $restaurant);
+
         $validator = Validator::make($request->all(), [
             'nom' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
@@ -135,6 +141,8 @@ class CategoryController extends Controller
      */
     public function destroy(Restaurant $restaurant, Category $category): JsonResponse
     {
+        $this->authorize('update', $restaurant);
+
         // Check if category has dishes
         if ($category->dishes()->count() > 0) {
             return response()->json([

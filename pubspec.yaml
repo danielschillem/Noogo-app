@@ -28,6 +28,12 @@ dependencies:
   pusher_channels_flutter: ^2.5.0
   sentry_flutter: ^8.14.0
   geolocator: ^13.0.2
+  # Deep links
+  app_links: ^6.3.1
+  # Firebase / FCM
+  firebase_core: ^3.13.0
+  firebase_messaging: ^15.2.5
+  flutter_local_notifications: ^18.0.1
 
 dev_dependencies:
   flutter_test:

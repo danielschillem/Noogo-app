@@ -63,6 +63,8 @@ class FlashInfoController extends Controller
      */
     public function store(Request $request, Restaurant $restaurant): JsonResponse
     {
+        $this->authorize('update', $restaurant);
+
         $validator = Validator::make($request->all(), [
             'titre' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -115,6 +117,8 @@ class FlashInfoController extends Controller
      */
     public function update(Request $request, Restaurant $restaurant, FlashInfo $flashInfo): JsonResponse
     {
+        $this->authorize('update', $restaurant);
+
         $validator = Validator::make($request->all(), [
             'titre' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
@@ -160,6 +164,8 @@ class FlashInfoController extends Controller
      */
     public function destroy(Restaurant $restaurant, FlashInfo $flashInfo): JsonResponse
     {
+        $this->authorize('update', $restaurant);
+
         // Delete image
         if ($flashInfo->image) {
             Storage::disk('public')->delete($flashInfo->image);

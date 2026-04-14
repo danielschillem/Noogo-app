@@ -10,6 +10,7 @@ import '../models/category.dart';
 import '../models/order.dart';
 import '../models/app_notification.dart';
 import '../config/api_config.dart';
+import '../config/demo_data.dart';
 import '../utils/qr_helper.dart';
 import 'api_service.dart';
 import 'notification_service.dart';
@@ -710,6 +711,25 @@ class RestaurantProvider with ChangeNotifier {
 
   void clearQRCode() {
     _scannedQRCode = null;
+    notifyListeners();
+  }
+
+  /// Charge des données de démonstration statiques (aucun réseau requis).
+  /// Appelé automatiquement en mode debug quand aucun QR code n'est disponible.
+  void loadDemoData() {
+    if (_isLoading) return;
+    _isLoading = false;
+    _hasApiError = false;
+    _restaurant = DemoData.restaurant;
+    _categories = DemoData.categories;
+    _dishes = DemoData.dishes;
+    _flashInfos = DemoData.flashInfos;
+    _dishesOfTheDay = _dishes.where((d) => d.isDishOfTheDay).toList();
+    _isOffline = false;
+    if (kDebugMode) {
+      debugPrint(
+          '🎭 Demo data chargée (${_dishes.length} plats, ${_categories.length} catégories)');
+    }
     notifyListeners();
   }
 
