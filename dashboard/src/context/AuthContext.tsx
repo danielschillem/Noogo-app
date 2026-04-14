@@ -6,6 +6,7 @@ interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   register: (data: { name: string; email: string; password: string; password_confirmation: string }) => Promise<void>;
+  updateProfile: (data: { name?: string; email?: string }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -22,7 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initAuth = async () => {
       const token = localStorage.getItem('auth_token');
       const storedUser = localStorage.getItem('user');
-      
+
       if (token && storedUser) {
         try {
           const response = await authApi.me();
@@ -54,10 +55,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     const response = await authApi.login(email, password);
     const { user, token } = response.data.data;
-    
+
     localStorage.setItem('auth_token', token);
     localStorage.setItem('user', JSON.stringify(user));
-    
+
     setState({
       user,
       token,
@@ -72,10 +73,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       // Ignore errors
     }
-    
+
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
-    
+
     setState({
       user: null,
       token: null,
@@ -87,10 +88,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (data: { name: string; email: string; password: string; password_confirmation: string }) => {
     const response = await authApi.register(data);
     const { user, token } = response.data.data;
-    
+
     localStorage.setItem('auth_token', token);
     localStorage.setItem('user', JSON.stringify(user));
-    
+
     setState({
       user,
       token,
@@ -99,8 +100,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const updateProfile = async (data: { name?: string; email?: string }) => {
+    const response = await authApi.updateUser(data);
+    const user = response.data.user;
+    localStorage.setItem('user', JSON.stringify(user));
+    setState(prev => ({ ...prev, user }));
+  };
+
   return (
-    <AuthContext.Provider value={{ ...state, login, logout, register }}>
+    <AuthContext.Provider value={{ ...state, login, logout, register, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

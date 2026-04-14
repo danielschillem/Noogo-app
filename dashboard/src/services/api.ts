@@ -43,6 +43,7 @@ export const authApi = {
     api.post('/auth/register', data),
   logout: () => api.post('/auth/logout'),
   me: () => api.get('/auth/me'),
+  updateUser: (data: { name?: string; email?: string }) => api.put('/auth/user/update', data),
 };
 
 // Dashboard API

@@ -10,6 +10,7 @@ import {
     Star,
     UtensilsCrossed,
     X,
+    GripVertical,
 } from 'lucide-react';
 import { categoriesApi, dishesApi, restaurantsApi } from '../../services/api';
 import type { Category, Dish, Restaurant } from '../../types';
@@ -242,6 +243,12 @@ export default function MenuPage() {
     const [categoryModal, setCategoryModal] = useState<{ open: boolean; category: Category | null }>({ open: false, category: null });
     const [dishModal, setDishModal] = useState<{ open: boolean; dish: Dish | null; categoryId?: number }>({ open: false, dish: null });
 
+    // Drag-and-drop state
+    const [dragCatIdx, setDragCatIdx] = useState<number | null>(null);
+    const [dragOverCatIdx, setDragOverCatIdx] = useState<number | null>(null);
+    const [dragDishId, setDragDishId] = useState<number | null>(null);
+    const [dragOverDishId, setDragOverDishId] = useState<number | null>(null);
+
     // Load restaurants
     useEffect(() => {
         restaurantsApi.getAll().then(r => {
@@ -316,6 +323,46 @@ export default function MenuPage() {
     const dishesInCategory = (categoryId: number) =>
         dishes.filter(d => d.category_id === categoryId);
 
+    // ── Drag-and-drop handlers ───────────────────────────────────────────────
+    const handleCatDrop = (overIdx: number) => {
+        if (dragCatIdx === null || dragCatIdx === overIdx) {
+            setDragCatIdx(null);
+            setDragOverCatIdx(null);
+            return;
+        }
+        const reordered = [...categories];
+        const [item] = reordered.splice(dragCatIdx, 1);
+        reordered.splice(overIdx, 0, item);
+        setCategories(reordered);
+        setDragCatIdx(null);
+        setDragOverCatIdx(null);
+        if (selectedRestaurantId) {
+            categoriesApi
+                .reorder(selectedRestaurantId, reordered.map((c, i) => ({ id: c.id, ordre: i })))
+                .catch(console.error);
+        }
+    };
+
+    const handleDishDrop = (fromId: number, toId: number, catId: number) => {
+        if (fromId === toId) return;
+        const catDishes = dishes.filter(d => d.category_id === catId);
+        const others = dishes.filter(d => d.category_id !== catId);
+        const fromIdx = catDishes.findIndex(d => d.id === fromId);
+        const toIdx = catDishes.findIndex(d => d.id === toId);
+        if (fromIdx === -1 || toIdx === -1) return;
+        const reordered = [...catDishes];
+        const [item] = reordered.splice(fromIdx, 1);
+        reordered.splice(toIdx, 0, item);
+        setDishes([...others, ...reordered]);
+        setDragDishId(null);
+        setDragOverDishId(null);
+        if (selectedRestaurantId) {
+            dishesApi
+                .reorder(selectedRestaurantId, reordered.map((d, i) => ({ id: d.id, ordre: i })))
+                .catch(console.error);
+        }
+    };
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -360,13 +407,33 @@ export default function MenuPage() {
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {categories.map(cat => {
+                    {categories.map((cat, catIdx) => {
                         const catDishes = dishesInCategory(cat.id);
                         const isExpanded = expandedCategories.has(cat.id);
                         return (
-                            <div key={cat.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                            <div
+                                key={cat.id}
+                                className={`bg-white rounded-xl border overflow-hidden transition-all duration-150 ${
+                                    dragOverCatIdx === catIdx && dragCatIdx !== catIdx
+                                        ? 'border-orange-400 shadow-md'
+                                        : 'border-gray-200'
+                                }`}
+                                draggable
+                                onDragStart={() => setDragCatIdx(catIdx)}
+                                onDragOver={e => { e.preventDefault(); setDragOverCatIdx(catIdx); }}
+                                onDragLeave={() => setDragOverCatIdx(null)}
+                                onDrop={() => handleCatDrop(catIdx)}
+                                onDragEnd={() => { setDragCatIdx(null); setDragOverCatIdx(null); }}
+                            >
                                 {/* Category header */}
                                 <div className="flex items-center gap-3 p-4">
+                                    <span
+                                        className="cursor-grab text-gray-300 hover:text-gray-500 flex-shrink-0"
+                                        title="Glisser pour réorganiser"
+                                        onMouseDown={e => e.stopPropagation()}
+                                    >
+                                        <GripVertical className="h-5 w-5" />
+                                    </span>
                                     <button onClick={() => toggleCategory(cat.id)} className="text-gray-400">
                                         {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
                                     </button>
@@ -417,7 +484,26 @@ export default function MenuPage() {
                                                 >Ajouter</button>
                                             </p>
                                         ) : catDishes.map(dish => (
-                                            <div key={dish.id} className="flex items-center gap-3 px-4 py-3">
+                                            <div
+                                                key={dish.id}
+                                                className={`flex items-center gap-3 px-4 py-3 transition-colors duration-100 ${
+                                                    dragOverDishId === dish.id && dragDishId !== dish.id
+                                                        ? 'bg-orange-50'
+                                                        : ''
+                                                }`}
+                                                draggable
+                                                onDragStart={() => setDragDishId(dish.id)}
+                                                onDragOver={e => { e.preventDefault(); setDragOverDishId(dish.id); }}
+                                                onDragLeave={() => setDragOverDishId(null)}
+                                                onDrop={() => { if (dragDishId !== null) handleDishDrop(dragDishId, dish.id, cat.id); }}
+                                                onDragEnd={() => { setDragDishId(null); setDragOverDishId(null); }}
+                                            >
+                                                <span
+                                                    className="cursor-grab text-gray-300 hover:text-gray-500 flex-shrink-0"
+                                                    title="Glisser pour réorganiser"
+                                                >
+                                                    <GripVertical className="h-4 w-4" />
+                                                </span>
                                                 {dish.image_url ? (
                                                     <img src={buildImageUrl(dish.image_url)} alt={dish.nom}
                                                         className="w-12 h-12 rounded-lg object-cover border border-gray-100 flex-shrink-0" />

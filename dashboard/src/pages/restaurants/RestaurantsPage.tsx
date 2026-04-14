@@ -174,8 +174,8 @@ function RestaurantCard({ restaurant, onToggleActive, onDelete }: RestaurantCard
           </div>
         )}
         <div className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium ${restaurant.is_active
-            ? 'bg-green-100 text-green-700'
-            : 'bg-gray-100 text-gray-700'
+          ? 'bg-green-100 text-green-700'
+          : 'bg-gray-100 text-gray-700'
           }`}>
           {restaurant.is_active ? 'Actif' : 'Inactif'}
         </div>
@@ -208,7 +208,7 @@ function RestaurantCard({ restaurant, onToggleActive, onDelete }: RestaurantCard
                 />
                 <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
                   <Link
-                    to={`/restaurants/${restaurant.id}/edit`}
+                    to={`/restaurants/${restaurant.id}`}
                     className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                   >
                     <Eye className="h-4 w-4" />

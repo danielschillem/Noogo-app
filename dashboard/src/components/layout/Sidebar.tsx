@@ -1,14 +1,15 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Store, 
-  UtensilsCrossed, 
-  ShoppingBag, 
-  Tag, 
+import {
+  LayoutDashboard,
+  Store,
+  UtensilsCrossed,
+  ShoppingBag,
+  Tag,
   Menu,
   X,
   LogOut,
-  ChevronDown
+  ChevronDown,
+  User,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
@@ -45,7 +46,7 @@ export default function Sidebar() {
 
       {/* Overlay */}
       {isOpen && (
-        <div 
+        <div
           className="lg:hidden fixed inset-0 bg-black/50 z-40"
           onClick={() => setIsOpen(false)}
         />
@@ -72,7 +73,7 @@ export default function Sidebar() {
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
             {navigation.map((item) => {
-              const isActive = location.pathname === item.href || 
+              const isActive = location.pathname === item.href ||
                 (item.href !== '/' && location.pathname.startsWith(item.href));
               return (
                 <Link
@@ -82,8 +83,8 @@ export default function Sidebar() {
                   className={`
                     flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium
                     transition-colors duration-200
-                    ${isActive 
-                      ? 'bg-orange-50 text-orange-600' 
+                    ${isActive
+                      ? 'bg-orange-50 text-orange-600'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }
                   `}
@@ -116,6 +117,14 @@ export default function Sidebar() {
 
               {showUserMenu && (
                 <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
+                  <Link
+                    to="/profile"
+                    onClick={() => setShowUserMenu(false)}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    <User className="h-4 w-4" />
+                    Mon profil
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
