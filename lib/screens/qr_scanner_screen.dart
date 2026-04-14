@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../widgets/qr_scanner_overlay.dart';
 import '../utils/app_colors.dart';
@@ -13,6 +14,7 @@ class QRScannerScreen extends StatefulWidget {
 
 class _QRScannerScreenState extends State<QRScannerScreen> {
   late MobileScannerController cameraController;
+  final TextEditingController _manualController = TextEditingController();
   String? result;
   bool isScanning = true;
   bool _isTorchOn = false;
@@ -253,6 +255,50 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                           style: AppTextStyles.bodyMedium,
                           textAlign: TextAlign.center,
                         ),
+                        // Saisie manuelle pour le web
+                        if (kIsWeb) ...[
+                          const SizedBox(height: 16),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _manualController,
+                                    decoration: InputDecoration(
+                                      hintText: 'Ou saisissez l\'ID du restaurant',
+                                      border: const OutlineInputBorder(),
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                      isDense: true,
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                    onSubmitted: (val) {
+                                      final trimmed = val.trim();
+                                      if (trimmed.isNotEmpty && mounted) {
+                                        Navigator.of(context).pop('https://noogo.netlify.app/restaurant/$trimmed');
+                                      }
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  ),
+                                  onPressed: () {
+                                    final trimmed = _manualController.text.trim();
+                                    if (trimmed.isNotEmpty && mounted) {
+                                      Navigator.of(context).pop('https://noogo.netlify.app/restaurant/$trimmed');
+                                    }
+                                  },
+                                  child: const Text('OK'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ],
                     ),
             ),
@@ -265,6 +311,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   @override
   void dispose() {
     cameraController.dispose();
+    _manualController.dispose();
     super.dispose();
   }
 }

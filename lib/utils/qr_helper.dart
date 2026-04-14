@@ -19,14 +19,31 @@ class QRHelper {
       return false;
     }
 
-    final isValidFormat = _validBaseUrls.any((base) =>
-          qrData.startsWith(base)) &&
-        qrData.contains('/restaurant/');
+    // Accepter toute URL contenant /restaurant/{id}
+    // ou un simple ID numérique
+    final uri = Uri.tryParse(qrData);
+    if (uri != null && qrData.contains('/restaurant/')) {
+      if (kDebugMode) {
+        debugPrint('🔍 Validation QR: valide (contient /restaurant/)');
+        debugPrint('   - QR scanné: $qrData');
+      }
+      return true;
+    }
+
+    // Fallback: simple numéro = ID direct
+    if (int.tryParse(qrData.trim()) != null) {
+      if (kDebugMode) debugPrint('🔍 Validation QR: valide (ID direct)');
+      return true;
+    }
+
+    // Vérification stricte avec liste d'URLs connues
+    final isValidFormat =
+        _validBaseUrls.any((base) => qrData.startsWith(base)) &&
+            qrData.contains('/restaurant/');
 
     if (kDebugMode) {
       debugPrint('🔍 Validation QR:');
       debugPrint('   - QR scanné: $qrData');
-      debugPrint('   - URLs valides: $_validBaseUrls');
       debugPrint('   - Valide: $isValidFormat');
     }
     return isValidFormat;
