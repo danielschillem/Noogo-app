@@ -1,7 +1,10 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/saved_restaurant.dart';
 import '../services/restaurant_provider.dart';
 import '../services/restaurant_storage_service.dart';
+import 'my_restaurants_screen.dart';
 import 'qr_scanner_screen.dart';
 import 'home_screen.dart';
 import '../utils/app_colors.dart';
@@ -18,6 +21,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     with SingleTickerProviderStateMixin {
   bool _isValidating = false;
   bool _isPressed = false;
+  bool _hasSavedRestaurants = false;
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _opacityAnimation;
@@ -48,6 +52,12 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     );
 
     _animationController.repeat(reverse: true);
+    _checkSavedRestaurants();
+  }
+
+  Future<void> _checkSavedRestaurants() async {
+    final list = await RestaurantStorageService.getSavedRestaurants();
+    if (mounted) setState(() => _hasSavedRestaurants = list.isNotEmpty);
   }
 
   @override
@@ -146,6 +156,19 @@ class _WelcomeScreenState extends State<WelcomeScreen>
         restaurantId: restaurantId.toString(),
         restaurantData: restaurantData,
       );
+
+      // Sauvegarder dans la liste multi-restaurants
+      await RestaurantStorageService.addOrUpdateRestaurant(
+        SavedRestaurant(
+          id: restaurantId,
+          name: provider.restaurant!.name,
+          imageUrl: provider.restaurant!.imageUrl,
+          address: provider.restaurant!.address,
+          phone: provider.restaurant!.phone,
+          lastScannedAt: DateTime.now(),
+        ),
+      );
+      setState(() => _hasSavedRestaurants = true);
 
       debugPrint(
           '✅ Validation réussie! Restaurant: ${provider.restaurant?.name}');
@@ -499,8 +522,78 @@ class _WelcomeScreenState extends State<WelcomeScreen>
             ),
           ),
 
+          // Bouton "Mes restaurants" si des restaurants sont déjà sauvegardés
+          if (_hasSavedRestaurants) ...[
+            const SizedBox(height: 12),
+            _buildMyRestaurantsButton()
+          ],
+
+          // Bouton Mode Démo (debug uniquement)
+          if (kDebugMode) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: OutlinedButton.icon(
+                onPressed: _isValidating
+                    ? null
+                    : () {
+                        final provider = Provider.of<RestaurantProvider>(
+                          context,
+                          listen: false,
+                        );
+                        provider.loadDemoData();
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder: (context) => const HomeScreen(),
+                          ),
+                          (route) => false,
+                        );
+                      },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white70,
+                  side: BorderSide(
+                    color: Colors.white.withValues(alpha: 0.4),
+                    width: 1,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.science_outlined, size: 20),
+                label: const Text(
+                  'Mode Démo',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                ),
+              ),
+            ),
+          ],
+
           const SizedBox(height: 40),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMyRestaurantsButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: OutlinedButton.icon(
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const MyRestaurantsScreen()),
+        ),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: Colors.white,
+          side: const BorderSide(color: Colors.white54),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ),
+        icon: const Icon(Icons.store_outlined, size: 22),
+        label: const Text(
+          'Mes restaurants enregistrés',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
       ),
     );
   }
