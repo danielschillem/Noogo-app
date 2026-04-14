@@ -1,0 +1,35 @@
+# ============================================================
+# netlify.toml — Config déploiement Dashboard Noogo sur Netlify
+# ============================================================
+
+[build]
+  # Dossier contenant le package.json du dashboard
+  base    = "dashboard"
+  # Dossier de sortie après build Vite
+  publish = "dist"
+  command = "npm ci && npm run build"
+
+[build.environment]
+  NODE_VERSION  = "20"
+  VITE_API_URL  = "https://noogo-backend.onrender.com/api"
+
+# ── SPA : toutes les routes → index.html (React Router) ─────
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
+
+# ── Headers de sécurité ──────────────────────────────────────
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options        = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy        = "strict-origin-when-cross-origin"
+    Permissions-Policy     = "camera=(), microphone=(), geolocation=()"
+
+# ── Cache long pour les assets buildés (hash dans le nom) ───
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

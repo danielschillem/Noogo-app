@@ -1,93 +1,190 @@
-# noogo-app-new
 
+# 🍽️ Noogo - Application Mobile Restaurant
 
+> Application Flutter pour la commande de repas en restaurant avec intégration API Laravel
 
-## Getting started
+---
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## 📋 Informations Projet
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+| Champ | Valeur |
+|-------|--------|
+| **Version** | 1.0.0+1 |
+| **Date de création** | Mars 2026 |
+| **Dernière mise à jour** | Janvier 2026 |
+| **Développeur** | QUICK DEV-IT |
+| **Flutter SDK** | >=3.0.0 <4.0.0 |
+| **Licence** | Propriétaire |
+| **Copyright** | © 2026 QUICK DEV-IT |
+| **Territoire** | Burkina Faso |
 
-## Add your files
+---
 
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+## 🚀 Fonctionnalités
+
+### ✅ Implémentées
+- 📱 **Scan QR Code** - Scanner le code QR du restaurant pour accéder au menu
+- 🍕 **Menu interactif** - Parcourir les plats par catégories
+- 🛒 **Panier** - Ajouter/supprimer des articles, gérer les quantités
+- 💳 **Paiement** - Support OTP et Mobile Money
+- 📦 **Suivi commandes** - Historique et statut en temps réel
+- 🔔 **Notifications** - Alertes push et locales
+- 👤 **Profil utilisateur** - Gestion compte et mode invité
+- 🎨 **Onboarding** - Introduction guidée pour nouveaux utilisateurs
+
+### 🔄 En développement
+- 📊 Historique des restaurants visités (API)
+- 📍 Géolocalisation restaurant
+- ⭐ Système de notation et avis
+
+---
+
+## 🏗️ Architecture
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/Schillem/noogo-app-new.git
-git branch -M main
-git push -uf origin main
+lib/
+├── main.dart                    # Point d'entrée
+├── config/
+│   └── api_config.dart          # Configuration API & images
+├── screens/                     # 11 écrans
+│   ├── splash_screen.dart
+│   ├── onboarding_screen.dart
+│   ├── welcome_screen.dart
+│   ├── auth_screen.dart
+│   ├── home_screen.dart
+│   ├── menu_screen.dart
+│   ├── cart_screen.dart
+│   ├── orders_screen.dart
+│   ├── profile_screen.dart
+│   ├── notification_screen.dart
+│   └── qr_scanner_screen.dart
+├── services/                    # 8 services
+│   ├── api_service.dart
+│   ├── auth_service.dart
+│   ├── restaurant_provider.dart
+│   ├── realtime_service.dart
+│   ├── notification_service.dart
+│   ├── payment_service.dart
+│   ├── history_service.dart
+│   └── restaurant_storage_service.dart
+├── models/                      # 8 modèles
+│   ├── user.dart
+│   ├── restaurant.dart
+│   ├── dish.dart
+│   ├── category.dart
+│   ├── order.dart
+│   ├── flash_info.dart
+│   ├── app_notification.dart
+│   └── otp_payment_request.dart
+├── widgets/                     # 7 widgets réutilisables
+│   ├── custom_app_bar.dart
+│   ├── custom_bottom_navigation.dart
+│   ├── restaurant_header.dart
+│   ├── dishes_grid.dart
+│   ├── flash_info_section.dart
+│   ├── contact_info.dart
+│   └── qr_scanner_overlay.dart
+└── utils/                       # 4 utilitaires
+    ├── app_colors.dart
+    ├── app_text_styles.dart
+    ├── app_animations.dart
+    └── qr_helper.dart
 ```
 
-## Integrate with your tools
+---
 
-* [Set up project integrations](https://gitlab.com/Schillem/noogo-app-new/-/settings/integrations)
+## 🛠️ Installation
 
-## Collaborate with your team
+### Prérequis
+- Flutter SDK >= 3.0.0
+- Dart SDK
+- Android Studio / VS Code
+- Émulateur Android ou appareil physique
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+### Étapes
 
-## Test and Deploy
+```bash
+# 1. Cloner le dépôt
+git clone <repository-url>
+cd noogo-app
 
-Use the built-in continuous integration in GitLab.
+# 2. Installer les dépendances
+flutter pub get
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
+# 3. Lancer l'application
+flutter run
 
-***
+# 4. Build pour production
+flutter build apk --release
+flutter build ios --release
+```
 
-# Editing this README
+---
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+## 📦 Dépendances Principales
 
-## Suggestions for a good README
+| Package | Version | Usage |
+|---------|---------|-------|
+| provider | ^6.0.5 | Gestion d'état |
+| http | ^1.5.0 | Appels API REST |
+| shared_preferences | ^2.1.1 | Stockage local |
+| mobile_scanner | ^7.1.4 | Scanner QR Code |
+| pusher_channels_flutter | ^2.5.0 | WebSocket temps réel |
+| cached_network_image | ^3.3.0 | Cache images |
+| intl | ^0.20.2 | Internationalisation |
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+---
 
-## Name
-Choose a self-explaining name for your project.
+## ⚙️ Configuration API
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+L'application se connecte à un backend Laravel :
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+```
+Base URL: https://dashboard-noogo.quickdev-it.com/api
+Pusher Cluster: eu
+```
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+### Endpoints principaux
+- `GET /restaurants/{id}` - Détails restaurant
+- `GET /menus/{restaurantId}` - Menu complet
+- `POST /orders` - Créer commande
+- `POST /verify-otp-payment` - Paiement OTP
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+---
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+## 📱 Plateformes Supportées
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+| Plateforme | Statut | Notes |
+|------------|--------|-------|
+| Android | ✅ Complet | API 21+ |
+| iOS | ✅ Complet | iOS 12+ |
+| Web | ⚠️ Partiel | Scanner QR non supporté |
+| Windows | ⚠️ Partiel | Scanner QR & Pusher limités |
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+---
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+## 🧪 Tests
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+```bash
+# Lancer les tests unitaires
+flutter test
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+# Analyse statique du code
+flutter analyze
+```
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+---
 
-## License
-For open source projects, say how it is licensed.
+## 📄 Licence
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+
+---
+
+## 📞 Contact
+
+Pour toute question ou contribution, contacter l'équipe de développement.
+
+---
+
+*Dernière mise à jour : 19 mars 2026*

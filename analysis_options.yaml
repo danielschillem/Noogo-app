@@ -1,0 +1,43 @@
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    # ── Qualité & bugs potentiels ────────────────────────────
+    avoid_print: true                      # Utiliser debugPrint ou le logger
+    avoid_empty_else: true
+    avoid_returning_null_for_future: true
+    cancel_subscriptions: true             # StreamSubscription toujours annulée
+    close_sinks: true                      # StreamSink toujours fermé
+    no_duplicate_case_values: true
+    unrelated_type_equality_checks: true
+    valid_regexps: true
+
+    # ── Performance Flutter ──────────────────────────────────
+    avoid_unnecessary_containers: true     # Container() sans décoration superflu
+    sized_box_for_whitespace: true         # SizedBox plutôt que Container(height/width)
+    use_colored_box: true                  # ColoredBox plutôt que Container(color)
+    use_decorated_box: true                # DecoratedBox plutôt que Container(decoration)
+
+    # ── Style & lisibilité ───────────────────────────────────
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    prefer_const_literals_to_create_immutables: true
+    prefer_final_fields: true
+    prefer_final_locals: true
+    prefer_single_quotes: true
+    unnecessary_const: true
+    unnecessary_new: true
+    use_super_parameters: true             # Dart 3 : super.key au lieu de key: key
+
+analyzer:
+  errors:
+    # Traiter ces lint comme des warnings (pas des erreurs)
+    avoid_print: warning
+    prefer_const_constructors: warning
+    prefer_final_locals: warning
+
+  exclude:
+    - "**/*.g.dart"             # Fichiers générés
+    - "**/*.freezed.dart"
+    - lib/l10n/generated/**     # Localisations générées
+    - build/**

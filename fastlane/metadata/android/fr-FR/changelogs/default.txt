@@ -1,0 +1,8 @@
+Noogo est une application de restauration moderne permettant de parcourir le menu, passer des commandes et suivre leur statut en temps réel.
+
+Nouveautés :
+- Mode sombre
+- Recherche dans le menu
+- Notifications push
+- Liens profonds (noogo://)
+- Performances améliorées

@@ -1,0 +1,212 @@
+{
+  "@@locale": "fr",
+
+  "appName": "Noogo",
+  "@appName": {
+    "description": "Nom de l'application"
+  },
+
+  "loading": "Chargement...",
+  "@loading": { "description": "Indicateur de chargement générique" },
+
+  "retry": "Réessayer",
+  "@retry": { "description": "Bouton pour réessayer une action" },
+
+  "error_loading": "Erreur de chargement",
+  "@error_loading": { "description": "Titre d'erreur générique" },
+
+  "no_internet": "Connexion au serveur impossible — affichage des données locales",
+  "@no_internet": { "description": "Bannière hors-ligne" },
+
+  "scan_qr": "Scanner le QR Code",
+  "@scan_qr": { "description": "Bouton ou titre scan QR" },
+
+  "scan_qr_subtitle": "Scannez le QR code de votre table pour commencer",
+  "@scan_qr_subtitle": { "description": "Sous-titre écran QR" },
+
+  "menu": "Menu",
+  "@menu": { "description": "Onglet menu" },
+
+  "cart": "Panier",
+  "@cart": { "description": "Onglet panier" },
+
+  "orders": "Commandes",
+  "@orders": { "description": "Onglet commandes" },
+
+  "profile": "Profil",
+  "@profile": { "description": "Onglet profil" },
+
+  "home": "Accueil",
+  "@home": { "description": "Onglet accueil" },
+
+  "cart_empty": "Votre panier est vide",
+  "@cart_empty": { "description": "Message panier vide" },
+
+  "cart_empty_subtitle": "Ajoutez des plats depuis le menu pour commencer votre commande",
+  "@cart_empty_subtitle": { "description": "Sous-titre panier vide" },
+
+  "see_menu": "Voir le menu",
+  "@see_menu": { "description": "Bouton vers le menu" },
+
+  "order_type": "Type de commande",
+  "@order_type": { "description": "Libellé type de commande" },
+
+  "order_type_sur_place": "Sur place",
+  "@order_type_sur_place": { "description": "Type de commande sur place" },
+
+  "order_type_a_emporter": "À emporter",
+  "@order_type_a_emporter": { "description": "Type de commande à emporter" },
+
+  "order_type_livraison": "Livraison",
+  "@order_type_livraison": { "description": "Type de commande livraison" },
+
+  "payment_method": "Moyen de paiement",
+  "@payment_method": { "description": "Libellé moyen de paiement" },
+
+  "payment_cash": "Espèces",
+  "@payment_cash": { "description": "Paiement en espèces" },
+
+  "payment_mobile_money": "Mobile Money",
+  "@payment_mobile_money": { "description": "Paiement par Mobile Money" },
+
+  "table_number": "Numéro de table",
+  "@table_number": { "description": "Champ numéro de table" },
+
+  "table_number_required": "Numéro de table obligatoire",
+  "@table_number_required": { "description": "Erreur champ table vide" },
+
+  "table_number_invalid": "Format invalide (ex: A1, 12, B-3)",
+  "@table_number_invalid": { "description": "Erreur format table" },
+
+  "phone_number": "Numéro de téléphone",
+  "@phone_number": { "description": "Champ téléphone" },
+
+  "phone_number_required": "Numéro de téléphone obligatoire",
+  "@phone_number_required": { "description": "Erreur champ téléphone vide" },
+
+  "phone_number_invalid": "Numéro invalide (format +226 00 00 00 00)",
+  "@phone_number_invalid": { "description": "Erreur format téléphone" },
+
+  "place_order": "Commander",
+  "@place_order": { "description": "Bouton valider commande" },
+
+  "order_confirmed": "Commande confirmée",
+  "@order_confirmed": { "description": "Titre confirmation commande" },
+
+  "order_preparing": "En préparation",
+  "@order_preparing": { "description": "Statut en préparation" },
+
+  "order_ready": "Commande prête !",
+  "@order_ready": { "description": "Statut commande prête" },
+
+  "order_delivered": "Commande livrée",
+  "@order_delivered": { "description": "Statut commande livrée" },
+
+  "order_cancelled": "Commande annulée",
+  "@order_cancelled": { "description": "Statut commande annulée" },
+
+  "order_pending": "En attente",
+  "@order_pending": { "description": "Statut en attente" },
+
+  "order_completed": "Commande terminée",
+  "@order_completed": { "description": "Statut commande terminée" },
+
+  "total": "Total",
+  "@total": { "description": "Libellé total" },
+
+  "total_amount": "{amount} FCFA",
+  "@total_amount": {
+    "description": "Montant formaté FCFA",
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+
+  "categories": "Catégories",
+  "@categories": { "description": "Titre section catégories" },
+
+  "all_dishes": "Tous les plats",
+  "@all_dishes": { "description": "Filtre toutes catégories" },
+
+  "favorites": "Favoris",
+  "@favorites": { "description": "Onglet favoris" },
+
+  "dish_of_the_day": "Plat du jour",
+  "@dish_of_the_day": { "description": "Badge plat du jour" },
+
+  "add_to_cart": "Ajouter au panier",
+  "@add_to_cart": { "description": "Bouton ajouter au panier" },
+
+  "notifications": "Notifications",
+  "@notifications": { "description": "Titre écran notifications" },
+
+  "no_notifications": "Aucune notification",
+  "@no_notifications": { "description": "Message aucune notification" },
+
+  "mark_all_read": "Tout marquer comme lu",
+  "@mark_all_read": { "description": "Action notifications" },
+
+  "restaurant_closed": "Restaurant fermé",
+  "@restaurant_closed": { "description": "Statut restaurant fermé" },
+
+  "restaurant_open": "Ouvert",
+  "@restaurant_open": { "description": "Statut restaurant ouvert" },
+
+  "rate_order": "Noter la commande",
+  "@rate_order": { "description": "Bouton ouvrir dialog notation" },
+
+  "rating_title": "Votre avis",
+  "@rating_title": { "description": "Titre dialog notation" },
+
+  "rating_subtitle": "Comment s'est passée votre commande ?",
+  "@rating_subtitle": { "description": "Sous-titre dialog notation" },
+
+  "rating_comment_hint": "Commentaire (optionnel)...",
+  "@rating_comment_hint": { "description": "Hint champ commentaire" },
+
+  "submit": "Envoyer",
+  "@submit": { "description": "Bouton soumettre" },
+
+  "cancel": "Annuler",
+  "@cancel": { "description": "Bouton annuler" },
+
+  "login": "Connexion",
+  "@login": { "description": "Bouton connexion" },
+
+  "logout": "Déconnexion",
+  "@logout": { "description": "Bouton déconnexion" },
+
+  "sign_up": "Créer un compte",
+  "@sign_up": { "description": "Bouton inscription" },
+
+  "guest_mode": "Continuer en invité",
+  "@guest_mode": { "description": "Bouton mode invité" },
+
+  "email": "Email",
+  "@email": { "description": "Champ email" },
+
+  "password": "Mot de passe",
+  "@password": { "description": "Champ mot de passe" },
+
+  "no_orders": "Aucune commande",
+  "@no_orders": { "description": "Message aucune commande" },
+
+  "no_orders_subtitle": "Vos commandes apparaîtront ici",
+  "@no_orders_subtitle": { "description": "Sous-titre aucune commande" },
+
+  "preparation_time": "{minutes} min",
+  "@preparation_time": {
+    "description": "Temps de préparation",
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+
+  "items_count": "{count, plural, =0{Aucun article} =1{1 article} other{{count} articles}}",
+  "@items_count": {
+    "description": "Nombre d'articles dans le panier",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
+}

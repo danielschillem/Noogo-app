@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "89154723235",
+    "project_id": "noogo-568e6",
+    "storage_bucket": "noogo-568e6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:89154723235:android:9e91ebca270ca57c82ce16",
+        "android_client_info": {
+          "package_name": "com.quickdevit.noogo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZ795lYXPwcw-My0YzIQgWrfiWZlYyRJg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,70 @@
+name: noogo
+description: Application Flutter pour restaurant avec intégration API Laravel
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  provider: ^6.0.5
+  http: ^1.5.0
+  cached_network_image: ^3.3.0
+  url_launcher: ^6.1.7
+  intl: ^0.20.2
+  flutter_dotenv: ^6.0.0
+  shared_preferences: ^2.1.1
+  badges: ^3.1.1
+  flutter_spinkit: ^5.1.0
+  carousel_slider: ^5.1.1
+  animations: ^2.0.6
+  cupertino_icons: ^1.0.5
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^7.1.4
+  pusher_channels_flutter: ^2.5.0
+  sentry_flutter: ^8.14.0
+  geolocator: ^13.0.2
+  # Deep links
+  app_links: ^6.3.1
+  # Firebase / FCM
+  firebase_core: ^3.13.0
+  firebase_messaging: ^15.2.5
+  flutter_local_notifications: ^18.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+# ==========================================
+# 🎨 CONFIGURATION DES ICÔNES D'APPLICATION
+# ==========================================
+flutter_icons:
+  android: true
+  ios: true
+  web:
+    generate: true
+
+  image_path: "assets/icons/03.png"
+  background_color: "#FF6B35"
+  theme_color: "#FF6B35"
+
+  adaptive_icon_foreground: "assets/icons/03.png"
+  adaptive_icon_background: "#FFFFFF"
+
+# ==========================================
+# 📦 CONFIGURATION FLUTTER
+# ==========================================
+flutter:
+  uses-material-design: true
+  generate: true
+
+  assets:
+    - assets/env/.env
+    - assets/images/
+    - assets/icons/

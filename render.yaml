@@ -1,0 +1,83 @@
+# ============================================================
+# render.yaml — Infrastructure Noogo sur Render.com
+# ============================================================
+# Déposer à la RACINE du repo GitHub.
+# Render détecte ce fichier et crée les services automatiquement.
+# Doc : https://render.com/docs/blueprint-spec
+#
+# ⚠️  BASE DE DONNÉES : Render n'autorise qu'1 PostgreSQL free par compte.
+#     Options (choisir une) :
+#     A) Utiliser votre PostgreSQL Render existant → copiez la "Internal
+#        Database URL" depuis Render Dashboard et collez-la dans DB_URL
+#        (variable marquée sync:false ci-dessous).
+#     B) Créer une DB gratuite sur https://neon.tech ou https://supabase.com
+#        (5 GB gratuit, PostgreSQL managed) et coller l'URL dans DB_URL.
+# ============================================================
+
+services:
+  - type: web
+    name: noogo-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free               # Passer à "starter" pour 0 cold-start
+    region: frankfurt
+    healthCheckPath: /up     # Laravel health endpoint
+    envVars:
+      # ── Application ──────────────────────────────────────
+      - key: APP_NAME
+        value: Noogo
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        sync: false           # ← Format requis: base64:xxx (32 octets)
+                              #   Générer via: php artisan key:generate --show
+                              #   OU laisser vide → start.sh génère au démarrage
+                              #   (mais clé change à chaque restart, sessions invalidées)
+
+      # ── URL — À mettre à jour après le 1er déploiement ──
+      - key: APP_URL
+        value: https://noogo-backend.onrender.com
+
+      # ── Base de données (à configurer manuellement) ───────
+      # Collez ici votre connection string PostgreSQL
+      # Format : postgresql://user:password@host:5432/dbname
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        sync: false           # ← À renseigner dans Render Dashboard
+
+      # ── Session / Cache ───────────────────────────────────
+      - key: SESSION_DRIVER
+        value: cookie
+      - key: CACHE_STORE
+        value: file
+      - key: FILESYSTEM_DISK
+        value: public
+
+      # ── Logs ─────────────────────────────────────────────
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: error
+
+      # ── CORS / Sanctum ───────────────────────────────────
+      # Renseigner les vrais domaines Netlify et mobile après déploiement
+      - key: SANCTUM_STATEFUL_DOMAINS
+        value: noogo-dashboard.netlify.app
+      - key: FRONTEND_URL
+        value: https://noogo-dashboard.netlify.app
+
+      # ── Pusher (temps réel) — À renseigner manuellement ──
+      - key: BROADCAST_CONNECTION
+        value: pusher
+      - key: PUSHER_APP_ID
+        sync: false
+      - key: PUSHER_APP_KEY
+        sync: false
+      - key: PUSHER_APP_SECRET
+        sync: false
+      - key: PUSHER_APP_CLUSTER
+        value: eu
