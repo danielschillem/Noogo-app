@@ -28,7 +28,8 @@ class AnalyticsService {
   }
 
   /// Validation du QR code réussie.
-  static Future<void> qrValidated(int restaurantId, String restaurantName) async {
+  static Future<void> qrValidated(
+      int restaurantId, String restaurantName) async {
     await _track('qr_validated', {
       'restaurant_id': restaurantId,
       'restaurant_name': restaurantName,
@@ -75,7 +76,7 @@ class AnalyticsService {
   static Future<void> orderPlaced({
     required int orderId,
     required double totalAmount,
-    required String orderType,    // 'sur place' | 'à emporter' | 'livraison'
+    required String orderType, // 'sur place' | 'à emporter' | 'livraison'
     required String paymentMethod, // 'cash' | 'mobile_money'
     required int restaurantId,
     required int itemCount,
@@ -182,11 +183,13 @@ class AnalyticsService {
     if (endpoint.isEmpty) return;
 
     try {
-      await http.post(
-        Uri.parse(endpoint),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(payload),
-      ).timeout(const Duration(seconds: 5));
+      await http
+          .post(
+            Uri.parse(endpoint),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(payload),
+          )
+          .timeout(const Duration(seconds: 5));
     } catch (e) {
       // Silencieux — analytics ne doit jamais faire crasher l'app
       if (kDebugMode) {

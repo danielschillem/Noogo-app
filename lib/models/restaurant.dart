@@ -13,6 +13,8 @@ class Restaurant {
   final int? userId;
   final List<String> images;
   final bool? isOpenFromApi; // ✅ Renommé pour clarté
+  final double? latitude; // FEAT-003 : coordonnées GPS (optionnel)
+  final double? longitude; // FEAT-003 : coordonnées GPS (optionnel)
 
   Restaurant({
     required this.id,
@@ -25,7 +27,9 @@ class Restaurant {
     this.heuresOuverture,
     this.userId,
     this.images = const [],
-    this.isOpenFromApi, // ✅ Statut du serveur (optionnel)
+    this.isOpenFromApi,
+    this.latitude,
+    this.longitude,
   });
 
   // ✅ GETTER CALCULÉ AUTOMATIQUEMENT
@@ -150,6 +154,8 @@ class Restaurant {
         userId: _parseInt(json['user_id']),
         images: _parseImages(json['images']),
         isOpenFromApi: _parseBool(json['is_open']), // ✅ Renommé
+        latitude: _parseDouble(json['latitude']),
+        longitude: _parseDouble(json['longitude']),
       );
     } catch (e) {
       debugPrint('❌ Erreur parsing Restaurant: $e');
@@ -164,6 +170,15 @@ class Restaurant {
     if (value is int) return value;
     if (value is String) return int.tryParse(value);
     if (value is double) return value.toInt();
+    return null;
+  }
+
+  // ✅ Helper sécurisé pour parser les double (lat/lng)
+  static double? _parseDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value);
     return null;
   }
 

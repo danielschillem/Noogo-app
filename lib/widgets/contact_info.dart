@@ -2,6 +2,7 @@
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/restaurant.dart';
+import '../services/geolocation_service.dart';
 import '../services/restaurant_provider.dart';
 import '../screens/qr_scanner_screen.dart';
 import '../utils/app_colors.dart';
@@ -20,6 +21,29 @@ class ContactInfo extends StatefulWidget {
 
 class _ContactInfoState extends State<ContactInfo> {
   bool _isValidating = false;
+  double? _distanceKm;
+  bool _loadingDistance = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDistance();
+  }
+
+  Future<void> _loadDistance() async {
+    if (widget.restaurant.latitude == null) return;
+    setState(() => _loadingDistance = true);
+    final d = await GeolocationService.getDistanceToRestaurant(
+      restaurantLat: widget.restaurant.latitude,
+      restaurantLng: widget.restaurant.longitude,
+    );
+    if (mounted) {
+      setState(() {
+        _distanceKm = d;
+        _loadingDistance = false;
+      });
+    }
+  }
 
   Future<void> _makePhoneCall(BuildContext context, String? phoneNumber) async {
     if (phoneNumber == null || phoneNumber.isEmpty) {
@@ -297,6 +321,83 @@ class _ContactInfoState extends State<ContactInfo> {
                     child: const Text(
                       'Appeler',
                       style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // FEAT-003 : Distance & Itinéraire
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Row(
+              children: [
+                const Icon(Icons.place_outlined, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    widget.restaurant.adresse,
+                    style: const TextStyle(fontSize: 13),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Badge distance
+                if (_loadingDistance)
+                  const SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                else if (_distanceKm != null)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.info.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.near_me,
+                            size: 12, color: AppColors.info),
+                        const SizedBox(width: 4),
+                        Text(
+                          GeolocationService.formatDistance(_distanceKm!),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.info,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(width: 8),
+                // Bouton Itinéraire
+                GestureDetector(
+                  onTap: () => GeolocationService.openMapsForRestaurant(
+                    lat: widget.restaurant.latitude,
+                    lng: widget.restaurant.longitude,
+                    address: widget.restaurant.adresse,
+                  ),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.success,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.directions, size: 14, color: Colors.white),
+                        SizedBox(width: 4),
+                        Text('Itinéraire',
+                            style:
+                                TextStyle(color: Colors.white, fontSize: 12)),
+                      ],
                     ),
                   ),
                 ),

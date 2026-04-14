@@ -53,6 +53,9 @@ class ApiConfig {
   /// DSN Sentry pour le crash reporting (vide = désactivé)
   static String get sentryDsn => dotenv.env['SENTRY_DSN'] ?? '';
 
+  /// Endpoint analytics custom (POST JSON) — vide = désactivé
+  static String get analyticsEndpoint => dotenv.env['ANALYTICS_ENDPOINT'] ?? '';
+
   // ============================================
   // 🖼️ CONFIGURATION IMAGES
   // ============================================

@@ -251,6 +251,14 @@
 
 ## 🕐 Phase 5 — Monitoring & I18N (Backlog)
 
+- [x] **MON-001** : Analytics événements clés
+  - ✅ Corrigé le 14/04/2026 :
+    - `lib/services/analytics_service.dart` — 12 événements custom (QR, commande, paiement, navigation, user)
+    - `ApiConfig.analyticsEndpoint` depuis `.env` (`ANALYTICS_ENDPOINT=`)
+    - Log local via `AppLogger` en dev ; envoi POST JSON en production si endpoint configuré
+    - Compatible Mixpanel / PostHog / endpoint Laravel custom (1 méthode `_send` à adapater)
+    - Appelé automatiquement dans `validateRestaurantQRCode` + `submitOrder`
+
 - [x] **MON-002** : Crash reporting Sentry (`sentry_flutter`)
   - ✅ Corrigé le 14/04/2026 :
     - Package `sentry_flutter: ^8.14.0` ajouté dans `pubspec.yaml`

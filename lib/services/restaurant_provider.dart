@@ -1190,6 +1190,17 @@ class RestaurantProvider with ChangeNotifier {
         _lastOrderStatuses[newOrder.id] = newOrder.status;
         await createOrderNotification(newOrder);
         await _saveOrdersLocally(_orders);
+
+        // Analytics : commande passée
+        unawaited(AnalyticsService.orderPlaced(
+          orderId: newOrder.id,
+          totalAmount: totalAmount,
+          orderType: normalizedOrderType,
+          paymentMethod: paymentMethod,
+          restaurantId: _restaurant!.id,
+          itemCount: _cartItems.length,
+        ));
+
         _cartItems.clear();
         _orderSubmitState = OrderSubmitState.success;
         notifyListeners();
