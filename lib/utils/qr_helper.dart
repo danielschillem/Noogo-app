@@ -1,10 +1,16 @@
 import 'package:flutter/foundation.dart';
-import '../config/api_config.dart';
 
 class QRHelper {
-  static const String qrBaseUrl = 'https://dashboard-noogo.quickdev-it.com';
+  /// URLs acceptées comme sources de QR codes valides
+  static const List<String> _validBaseUrls = [
+    'https://noogo.netlify.app',
+    'https://dashboard-noogo.quickdev-it.com',
+    'http://localhost',
+    'http://127.0.0.1',
+  ];
+
   static String generateRestaurantQRData(int restaurantId) {
-    return '$qrBaseUrl/restaurant/$restaurantId/menu';
+    return '${_validBaseUrls.first}/restaurant/$restaurantId';
   }
 
   static bool isValidRestaurantQR(String qrData) {
@@ -13,23 +19,22 @@ class QRHelper {
       return false;
     }
 
-    final isValidFormat = qrData.startsWith(qrBaseUrl) &&
-        (qrData.contains('/restaurant/'));
+    final isValidFormat = _validBaseUrls.any((base) =>
+          qrData.startsWith(base)) &&
+        qrData.contains('/restaurant/');
 
     if (kDebugMode) {
       debugPrint('🔍 Validation QR:');
       debugPrint('   - QR scanné: $qrData');
-      debugPrint('   - Base URL attendue: ${ApiConfig.baseUrl}');
+      debugPrint('   - URLs valides: $_validBaseUrls');
       debugPrint('   - Valide: $isValidFormat');
     }
-    debugPrint('   - Base URL attendue: $qrBaseUrl');
     return isValidFormat;
   }
 
   /// Parse l'ID du restaurant depuis le QR Code
   static int? parseRestaurantId(String qrData) {
     try {
-
       final uri = Uri.parse(qrData);
       final segments = uri.pathSegments;
 
@@ -66,6 +71,6 @@ class QRHelper {
 
   /// Construit l'URL complète du menu à partir d'un ID
   static String getMenuUrl(int restaurantId) {
-    return '$qrBaseUrl/restaurant/$restaurantId/menu';
+    return '${_validBaseUrls.first}/restaurant/$restaurantId';
   }
 }
