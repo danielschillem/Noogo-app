@@ -67,7 +67,6 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         title: const Text('Scanner QR Code'),
         backgroundColor: const Color(0xFF1B975B),
         foregroundColor: Colors.white,
-
         actions: [
           IconButton(
             color: Colors.white,
@@ -113,6 +112,52 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                 MobileScanner(
                   controller: cameraController,
                   onDetect: _handleBarcode,
+                  errorBuilder: (context, error) {
+                    String message = 'Impossible d\'accéder à la caméra.';
+                    if (error.errorCode ==
+                        MobileScannerErrorCode.permissionDenied) {
+                      message =
+                          'Permission caméra refusée.\nActivez-la dans les paramètres du navigateur.';
+                    } else if (error.errorDetails?.message
+                            ?.toLowerCase()
+                            .contains('use') ==
+                        true) {
+                      message =
+                          'Caméra déjà utilisée par une autre application.\nFermez les autres apps ou onglets utilisant la caméra, puis réessayez.';
+                    }
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.videocam_off,
+                                color: Colors.white54, size: 64),
+                            const SizedBox(height: 16),
+                            Text(
+                              message,
+                              style: const TextStyle(
+                                  color: Colors.white, fontSize: 16),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 24),
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                await cameraController.stop();
+                                await cameraController.start();
+                              },
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('Réessayer'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF1B975B),
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
                 // Overlay pour le cadre de scan
                 Container(
