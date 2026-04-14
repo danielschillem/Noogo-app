@@ -33,9 +33,9 @@ RUN mkdir -p storage/logs storage/framework/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# ── Overrides Nginx (conf.d, sans remplacer le nginx.conf de serversideup) ───
-# Augmenter la taille max des uploads et forcer le webroot Laravel
-COPY docker/nginx-laravel.conf /etc/nginx/conf.d/laravel.conf
+# ── Configuration Nginx principale ──────────────────────────
+# On fournit notre propre nginx.conf (serversideup ne l'inclut pas toujours)
+COPY nginx.conf /etc/nginx/nginx.conf
 
 # ── Script de démarrage ──────────────────────────────────────
 COPY start.sh /start-noogo.sh
