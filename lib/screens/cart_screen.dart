@@ -23,6 +23,10 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
   final _mobileMoneyNumberController = TextEditingController();
   final _otpController = TextEditingController();
 
+  // Form keys pour validation inline
+  final _phoneFormKey = GlobalKey<FormState>();
+  final _mobileMoneyFormKey = GlobalKey<FormState>();
+
   @override
   void initState() {
     super.initState();
@@ -103,9 +107,6 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       ),
       body: Consumer<RestaurantProvider>(
         builder: (context, provider, child) {
-          debugPrint(
-              'CartScreen rebuild: ${provider.cartItems.length} articles');
-
           return AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
             child: provider.cartItems.isEmpty
@@ -804,17 +805,26 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
           ElevatedButton(
             onPressed: () {
               final tableNumber = _tableNumberController.text.trim();
-              if (tableNumber.isNotEmpty) {
-                Navigator.pop(context, tableNumber);
-              } else {
+              final isValid =
+                  RegExp(r'^[A-Za-z0-9\-]{1,10}$').hasMatch(tableNumber);
+              if (isValid) {
+                Navigator.pop(context, tableNumber.toUpperCase());
+              } else if (tableNumber.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Veuillez entrer un numéro de table'),
                     backgroundColor: AppColors.error,
                   ),
                 );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                        'Numéro invalide (ex: 12, A5 — max 10 caractères)'),
+                    backgroundColor: AppColors.error,
+                  ),
+                );
               }
-              debugPrint("TABLE SAISIE: $tableNumber");
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
@@ -849,16 +859,30 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
               style: TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 16),
-            TextFormField(
-              controller: _phoneNumberController,
-              decoration: const InputDecoration(
-                labelText: 'Téléphone',
-                hintText: 'Ex: 70123456',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.phone),
+            Form(
+              key: _phoneFormKey,
+              child: TextFormField(
+                controller: _phoneNumberController,
+                decoration: const InputDecoration(
+                  labelText: 'Téléphone',
+                  hintText: 'Ex: 70123456',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.phone),
+                ),
+                keyboardType: TextInputType.phone,
+                autofocus: true,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Entrez votre numéro de téléphone';
+                  }
+                  final cleaned = value.replaceAll(RegExp(r'[\s\-\.]'), '');
+                  if (!RegExp(r'^(?:\+?226|00226)?[0-9]{8}$').hasMatch(cleaned)) {
+                    return 'Numéro invalide (ex: 70 12 34 56)';
+                  }
+                  return null;
+                },
               ),
-              keyboardType: TextInputType.phone,
-              autofocus: true,
             ),
           ],
         ),
@@ -869,20 +893,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
           ),
           ElevatedButton(
             onPressed: () {
-              final phone = _phoneNumberController.text.trim();
-              final cleaned = phone.replaceAll(RegExp(r'[\s\-\.]'), '');
-              final isValid =
-                  RegExp(r'^(?:\+?226|00226)?[0-9]{8}$').hasMatch(cleaned);
-              if (isValid) {
-                Navigator.pop(context, phone);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content:
-                        Text('Numéro invalide (ex: 70 12 34 56 — 8 chiffres)'),
-                    backgroundColor: AppColors.error,
-                  ),
-                );
+              if (_phoneFormKey.currentState!.validate()) {
+                Navigator.pop(context, _phoneNumberController.text.trim());
               }
             },
             style: ElevatedButton.styleFrom(
@@ -1086,17 +1098,31 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
               style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 16),
-            TextFormField(
-              controller: _mobileMoneyNumberController,
-              decoration: InputDecoration(
-                labelText: 'Numéro Mobile Money',
-                hintText: 'Ex: 70123456',
-                border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.phone),
-                helperText: 'Le code OTP sera envoyé à ce numéro',
+            Form(
+              key: _mobileMoneyFormKey,
+              child: TextFormField(
+                controller: _mobileMoneyNumberController,
+                decoration: InputDecoration(
+                  labelText: 'Numéro Mobile Money',
+                  hintText: 'Ex: 70123456',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.phone),
+                  helperText: 'Le code OTP sera envoyé à ce numéro',
+                ),
+                keyboardType: TextInputType.phone,
+                autofocus: true,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Entrez votre numéro Mobile Money';
+                  }
+                  final cleaned = value.replaceAll(RegExp(r'[\s\-\.]'), '');
+                  if (!RegExp(r'^(?:\+?226|00226)?[0-9]{8}$').hasMatch(cleaned)) {
+                    return 'Numéro invalide (ex: 70 12 34 56)';
+                  }
+                  return null;
+                },
               ),
-              keyboardType: TextInputType.phone,
-              autofocus: true,
             ),
           ],
         ),
@@ -1107,20 +1133,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
           ),
           ElevatedButton(
             onPressed: () {
-              final number = _mobileMoneyNumberController.text.trim();
-              final cleaned = number.replaceAll(RegExp(r'[\s\-\.]'), '');
-              final isValid =
-                  RegExp(r'^(?:\+?226|00226)?[0-9]{8}$').hasMatch(cleaned);
-              if (isValid) {
-                Navigator.pop(context, number);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content:
-                        Text('Numéro invalide (ex: 70 12 34 56 — 8 chiffres)'),
-                    backgroundColor: AppColors.error,
-                  ),
-                );
+              if (_mobileMoneyFormKey.currentState!.validate()) {
+                Navigator.pop(context, _mobileMoneyNumberController.text.trim());
               }
             },
             style: ElevatedButton.styleFrom(

@@ -422,17 +422,14 @@ class _OrdersScreenState extends State<OrdersScreen>
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 10),
                                 decoration: BoxDecoration(
-                                  color:
-                                      Colors.amber.withValues(alpha: 0.1),
+                                  color: Colors.amber.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                    color:
-                                        Colors.amber.withValues(alpha: 0.4),
+                                    color: Colors.amber.withValues(alpha: 0.4),
                                   ),
                                 ),
                                 child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     const Icon(
                                       Icons.star_rounded,
@@ -451,14 +448,12 @@ class _OrdersScreenState extends State<OrdersScreen>
                                 ),
                               )
                             : ElevatedButton.icon(
-                                onPressed: () =>
-                                    _showRatingDialog(order),
+                                onPressed: () => _showRatingDialog(order),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.amber,
                                   foregroundColor: Colors.white,
                                 ),
-                                icon: const Icon(Icons.star_outline,
-                                    size: 16),
+                                icon: const Icon(Icons.star_outline, size: 16),
                                 label: const Text('Évaluer'),
                               ),
                       ),

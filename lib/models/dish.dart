@@ -103,15 +103,17 @@ class Dish {
       }
       // Si c'est une liste
       else if (images is List) {
-        if (kDebugMode)
+        if (kDebugMode) {
           debugPrint('   - Liste détectée (${images.length} éléments)');
+        }
 
         if (images.isEmpty) {
           relativePath = null;
         } else {
           final first = images[0];
-          if (kDebugMode)
+          if (kDebugMode) {
             debugPrint('   - Premier élément: $first (${first.runtimeType})');
+          }
 
           if (first is String && first.isNotEmpty) {
             relativePath = first;
