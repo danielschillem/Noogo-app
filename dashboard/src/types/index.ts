@@ -44,6 +44,7 @@ export interface MyRestaurant {
   logo?: string;
   adresse: string;
   is_active: boolean;
+  is_open?: boolean;
   role: StaffRole;
   role_label: string;
   permissions: string[];

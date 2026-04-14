@@ -9,10 +9,12 @@ import {
   X,
   LogOut,
   ChevronDown,
+  ChevronRight,
   User,
   Users,
+  Circle,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { dashboardApi, myRestaurantsApi } from '../../services/api';
 import type { MyRestaurant } from '../../types';
@@ -34,7 +36,23 @@ export default function Sidebar() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
   const [myRestaurants, setMyRestaurants] = useState<MyRestaurant[]>([]);
+  const [showAllRestaurants, setShowAllRestaurants] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Dédoublonner par id (sécurité côté client en cas de doublon API)
+  const uniqueRestaurants = useMemo(() => {
+    const seen = new Map<number, MyRestaurant>();
+    for (const r of myRestaurants) {
+      if (!seen.has(r.id)) seen.set(r.id, r);
+    }
+    return Array.from(seen.values()).sort((a, b) => a.nom.localeCompare(b.nom));
+  }, [myRestaurants]);
+
+  const MAX_VISIBLE = 4;
+  const visibleRestaurants = showAllRestaurants
+    ? uniqueRestaurants
+    : uniqueRestaurants.slice(0, MAX_VISIBLE);
+  const hiddenCount = uniqueRestaurants.length - MAX_VISIBLE;
 
   // Charger "mes restaurants" pour les non-admins
   useEffect(() => {
@@ -113,12 +131,18 @@ export default function Sidebar() {
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
             {/* Mes Restaurants (non-admin) */}
-            {!user?.is_admin && myRestaurants.length > 0 && (
+            {!user?.is_admin && uniqueRestaurants.length > 0 && (
               <div className="mb-4">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 mb-2">
-                  Mes restaurants
-                </p>
-                {myRestaurants.map(r => {
+                <div className="flex items-center justify-between px-4 mb-2">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    Mes restaurants
+                  </p>
+                  <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">
+                    {uniqueRestaurants.length}
+                  </span>
+                </div>
+
+                {visibleRestaurants.map(r => {
                   const href = `/restaurants/${r.id}`;
                   const isActive = location.pathname.startsWith(href);
                   return (
@@ -128,19 +152,48 @@ export default function Sidebar() {
                       onClick={() => setIsOpen(false)}
                       className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 ${isActive ? 'bg-orange-50 text-orange-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
                     >
-                      <Store className={`h-4 w-4 flex-shrink-0 ${isActive ? 'text-orange-500' : 'text-gray-400'}`} />
-                      <div className="flex-1 min-w-0">
-                        <p className="truncate">{r.nom}</p>
-                        <p className="text-xs text-gray-400">{r.role_label}</p>
+                      {/* Indicateur statut : vert = actif+ouvert, jaune = actif+fermé, gris = inactif */}
+                      <div className="relative flex-shrink-0">
+                        <Store className={`h-4 w-4 ${isActive ? 'text-orange-500' : 'text-gray-400'}`} />
+                        <Circle
+                          className={`absolute -bottom-0.5 -right-0.5 h-2 w-2 fill-current ${!r.is_active ? 'text-gray-300' :
+                              r.is_open !== false ? 'text-emerald-500' :
+                                'text-amber-400'
+                            }`}
+                        />
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="truncate leading-tight">{r.nom}</p>
+                        <p className="text-xs text-gray-400 leading-tight">
+                          {r.role_label}
+                          {r.is_active === false && (
+                            <span className="ml-1 text-red-400">· Inactif</span>
+                          )}
+                        </p>
+                      </div>
+                      {isActive && <ChevronRight className="h-3.5 w-3.5 text-orange-400 flex-shrink-0" />}
                     </Link>
                   );
                 })}
-                {myRestaurants.some(r => ['owner', 'manager'].includes(r.role)) && (
+
+                {/* Expand / Collapse si > MAX_VISIBLE */}
+                {uniqueRestaurants.length > MAX_VISIBLE && (
+                  <button
+                    onClick={() => setShowAllRestaurants(v => !v)}
+                    className="flex items-center gap-2 w-full px-4 py-1.5 text-xs text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showAllRestaurants ? 'rotate-180' : ''}`} />
+                    {showAllRestaurants
+                      ? 'Réduire'
+                      : `Voir ${hiddenCount} restaurant${hiddenCount > 1 ? 's' : ''} de plus`}
+                  </button>
+                )}
+
+                {uniqueRestaurants.some(r => ['owner', 'manager'].includes(r.role)) && (
                   <Link
                     to="/restaurants"
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2 rounded-lg text-xs text-orange-500 hover:bg-orange-50 transition-colors mt-1"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs text-orange-500 hover:bg-orange-50 transition-colors mt-1"
                   >
                     <Users className="h-3.5 w-3.5" /> Gérer le personnel
                   </Link>

@@ -15,14 +15,20 @@ import {
   QrCode,
   DoorOpen,
   DoorClosed,
+  Store,
+  CheckCircle2,
+  XCircle,
 } from 'lucide-react';
 import { restaurantsApi } from '../../services/api';
 import type { Restaurant } from '../../types';
+
+type FilterTab = 'all' | 'active' | 'inactive';
 
 export default function RestaurantsPage() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [filterTab, setFilterTab] = useState<FilterTab>('all');
 
   useEffect(() => {
     fetchRestaurants();
@@ -67,10 +73,22 @@ export default function RestaurantsPage() {
     }
   };
 
-  const filteredRestaurants = restaurants.filter(r =>
-    r.nom.toLowerCase().includes(search.toLowerCase()) ||
-    r.adresse.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredRestaurants = restaurants
+    .filter(r => {
+      const matchSearch = r.nom.toLowerCase().includes(search.toLowerCase()) ||
+        r.adresse.toLowerCase().includes(search.toLowerCase());
+      const matchTab =
+        filterTab === 'all' ? true :
+          filterTab === 'active' ? r.is_active :
+            !r.is_active;
+      return matchSearch && matchTab;
+    })
+    .sort((a, b) => a.nom.localeCompare(b.nom));
+
+  const total = restaurants.length;
+  const activeCount = restaurants.filter(r => r.is_active).length;
+  const inactiveCount = total - activeCount;
+  const openCount = restaurants.filter(r => r.is_active && r.is_open).length;
 
   if (isLoading) {
     return (
@@ -97,23 +115,64 @@ export default function RestaurantsPage() {
         </Link>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Rechercher un restaurant..."
-          className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-        />
+      {/* Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {[
+          { label: 'Total', value: total, color: 'bg-gray-50 text-gray-700', icon: <Store className="h-5 w-5 text-gray-400" /> },
+          { label: 'Actifs', value: activeCount, color: 'bg-green-50 text-green-700', icon: <CheckCircle2 className="h-5 w-5 text-green-500" /> },
+          { label: 'Inactifs', value: inactiveCount, color: 'bg-red-50 text-red-700', icon: <XCircle className="h-5 w-5 text-red-400" /> },
+          { label: 'Ouverts maintenant', value: openCount, color: 'bg-emerald-50 text-emerald-700', icon: <DoorOpen className="h-5 w-5 text-emerald-500" /> },
+        ].map(s => (
+          <div key={s.label} className={`flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-100 ${s.color}`}>
+            {s.icon}
+            <div>
+              <p className="text-2xl font-bold leading-none">{s.value}</p>
+              <p className="text-xs opacity-70 mt-0.5">{s.label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filtres + Recherche */}
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+        {/* Onglets filtres */}
+        <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+          {([
+            { key: 'all', label: `Tous (${total})` },
+            { key: 'active', label: `Actifs (${activeCount})` },
+            { key: 'inactive', label: `Inactifs (${inactiveCount})` },
+          ] as { key: FilterTab; label: string }[]).map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setFilterTab(tab.key)}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${filterTab === tab.key
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+                }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Recherche */}
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Rechercher un restaurant..."
+            className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+          />
+        </div>
       </div>
 
       {/* Grid */}
       {filteredRestaurants.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredRestaurants.map((restaurant) => (
-          <RestaurantCard
+            <RestaurantCard
               key={restaurant.id}
               restaurant={restaurant}
               onToggleActive={handleToggleActive}
@@ -127,15 +186,30 @@ export default function RestaurantsPage() {
           <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
             <MapPin className="h-8 w-8 text-gray-400" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun restaurant</h3>
-          <p className="text-gray-500 mb-4">Commencez par ajouter votre premier restaurant</p>
-          <Link
-            to="/restaurants/new"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
-          >
-            <Plus className="h-5 w-5" />
-            Ajouter un restaurant
-          </Link>
+          {search || filterTab !== 'all' ? (
+            <>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun résultat</h3>
+              <p className="text-gray-500 mb-4">Essayez d'autres filtres ou termes de recherche</p>
+              <button
+                onClick={() => { setSearch(''); setFilterTab('all'); }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+              >
+                Réinitialiser les filtres
+              </button>
+            </>
+          ) : (
+            <>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun restaurant</h3>
+              <p className="text-gray-500 mb-4">Commencez par ajouter votre premier restaurant</p>
+              <Link
+                to="/restaurants/new"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
+              >
+                <Plus className="h-5 w-5" />
+                Ajouter un restaurant
+              </Link>
+            </>
+          )}
         </div>
       )}
     </div>
@@ -188,14 +262,12 @@ function RestaurantCard({ restaurant, onToggleActive, onToggleOpen, onDelete }: 
           </div>
         )}
         <div className="absolute top-3 right-3 flex flex-col gap-1 items-end">
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-            restaurant.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-          }`}>
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${restaurant.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+            }`}>
             {restaurant.is_active ? 'Actif' : 'Inactif'}
           </span>
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-            restaurant.is_open ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'
-          }`}>
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${restaurant.is_open ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'
+            }`}>
             {restaurant.is_open ? 'Ouvert' : 'Fermé'}
           </span>
         </div>
