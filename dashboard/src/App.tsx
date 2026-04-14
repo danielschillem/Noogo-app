@@ -13,6 +13,8 @@ import ProfilePage from './pages/auth/ProfilePage';
 import OrdersPage from './pages/orders/OrdersPage';
 import MenuPage from './pages/menu/MenuPage';
 import PromotionsPage from './pages/promotions/PromotionsPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -71,6 +73,8 @@ function AppRoutes() {
           </PublicRoute>
         }
       />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
 
       {/* Protected routes */}
       <Route

@@ -237,4 +237,75 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_guestModeKey);
   }
+
+  // ✅ Demande de réinitialisation du mot de passe
+  // Accepte un numéro de téléphone BF (champ "telephone")
+  static Future<Map<String, dynamic>> forgotPassword(String phone) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/forgot-password'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({'telephone': phone.trim()}),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        final token = data['data']?['reset_token'];
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Code généré',
+          if (token != null) 'reset_token': token,
+        };
+      } else {
+        return {
+          'success': false,
+          'message': _parseErrorMessage(data) ?? 'Erreur de réinitialisation',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Erreur réseau: $e'};
+    }
+  }
+
+  // ✅ Réinitialisation du mot de passe avec token
+  static Future<Map<String, dynamic>> resetPassword({
+    required String token,
+    required String password,
+    required String confirmPassword,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/reset-password'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'token': token.trim(),
+          'password': password,
+          'password_confirmation': confirmPassword,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Mot de passe réinitialisé',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': _parseErrorMessage(data) ?? 'Token invalide ou expiré',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Erreur réseau: $e'};
+    }
+  }
 }

@@ -44,6 +44,10 @@ export const authApi = {
   logout: () => api.post('/auth/logout'),
   me: () => api.get('/auth/me'),
   updateUser: (data: { name?: string; email?: string }) => api.put('/auth/user/update', data),
+  forgotPassword: (email: string) =>
+    api.post('/auth/forgot-password', { email }),
+  resetPassword: (data: { token: string; password: string; password_confirmation: string }) =>
+    api.post('/auth/reset-password', data),
 };
 
 // Dashboard API
