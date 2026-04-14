@@ -1,6 +1,11 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:http/http.dart' as http;
+import 'dart:async';
+import 'dart:convert';
+import '../config/api_config.dart';
+import '../services/auth_service.dart';
 
 /// Handler exécuté dans un isolate séparé (background).
 @pragma('vm:entry-point')
@@ -23,6 +28,14 @@ class FCMService {
     description: 'Commandes, promotions et alertes importantes',
     importance: Importance.high,
   );
+
+  /// Stream d'événements de statut de commande (déclenché par FCM foreground).
+  /// OrdersScreen écoute ce stream pour se rafraîchir instantanément.
+  static final StreamController<Map<String, dynamic>> _orderEventController =
+      StreamController<Map<String, dynamic>>.broadcast();
+
+  static Stream<Map<String, dynamic>> get orderEvents =>
+      _orderEventController.stream;
 
   static Future<void> init() async {
     if (_initialized) return;
@@ -79,6 +92,16 @@ class FCMService {
       final token = await messaging.getToken();
       if (kDebugMode) debugPrint('📲 FCM Token: $token');
 
+      // Envoyer le token au backend si l'utilisateur est connecté
+      if (token != null) {
+        await registerTokenToBackend(token);
+      }
+
+      // Rafraîchir le token si renouvelé
+      messaging.onTokenRefresh.listen((newToken) {
+        registerTokenToBackend(newToken);
+      });
+
       // Topic global pour les notifications broadcast
       await messaging.subscribeToTopic('all_users');
 
@@ -91,6 +114,13 @@ class FCMService {
 
   static Future<void> _onForeground(RemoteMessage message) async {
     final notif = message.notification;
+
+    // Si c'est un événement de commande, émettre sur le stream
+    final data = message.data;
+    if (data['type'] == 'order_status_changed' || data['type'] == 'new_order') {
+      _orderEventController.add(data);
+    }
+
     if (notif == null) return;
 
     if (kDebugMode) debugPrint('📲 FCM foreground: ${notif.title}');
@@ -123,6 +153,49 @@ class FCMService {
       return await FirebaseMessaging.instance.getToken();
     } catch (_) {
       return null;
+    }
+  }
+
+  /// Enregistre le token FCM au backend Laravel (POST /api/auth/device-token).
+  /// Silencieux si l'utilisateur n'est pas connecté.
+  static Future<void> registerTokenToBackend(String token) async {
+    try {
+      final authToken = await AuthService.getToken();
+      if (authToken == null) return; // Guest — pas de token à enregistrer
+
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/auth/device-token'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $authToken',
+        },
+        body: jsonEncode({'fcm_token': token}),
+      );
+
+      if (kDebugMode) {
+        debugPrint('📲 FCM token backend: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('⚠️ FCM token backend failed: $e');
+    }
+  }
+
+  /// Efface le token FCM du backend à la déconnexion.
+  static Future<void> unregisterTokenFromBackend() async {
+    try {
+      final authToken = await AuthService.getToken();
+      if (authToken == null) return;
+
+      await http.delete(
+        Uri.parse('${ApiConfig.baseUrl}/auth/device-token'),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $authToken',
+        },
+      );
+    } catch (e) {
+      if (kDebugMode) debugPrint('⚠️ FCM token unregister failed: $e');
     }
   }
 

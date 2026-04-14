@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Restaurant;
 use App\Models\Dish;
+use App\Services\FcmNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -129,6 +130,13 @@ class OrderController extends Controller
                 \Illuminate\Support\Facades\Log::warning('Broadcast failed: ' . $broadcastEx->getMessage());
             }
 
+            // Notification push FCM au restaurant (owner + topic staff)
+            try {
+                (new FcmNotificationService())->notifyNewOrder($restaurant, $order);
+            } catch (\Exception $fcmEx) {
+                \Illuminate\Support\Facades\Log::warning('FCM notifyNewOrder failed: ' . $fcmEx->getMessage());
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Commande créée avec succès',
@@ -181,6 +189,13 @@ class OrderController extends Controller
             broadcast(new OrderStatusChanged($order->fresh(), 'order.updated'));
         } catch (\Exception $broadcastEx) {
             \Illuminate\Support\Facades\Log::warning('Broadcast failed: ' . $broadcastEx->getMessage());
+        }
+
+        // Notification push FCM au client (si connecté + token disponible)
+        try {
+            (new FcmNotificationService())->notifyOrderStatusChanged($order->fresh()->load('user'), $request->status);
+        } catch (\Exception $fcmEx) {
+            \Illuminate\Support\Facades\Log::warning('FCM notifyOrderStatusChanged failed: ' . $fcmEx->getMessage());
         }
 
         return response()->json([

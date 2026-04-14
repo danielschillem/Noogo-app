@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\FlashInfoController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\StaffController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\DeviceTokenController;
 
 /*
 |--------------------------------------------------------------------------
@@ -75,6 +76,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/user/update', [AuthController::class, 'updateUser']);
         // Retourne les restaurants accessibles (proprio + staff) — pour la vue propriétaire
         Route::get('/my-restaurants', [StaffController::class, 'myRestaurants']);
+        // Token FCM : enregistrement au login, suppression au logout
+        Route::post('/device-token', [DeviceTokenController::class, 'store']);
+        Route::delete('/device-token', [DeviceTokenController::class, 'destroy']);
     });
 
     // Dashboard — limité à 120 requêtes/minute (protection contre scraping / boucles)
