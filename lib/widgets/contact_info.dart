@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/restaurant.dart';
@@ -48,7 +48,7 @@ class _ContactInfoState extends State<ContactInfo> {
   Future<void> _makePhoneCall(BuildContext context, String? phoneNumber) async {
     if (phoneNumber == null || phoneNumber.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Numéro de téléphone invalide")),
+        const SnackBar(content: Text('Numéro de téléphone invalide')),
       );
       return;
     }
@@ -180,7 +180,7 @@ class _ContactInfoState extends State<ContactInfo> {
       builder: (_) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.error_outline, color: AppColors.error),
+            const Icon(Icons.error_outline, color: AppColors.error),
             const SizedBox(width: 8),
             Expanded(child: Text(title)),
           ],
@@ -240,11 +240,11 @@ class _ContactInfoState extends State<ContactInfo> {
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: AppColors.shadowColor,
             blurRadius: 8,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -280,7 +280,7 @@ class _ContactInfoState extends State<ContactInfo> {
                   child: AnimatedOpacity(
                     opacity: _isValidating ? 0.5 : 1,
                     duration: const Duration(milliseconds: 200),
-                    child: Icon(
+                    child: const Icon(
                       Icons.qr_code_scanner,
                       size: 26,
                       color: AppColors.primary,

@@ -16,6 +16,7 @@ class HistoryService {
   static const int _maxHistory = 20;
 
   /// Retourne la liste des restaurants visités avec leurs vrais détails depuis l'API.
+  /// Les requêtes sont lancées en parallèle via [Future.wait] pour éviter les appels N+1.
   Future<List<VisitedRestaurant>> getVisitedRestaurants() async {
     final prefs = await SharedPreferences.getInstance();
     final List<String> ids = prefs.getStringList(_visitedKey) ?? [];
@@ -23,13 +24,13 @@ class HistoryService {
     if (ids.isEmpty) return [];
 
     final apiService = ApiService();
-    final results = <VisitedRestaurant>[];
 
-    for (final id in ids) {
+    // Lancer tous les appels en parallèle
+    final futures = ids.map((id) async {
+      final restaurantId = int.tryParse(id);
+      if (restaurantId == null) return null;
+
       try {
-        final restaurantId = int.tryParse(id);
-        if (restaurantId == null) continue;
-
         final menuData =
             await apiService.getRestaurantMenu(restaurantId: restaurantId);
         final restaurant = menuData.restaurant;
@@ -40,17 +41,21 @@ class HistoryService {
               : (restaurant.images.isNotEmpty ? restaurant.images.first : null),
         );
 
-        results.add(VisitedRestaurant(
+        return VisitedRestaurant(
           id: id,
           name: restaurant.nom,
           imageUrl: imageUrl,
-        ));
+        );
       } catch (_) {
         // Ignorer les restaurants inaccessibles (hors-ligne, supprimés…)
+        return null;
       }
-    }
+    }).toList();
 
-    return results;
+    final results = await Future.wait(futures);
+
+    // Filtrer les nulls (restaurants inaccessibles) en préservant l'ordre
+    return results.whereType<VisitedRestaurant>().toList();
   }
 
   /// Ajoute un restaurant à l'historique (garde les 20 plus récents).

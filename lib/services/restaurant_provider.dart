@@ -127,12 +127,14 @@ class RestaurantProvider with ChangeNotifier {
     _autoRefreshTimer = Timer.periodic(
       const Duration(seconds: 30), // Toutes les 30 secondes
       (timer) async {
-        debugPrint('🔄 Auto-refresh des commandes...');
+        if (kDebugMode) debugPrint('🔄 Auto-refresh des commandes...');
         await _autoLoadOrdersWithNotifications();
       },
     );
 
-    debugPrint('✅ Auto-refresh activé (toutes les 30 secondes)');
+    if (kDebugMode) {
+      debugPrint('✅ Auto-refresh activé (toutes les 30 secondes)');
+    }
   }
 
   /// Charger les commandes ET créer des notifications pour les changements
@@ -151,8 +153,10 @@ class RestaurantProvider with ChangeNotifier {
         final oldStatus = _lastOrderStatuses[orderId];
 
         if (oldStatus != null && oldStatus != newStatus) {
-          debugPrint(
-              '📢 Changement: commande #$orderId: $oldStatus → $newStatus');
+          if (kDebugMode) {
+            debugPrint(
+                '📢 Changement: commande #$orderId: $oldStatus → $newStatus');
+          }
           await _createNotificationForStatusChange(
               newOrder, oldStatus, newStatus);
         }
@@ -165,10 +169,12 @@ class RestaurantProvider with ChangeNotifier {
 
       await _saveOrdersLocally(_orders);
 
-      debugPrint('✅ ${fetchedOrders.length} commandes mises à jour');
+      if (kDebugMode) {
+        debugPrint('✅ ${fetchedOrders.length} commandes mises à jour');
+      }
       notifyListeners();
     } catch (e) {
-      debugPrint('⚠️ Erreur auto-refresh: $e');
+      if (kDebugMode) debugPrint('⚠️ Erreur auto-refresh: $e');
     }
   }
 
@@ -235,15 +241,15 @@ class RestaurantProvider with ChangeNotifier {
       );
 
       await addNotification(notification);
-      debugPrint('✅ Notification créée: $title');
+      if (kDebugMode) debugPrint('✅ Notification créée: $title');
     } catch (e) {
-      debugPrint('❌ Erreur création notification: $e');
+      if (kDebugMode) debugPrint('❌ Erreur création notification: $e');
     }
   }
 
   /// Forcer un rafraîchissement manuel
   Future<void> forceRefreshOrders() async {
-    debugPrint('🔄 Rafraîchissement manuel...');
+    if (kDebugMode) debugPrint('🔄 Rafraîchissement manuel...');
     await _autoLoadOrdersWithNotifications();
   }
 
@@ -254,16 +260,20 @@ class RestaurantProvider with ChangeNotifier {
   Future<void> loadNotifications() async {
     try {
       _notifications = await NotificationService.loadNotifications();
-      debugPrint('✅ Notifications chargées: ${_notifications.length}');
+      if (kDebugMode) {
+        debugPrint('✅ Notifications chargées: ${_notifications.length}');
+      }
 
       // ✅ AJOUTEZ CE TRY-CATCH
       try {
         notifyListeners();
       } catch (e) {
-        debugPrint('⚠️ Widget détruit lors de la notification: $e');
+        if (kDebugMode) {
+          debugPrint('⚠️ Widget détruit lors de la notification: $e');
+        }
       }
     } catch (e) {
-      debugPrint('⚠️ Erreur chargement notifications: $e');
+      if (kDebugMode) debugPrint('⚠️ Erreur chargement notifications: $e');
       _notifications = [];
     }
   }
@@ -272,9 +282,11 @@ class RestaurantProvider with ChangeNotifier {
     try {
       await NotificationService.addNotification(notification);
       await loadNotifications();
-      debugPrint('✅ Notification ajoutée: ${notification.title}');
+      if (kDebugMode) {
+        debugPrint('✅ Notification ajoutée: ${notification.title}');
+      }
     } catch (e) {
-      debugPrint('⚠️ Erreur ajout notification: $e');
+      if (kDebugMode) debugPrint('⚠️ Erreur ajout notification: $e');
     }
   }
 
@@ -283,7 +295,7 @@ class RestaurantProvider with ChangeNotifier {
       await NotificationService.markAsRead(notificationId);
       await loadNotifications();
     } catch (e) {
-      debugPrint('⚠️ Erreur mise à jour notification: $e');
+      if (kDebugMode) debugPrint('⚠️ Erreur mise à jour notification: $e');
     }
   }
 
@@ -292,7 +304,7 @@ class RestaurantProvider with ChangeNotifier {
       await NotificationService.markAllAsRead();
       await loadNotifications();
     } catch (e) {
-      debugPrint('⚠️ Erreur mise à jour notifications: $e');
+      if (kDebugMode) debugPrint('⚠️ Erreur mise à jour notifications: $e');
     }
   }
 
@@ -301,7 +313,7 @@ class RestaurantProvider with ChangeNotifier {
       await NotificationService.deleteNotification(notificationId);
       await loadNotifications();
     } catch (e) {
-      debugPrint('⚠️ Erreur suppression notification: $e');
+      if (kDebugMode) debugPrint('⚠️ Erreur suppression notification: $e');
     }
   }
 
@@ -310,7 +322,7 @@ class RestaurantProvider with ChangeNotifier {
       await NotificationService.clearAllNotifications();
       await loadNotifications();
     } catch (e) {
-      debugPrint('⚠️ Erreur suppression notifications: $e');
+      if (kDebugMode) debugPrint('⚠️ Erreur suppression notifications: $e');
     }
   }
 
@@ -319,7 +331,7 @@ class RestaurantProvider with ChangeNotifier {
       final notification = NotificationService.createTestNotification(type);
       await addNotification(notification);
     } catch (e) {
-      debugPrint('⚠️ Erreur création notification test: $e');
+      if (kDebugMode) debugPrint('⚠️ Erreur création notification test: $e');
     }
   }
 
@@ -341,7 +353,9 @@ class RestaurantProvider with ChangeNotifier {
       );
       await addNotification(notification);
     } catch (e) {
-      debugPrint('⚠️ Erreur création notification commande: $e');
+      if (kDebugMode) {
+        debugPrint('⚠️ Erreur création notification commande: $e');
+      }
     }
   }
 
@@ -365,36 +379,40 @@ class RestaurantProvider with ChangeNotifier {
   /// ✅ Initialiser Pusher avec les nouveaux credentials
   Future<void> _initializePusher(String userId, String? authToken) async {
     try {
-      debugPrint('🔌 Initialisation de Pusher...');
+      if (kDebugMode) debugPrint('🔌 Initialisation de Pusher...');
 
       // Configurer les callbacks
       _realtimeService.onConnected = () {
-        debugPrint('✅ Pusher connecté');
+        if (kDebugMode) debugPrint('✅ Pusher connecté');
         _isRealtimeConnected = true;
         notifyListeners();
       };
 
       _realtimeService.onDisconnected = () {
-        debugPrint('⚠️ Pusher déconnecté');
+        if (kDebugMode) debugPrint('⚠️ Pusher déconnecté');
         _isRealtimeConnected = false;
         notifyListeners();
       };
 
       _realtimeService.onConnectionError = (error) {
-        debugPrint('❌ Erreur Pusher: $error');
+        if (kDebugMode) debugPrint('❌ Erreur Pusher: $error');
         _isRealtimeConnected = false;
         notifyListeners();
       };
 
       // ✅ Callback pour les mises à jour de commandes
       _realtimeService.onOrderStatusUpdate = (data) async {
-        debugPrint('📦 Mise à jour commande reçue via Pusher: $data');
+        if (kDebugMode) {
+          debugPrint('📦 Mise à jour commande reçue via Pusher: $data');
+        }
         await _handleOrderStatusUpdate(data);
       };
 
       // ✅ Callback pour les nouvelles notifications
       _realtimeService.onNewNotification = (data) async {
-        debugPrint('🔔 Nouvelle notification reçue via Pusher: $data');
+        if (kDebugMode) {
+          debugPrint('🔔 Nouvelle notification reçue via Pusher: $data');
+        }
         await _handleNewNotification(data);
       };
 
@@ -406,9 +424,9 @@ class RestaurantProvider with ChangeNotifier {
       await _realtimeService.subscribeToUserNotifications(userId);
       await _realtimeService.subscribeToPublicNotifications();
 
-      debugPrint('✅ Pusher initialisé et canaux souscrits');
+      if (kDebugMode) debugPrint('✅ Pusher initialisé et canaux souscrits');
     } catch (e) {
-      debugPrint('❌ Erreur initialisation Pusher: $e');
+      if (kDebugMode) debugPrint('❌ Erreur initialisation Pusher: $e');
       _isRealtimeConnected = false;
       notifyListeners();
     }
@@ -417,13 +435,13 @@ class RestaurantProvider with ChangeNotifier {
   /// ✅ Gérer les mises à jour de commande depuis Pusher
   Future<void> _handleOrderStatusUpdate(Map<String, dynamic> data) async {
     try {
-      debugPrint('📦 Traitement mise à jour commande: $data');
+      if (kDebugMode) debugPrint('📦 Traitement mise à jour commande: $data');
 
       final orderId = data['order_id'] ?? data['orderId'] ?? data['id'];
       final newStatusStr = data['status'] ?? data['order_status'];
 
       if (orderId == null) {
-        debugPrint('⚠️ order_id manquant dans les données');
+        if (kDebugMode) debugPrint('⚠️ order_id manquant dans les données');
         return;
       }
 
@@ -437,8 +455,10 @@ class RestaurantProvider with ChangeNotifier {
         final newStatus = _mapStringToOrderStatus(newStatusStr);
 
         if (newStatus != null && oldStatus != newStatus) {
-          debugPrint(
-              '✅ Mise à jour: commande #$orderId: $oldStatus → $newStatus');
+          if (kDebugMode) {
+            debugPrint(
+                '✅ Mise à jour: commande #$orderId: $oldStatus → $newStatus');
+          }
 
           // Mettre à jour la commande
           _orders[orderIndex] = oldOrder.copyWith(status: newStatus);
@@ -454,19 +474,23 @@ class RestaurantProvider with ChangeNotifier {
           notifyListeners();
         }
       } else {
-        debugPrint(
-            '⚠️ Commande #$orderId non trouvée localement, rechargement...');
+        if (kDebugMode) {
+          debugPrint(
+              '⚠️ Commande #$orderId non trouvée localement, rechargement...');
+        }
         await loadOrders();
       }
     } catch (e) {
-      debugPrint('❌ Erreur traitement mise à jour commande: $e');
+      if (kDebugMode) {
+        debugPrint('❌ Erreur traitement mise à jour commande: $e');
+      }
     }
   }
 
   /// ✅ Gérer les nouvelles notifications depuis Pusher
   Future<void> _handleNewNotification(Map<String, dynamic> data) async {
     try {
-      debugPrint('🔔 Traitement nouvelle notification: $data');
+      if (kDebugMode) debugPrint('🔔 Traitement nouvelle notification: $data');
 
       final notification = AppNotification(
         id: data['id']?.toString() ??
@@ -482,9 +506,11 @@ class RestaurantProvider with ChangeNotifier {
       );
 
       await addNotification(notification);
-      debugPrint('✅ Notification Pusher ajoutée: ${notification.title}');
+      if (kDebugMode) {
+        debugPrint('✅ Notification Pusher ajoutée: ${notification.title}');
+      }
     } catch (e) {
-      debugPrint('❌ Erreur traitement notification Pusher: $e');
+      if (kDebugMode) debugPrint('❌ Erreur traitement notification Pusher: $e');
     }
   }
 
@@ -523,7 +549,7 @@ class RestaurantProvider with ChangeNotifier {
       case 'annulee':
         return OrderStatus.cancelled;
       default:
-        debugPrint('⚠️ Statut inconnu: $status');
+        if (kDebugMode) debugPrint('⚠️ Statut inconnu: $status');
         return null;
     }
   }
@@ -534,9 +560,9 @@ class RestaurantProvider with ChangeNotifier {
       await _realtimeService.disconnect();
       _realtimeService.clearCallbacks();
       _isRealtimeConnected = false;
-      debugPrint('✅ Pusher déconnecté');
+      if (kDebugMode) debugPrint('✅ Pusher déconnecté');
     } catch (e) {
-      debugPrint('❌ Erreur déconnexion Pusher: $e');
+      if (kDebugMode) debugPrint('❌ Erreur déconnexion Pusher: $e');
     }
   }
 
@@ -554,7 +580,7 @@ class RestaurantProvider with ChangeNotifier {
   Future<void> validateRestaurantQRCode(String qrData) async {
     // Éviter les validations simultanées
     if (_isLoading) {
-      debugPrint('⏳ Validation déjà en cours, ignorée');
+      if (kDebugMode) debugPrint('⏳ Validation déjà en cours, ignorée');
       return;
     }
 
@@ -564,9 +590,11 @@ class RestaurantProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      debugPrint('');
-      debugPrint('🔍 === validateRestaurantQRCode ===');
-      debugPrint('   QR Code: $qrData');
+      if (kDebugMode) {
+        debugPrint('');
+        debugPrint('🔍 === validateRestaurantQRCode ===');
+        debugPrint('   QR Code: $qrData');
+      }
 
       // 1️⃣ Validation du format
       if (!QRHelper.isValidRestaurantQR(qrData)) {
@@ -586,14 +614,16 @@ class RestaurantProvider with ChangeNotifier {
         );
       }
 
-      debugPrint('✅ Restaurant ID extrait: $restaurantId');
+      if (kDebugMode) debugPrint('✅ Restaurant ID extrait: $restaurantId');
 
       // 3️⃣ Réinitialiser les données SAUF Pusher
-      debugPrint('🔄 Réinitialisation des données...');
+      if (kDebugMode) debugPrint('🔄 Réinitialisation des données...');
       _resetDataOnly(); // ✅ Nouvelle méthode qui ne touche pas à Pusher
 
       // 4️⃣ Chargement des données
-      debugPrint('📡 Chargement des données du restaurant $restaurantId...');
+      if (kDebugMode) {
+        debugPrint('📡 Chargement des données du restaurant $restaurantId...');
+      }
 
       _isLoading = false; // Reset temporaire
       await loadAllInitialData(restaurantId: restaurantId);
@@ -615,17 +645,20 @@ class RestaurantProvider with ChangeNotifier {
       // 8️⃣ Redémarrer l'auto-refresh
       _startAutoRefresh();
 
-      debugPrint('✅ Validation complète réussie');
-      debugPrint('   Restaurant: ${_restaurant!.nom}');
-      debugPrint('   Plats: ${_dishes.length}');
-      debugPrint('');
+      if (kDebugMode) {
+        debugPrint('✅ Validation complète réussie');
+        debugPrint('   Restaurant: ${_restaurant!.nom}');
+        debugPrint('   Plats: ${_dishes.length}');
+        debugPrint('');
+      }
     } catch (e, stackTrace) {
-      debugPrint('');
-      debugPrint('❌ === ERREUR validateRestaurantQRCode ===');
-      debugPrint('   - Erreur: $e');
-      debugPrint('   - Stack: $stackTrace');
-      debugPrint('');
-
+      if (kDebugMode) {
+        debugPrint('');
+        debugPrint('❌ === ERREUR validateRestaurantQRCode ===');
+        debugPrint('   - Erreur: $e');
+        debugPrint('   - Stack: $stackTrace');
+        debugPrint('');
+      }
       _hasApiError = true;
       _setError(e.toString());
 
@@ -638,7 +671,9 @@ class RestaurantProvider with ChangeNotifier {
 
   /// ✅ Réinitialiser uniquement les données, SANS toucher à Pusher
   void _resetDataOnly() {
-    debugPrint('🔄 Réinitialisation des données (Pusher conservé)...');
+    if (kDebugMode) {
+      debugPrint('🔄 Réinitialisation des données (Pusher conservé)...');
+    }
 
     // Arrêter l'auto-refresh
     _autoRefreshTimer?.cancel();
@@ -670,7 +705,7 @@ class RestaurantProvider with ChangeNotifier {
     // Nettoyer le cache
     ApiConfig.clearValidationCache();
 
-    debugPrint('✅ Données réinitialisées (Pusher intact)');
+    if (kDebugMode) debugPrint('✅ Données réinitialisées (Pusher intact)');
   }
 
   void clearQRCode() {
@@ -681,7 +716,9 @@ class RestaurantProvider with ChangeNotifier {
   Future<void> loadAllInitialData({required int restaurantId}) async {
     // Si déjà en cours de chargement, on évite les doublons
     if (_isLoading) {
-      debugPrint('⏳ Chargement déjà en cours pour restaurant $restaurantId');
+      if (kDebugMode) {
+        debugPrint('⏳ Chargement déjà en cours pour restaurant $restaurantId');
+      }
       return;
     }
 
@@ -691,9 +728,11 @@ class RestaurantProvider with ChangeNotifier {
     notifyListeners(); // ✅ Notifier dès le début
 
     try {
-      debugPrint('');
-      debugPrint('📡 === DÉBUT loadAllInitialData ===');
-      debugPrint('   - Restaurant ID: $restaurantId');
+      if (kDebugMode) {
+        debugPrint('');
+        debugPrint('📡 === DÉBUT loadAllInitialData ===');
+        debugPrint('   - Restaurant ID: $restaurantId');
+      }
 
       // Validation ID
       if (restaurantId <= 0) {
@@ -701,7 +740,7 @@ class RestaurantProvider with ChangeNotifier {
       }
 
       // ===== MENU & RESTAURANT (BLOQUANT) =====
-      debugPrint('📡 Chargement du menu...');
+      if (kDebugMode) debugPrint('📡 Chargement du menu...');
       final menuData = await _apiService
           .getRestaurantMenu(
         restaurantId: restaurantId,
@@ -714,11 +753,13 @@ class RestaurantProvider with ChangeNotifier {
         },
       );
 
-      debugPrint('✅ Menu reçu:');
-      debugPrint('   - Restaurant: ${menuData.restaurant.nom}');
-      debugPrint('   - Plats: ${menuData.dishes.length}');
-      debugPrint('   - Plats du jour: ${menuData.dishesOfTheDay.length}');
-      debugPrint('   - Catégories: ${menuData.categories.length}');
+      if (kDebugMode) {
+        debugPrint('✅ Menu reçu:');
+        debugPrint('   - Restaurant: ${menuData.restaurant.nom}');
+        debugPrint('   - Plats: ${menuData.dishes.length}');
+        debugPrint('   - Plats du jour: ${menuData.dishesOfTheDay.length}');
+        debugPrint('   - Catégories: ${menuData.categories.length}');
+      }
 
       // ✅ Assignation immédiate (CRITIQUE)
       _restaurant = menuData.restaurant;
@@ -728,7 +769,7 @@ class RestaurantProvider with ChangeNotifier {
       _isOffline = false;
 
       if (_restaurant == null) {
-        throw Exception("Restaurant introuvable pour ID: $restaurantId");
+        throw Exception('Restaurant introuvable pour ID: $restaurantId');
       }
 
       // ✅ Sauvegarder le menu en cache (FEAT-001)
@@ -741,7 +782,9 @@ class RestaurantProvider with ChangeNotifier {
       _isLoading = false; // ✅ Marquer comme terminé AVANT de notifier
       notifyListeners();
 
-      debugPrint('✅ Données principales chargées - UI peut s\'afficher');
+      if (kDebugMode) {
+        debugPrint('✅ Données principales chargées - UI peut s\'afficher');
+      }
 
       // ===== DONNÉES SECONDAIRES (NON BLOQUANTES) =====
       // On charge en arrière-plan sans bloquer l'UI
@@ -755,21 +798,25 @@ class RestaurantProvider with ChangeNotifier {
       // FLASH INFOS
       _loadFlashInfosInBackground(restaurantId);
 
-      debugPrint('✅ === loadAllInitialData TERMINÉ ===');
-      debugPrint('   - Restaurant: ${_restaurant?.nom}');
-      debugPrint('   - Plats: ${_dishes.length}');
-      debugPrint('');
+      if (kDebugMode) {
+        debugPrint('✅ === loadAllInitialData TERMINÉ ===');
+        debugPrint('   - Restaurant: ${_restaurant?.nom}');
+        debugPrint('   - Plats: ${_dishes.length}');
+        debugPrint('');
+      }
 
       _hasApiError = false;
       _clearError();
     } catch (e, stackTrace) {
-      debugPrint('');
-      debugPrint('❌ === ERREUR loadAllInitialData ===');
-      debugPrint('   - Erreur: $e');
-      debugPrint('   - Stack: $stackTrace');
-      debugPrint('');
+      if (kDebugMode) {
+        debugPrint('');
+        debugPrint('❌ === ERREUR loadAllInitialData ===');
+        debugPrint('   - Erreur: $e');
+        debugPrint('   - Stack: $stackTrace');
+        debugPrint('');
+      }
 
-      _setError("Erreur de connexion au restaurant");
+      _setError('Erreur de connexion au restaurant');
       _hasApiError = true;
 
       // Tentative de chargement depuis le cache (FEAT-001)
@@ -779,7 +826,9 @@ class RestaurantProvider with ChangeNotifier {
         _favoriteDishIds = await FavoritesService.loadFavorites();
         _clearError();
         _hasApiError = false;
-        debugPrint('📂 Menu chargé depuis le cache (mode hors-ligne)');
+        if (kDebugMode) {
+          debugPrint('📂 Menu chargé depuis le cache (mode hors-ligne)');
+        }
       } else {
         // Réinitialisation contrôlée
         _restaurant = null;
@@ -816,9 +865,13 @@ class RestaurantProvider with ChangeNotifier {
         'categories': _categories.map((c) => c.toJson()).toList(),
       });
       await prefs.setString(_menuCacheKey, data);
-      debugPrint('💾 Menu mis en cache pour le restaurant $restaurantId');
+      if (kDebugMode) {
+        debugPrint('💾 Menu mis en cache pour le restaurant $restaurantId');
+      }
     } catch (e) {
-      debugPrint('⚠️ Impossible de mettre le menu en cache: $e');
+      if (kDebugMode) {
+        debugPrint('⚠️ Impossible de mettre le menu en cache: $e');
+      }
     }
   }
 
@@ -848,7 +901,7 @@ class RestaurantProvider with ChangeNotifier {
 
       return true;
     } catch (e) {
-      debugPrint('⚠️ Impossible de charger le cache menu: $e');
+      if (kDebugMode) debugPrint('⚠️ Impossible de charger le cache menu: $e');
       return false;
     }
   }
@@ -878,9 +931,13 @@ class RestaurantProvider with ChangeNotifier {
       final limited = orders.take(_maxStoredOrders).toList();
       final encoded = jsonEncode(limited.map((o) => o.toJson()).toList());
       await prefs.setString(_ordersKey, encoded);
-      debugPrint('💾 ${limited.length} commandes sauvegardées localement');
+      if (kDebugMode) {
+        debugPrint('💾 ${limited.length} commandes sauvegardées localement');
+      }
     } catch (e) {
-      debugPrint('⚠️ Impossible de sauvegarder les commandes: $e');
+      if (kDebugMode) {
+        debugPrint('⚠️ Impossible de sauvegarder les commandes: $e');
+      }
     }
   }
 
@@ -893,18 +950,22 @@ class RestaurantProvider with ChangeNotifier {
       final List<dynamic> raw = jsonDecode(encoded);
       final orders =
           raw.map((j) => Order.fromJson(j as Map<String, dynamic>)).toList();
-      debugPrint(
-          '📂 ${orders.length} commandes chargées depuis le stockage local');
+      if (kDebugMode) {
+        debugPrint(
+            '📂 ${orders.length} commandes chargées depuis le stockage local');
+      }
       return orders;
     } catch (e) {
-      debugPrint('⚠️ Impossible de charger les commandes locales: $e');
+      if (kDebugMode) {
+        debugPrint('⚠️ Impossible de charger les commandes locales: $e');
+      }
       return [];
     }
   }
 
   void _loadOrdersInBackground() async {
     try {
-      debugPrint('📡 [Background] Chargement des commandes...');
+      if (kDebugMode) debugPrint('📡 [Background] Chargement des commandes...');
 
       // 1️⃣ Charger d'abord les commandes locales pour affichage immédiat
       final localOrders = await _loadOrdersLocally();
@@ -916,10 +977,12 @@ class RestaurantProvider with ChangeNotifier {
         try {
           notifyListeners();
         } catch (e) {
-          debugPrint('⚠️ [Background] Widget détruit: $e');
+          if (kDebugMode) debugPrint('⚠️ [Background] Widget détruit: $e');
         }
-        debugPrint(
-            '✅ [Background] ${localOrders.length} commandes locales affichées');
+        if (kDebugMode) {
+          debugPrint(
+              '✅ [Background] ${localOrders.length} commandes locales affichées');
+        }
       }
 
       // 2️⃣ Synchroniser avec le serveur si un restaurant est chargé
@@ -942,53 +1005,75 @@ class RestaurantProvider with ChangeNotifier {
         _lastOrderStatuses[order.id] = order.status;
       }
 
-      debugPrint('✅ [Background] ${_orders.length} commandes chargées');
+      if (kDebugMode) {
+        debugPrint('✅ [Background] ${_orders.length} commandes chargées');
+      }
       try {
         notifyListeners();
       } catch (e) {
-        debugPrint('⚠️ [Background] Widget détruit, pas de notification: $e');
+        if (kDebugMode) {
+          debugPrint('⚠️ [Background] Widget détruit, pas de notification: $e');
+        }
       }
     } catch (e) {
-      debugPrint("⚠️ [Background] Commandes non disponibles: $e");
+      if (kDebugMode) {
+        debugPrint('⚠️ [Background] Commandes non disponibles: $e');
+      }
       _orders = [];
     }
   }
 
   void _loadNotificationsInBackground() async {
     try {
-      debugPrint('📡 [Background] Chargement des notifications...');
+      if (kDebugMode) {
+        debugPrint('📡 [Background] Chargement des notifications...');
+      }
       await loadNotifications();
-      debugPrint(
-          '✅ [Background] ${_notifications.length} notifications chargées');
+      if (kDebugMode) {
+        debugPrint(
+            '✅ [Background] ${_notifications.length} notifications chargées');
+      }
     } catch (e) {
-      debugPrint("⚠️ [Background] Notifications non disponibles: $e");
+      if (kDebugMode) {
+        debugPrint('⚠️ [Background] Notifications non disponibles: $e');
+      }
       _notifications = [];
     }
   }
 
   void _loadFlashInfosInBackground(int restaurantId) async {
     try {
-      debugPrint('📡 [Background] Chargement des flash infos...');
+      if (kDebugMode) {
+        debugPrint('📡 [Background] Chargement des flash infos...');
+      }
       _flashInfos = await _apiService.getFlashInfos(
         restaurantId: restaurantId,
       );
-      debugPrint('✅ [Background] ${_flashInfos.length} flash infos chargées');
+      if (kDebugMode) {
+        debugPrint('✅ [Background] ${_flashInfos.length} flash infos chargées');
+      }
 
       // ✅ Protection contre les widgets détruits
       try {
         notifyListeners();
       } catch (e) {
-        debugPrint('⚠️ [Background] Widget détruit, pas de notification: $e');
+        if (kDebugMode) {
+          debugPrint('⚠️ [Background] Widget détruit, pas de notification: $e');
+        }
       }
     } catch (e) {
-      debugPrint("⚠️ [Background] Flash infos non disponibles: $e");
+      if (kDebugMode) {
+        debugPrint('⚠️ [Background] Flash infos non disponibles: $e');
+      }
       _flashInfos = [];
     }
   }
 
   Future<void> refreshAllData() async {
     if (_scannedQRCode == null) {
-      debugPrint('⚠️ Impossible de rafraîchir : aucun QR code scanné');
+      if (kDebugMode) {
+        debugPrint('⚠️ Impossible de rafraîchir : aucun QR code scanné');
+      }
       return;
     }
 
@@ -1003,14 +1088,16 @@ class RestaurantProvider with ChangeNotifier {
         throw Exception('Impossible d\'extraire l\'ID lors du refresh');
       }
 
-      debugPrint('🔄 Rafraîchissement du restaurant ID: $restaurantId');
+      if (kDebugMode) {
+        debugPrint('🔄 Rafraîchissement du restaurant ID: $restaurantId');
+      }
 
       // ✅ Passer l'ID comme int
       await loadAllInitialData(restaurantId: restaurantId);
 
-      debugPrint('✅ Rafraîchissement terminé');
+      if (kDebugMode) debugPrint('✅ Rafraîchissement terminé');
     } catch (e) {
-      debugPrint('❌ Erreur lors du refresh: $e');
+      if (kDebugMode) debugPrint('❌ Erreur lors du refresh: $e');
       _setError('Impossible de rafraîchir les données');
       _hasApiError = true;
       notifyListeners();
@@ -1050,7 +1137,7 @@ class RestaurantProvider with ChangeNotifier {
         }
       }
     } catch (e) {
-      _setError("Erreur lors du chargement des commandes");
+      _setError('Erreur lors du chargement des commandes');
     } finally {
       _isLoadingOrders = false;
       notifyListeners();
@@ -1253,10 +1340,10 @@ class RestaurantProvider with ChangeNotifier {
   bool get hasData => _restaurant != null;
 
   String get cartSummary {
-    if (_cartItems.isEmpty) return "Panier vide";
+    if (_cartItems.isEmpty) return 'Panier vide';
     return _cartItems
         .map((item) =>
-            "${item.dish.name} x${item.quantity} = ${item.totalPrice.toStringAsFixed(0)} FCFA")
+            '${item.dish.name} x${item.quantity} = ${item.totalPrice.toStringAsFixed(0)} FCFA')
         .join(', ');
   }
 
@@ -1280,6 +1367,7 @@ class RestaurantProvider with ChangeNotifier {
   }
 
   void debugPrintState() {
+    if (!kDebugMode) return;
     debugPrint('=== ÉTAT DU PROVIDER ===');
     debugPrint('Restaurant: ${_restaurant?.name ?? "Aucun"}');
     debugPrint('Commandes: ${_orders.length}');
@@ -1298,7 +1386,9 @@ class RestaurantProvider with ChangeNotifier {
 
   /// ✅ Réinitialisation COMPLÈTE (y compris Pusher) - utilisé lors de la déconnexion
   void resetAllData() {
-    debugPrint('🔄 Réinitialisation COMPLÈTE (avec déconnexion Pusher)...');
+    if (kDebugMode) {
+      debugPrint('🔄 Réinitialisation COMPLÈTE (avec déconnexion Pusher)...');
+    }
 
     // Arrêter l'auto-refresh
     _autoRefreshTimer?.cancel();
@@ -1309,7 +1399,7 @@ class RestaurantProvider with ChangeNotifier {
       _realtimeService.clearCallbacks();
       _isRealtimeConnected = false;
     } catch (e) {
-      debugPrint('⚠️ Erreur déconnexion Pusher: $e');
+      if (kDebugMode) debugPrint('⚠️ Erreur déconnexion Pusher: $e');
     }
 
     // Réinitialiser les états
@@ -1341,7 +1431,7 @@ class RestaurantProvider with ChangeNotifier {
     // Nettoyer le cache
     ApiConfig.clearValidationCache();
 
-    debugPrint('✅ Réinitialisation complète terminée');
+    if (kDebugMode) debugPrint('✅ Réinitialisation complète terminée');
 
     notifyListeners();
   }

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/app_notification.dart';
 import '../services/restaurant_provider.dart';
@@ -70,7 +70,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      Text(
+                      const Text(
                         'Notifications',
                         style: AppTextStyles.heading1,
                       ),
@@ -119,13 +119,17 @@ class _NotificationsScreenState extends State<NotificationsScreen>
 
                 // Liste des notifications
                 Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: provider.notifications.length,
-                    itemBuilder: (context, index) {
-                      final notification = provider.notifications[index];
-                      return _buildNotificationCard(notification, provider);
-                    },
+                  child: RefreshIndicator(
+                    onRefresh: provider.loadNotifications,
+                    color: AppColors.primary,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: provider.notifications.length,
+                      itemBuilder: (context, index) {
+                        final notification = provider.notifications[index];
+                        return _buildNotificationCard(notification, provider);
+                      },
+                    ),
                   ),
                 ),
               ],
@@ -137,7 +141,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
   }
 
   Widget _buildEmptyNotifications() {
-    return Center(
+    return const Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -146,12 +150,12 @@ class _NotificationsScreenState extends State<NotificationsScreen>
             size: 80,
             color: AppColors.textSecondary,
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           Text(
             'Aucune notification',
             style: AppTextStyles.heading2,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             'Vous n\'avez pas encore de notifications',
             style: AppTextStyles.subtitle,
@@ -174,11 +178,11 @@ class _NotificationsScreenState extends State<NotificationsScreen>
         border: notification.isRead
             ? null
             : Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: AppColors.shadowColor,
             blurRadius: 4,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -188,8 +192,8 @@ class _NotificationsScreenState extends State<NotificationsScreen>
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color:
-            _getNotificationIconColor(notification.title).withValues(alpha: 0.1),
+            color: _getNotificationIconColor(notification.title)
+                .withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
@@ -205,7 +209,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                 notification.title,
                 style: AppTextStyles.bodyMedium.copyWith(
                   fontWeight:
-                  notification.isRead ? FontWeight.normal : FontWeight.w600,
+                      notification.isRead ? FontWeight.normal : FontWeight.w600,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -245,7 +249,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
         ),
         onTap: () => _onNotificationTap(notification, provider),
         trailing: PopupMenuButton<String>(
-          icon: Icon(
+          icon: const Icon(
             Icons.more_vert,
             color: AppColors.textSecondary,
             size: 20,

@@ -294,7 +294,7 @@ class RealtimeService {
     }
 
     try {
-      final channelName = 'notifications';
+      const channelName = 'notifications';
 
       debugPrint('');
       debugPrint('📢 SOUSCRIPTION AU CANAL PUBLIC');

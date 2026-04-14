@@ -1,8 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/user.dart';
 import '../services/restaurant_provider.dart';
 import '../services/auth_service.dart';
+import '../services/theme_provider.dart';
 import '../utils/app_colors.dart';
 import '../utils/app_text_styles.dart';
 import '../widgets/custom_app_bar.dart';
@@ -16,7 +17,11 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen>
-    with TickerProviderStateMixin {
+    with
+        TickerProviderStateMixin,
+        AutomaticKeepAliveClientMixin<ProfileScreen> {
+  @override
+  bool get wantKeepAlive => true;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -100,14 +105,15 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // AutomaticKeepAliveClientMixin
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: const CustomAppBar(title: 'Profile'),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _currentUser != null
-          ? _buildAuthenticatedProfile()
-          : _buildGuestProfile(),
+              ? _buildAuthenticatedProfile()
+              : _buildGuestProfile(),
     );
   }
 
@@ -166,7 +172,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ),
               ],
             ),
-            child: Icon(Icons.person, size: 40, color: AppColors.primary),
+            child: const Icon(Icons.person, size: 40, color: AppColors.primary),
           ),
           const SizedBox(height: 16),
           Text(
@@ -213,27 +219,33 @@ class _ProfileScreenState extends State<ProfileScreen>
           decoration: BoxDecoration(
             color: AppColors.cardBackground,
             borderRadius: BorderRadius.circular(12),
-            boxShadow: [
+            boxShadow: const [
               BoxShadow(
                   color: AppColors.shadowColor,
                   blurRadius: 6,
-                  offset: const Offset(0, 2)),
+                  offset: Offset(0, 2)),
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Mes statistiques', style: AppTextStyles.heading3),
+              const Text('Mes statistiques', style: AppTextStyles.heading3),
               const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
-                    child: _buildStatItem('Commandes',
-                        '${provider.orders.length}', Icons.receipt_long, AppColors.primary),
+                    child: _buildStatItem(
+                        'Commandes',
+                        '${provider.orders.length}',
+                        Icons.receipt_long,
+                        AppColors.primary),
                   ),
                   Expanded(
-                    child: _buildStatItem('Panier',
-                        '${provider.cartItems.length}', Icons.shopping_cart, AppColors.secondary),
+                    child: _buildStatItem(
+                        'Panier',
+                        '${provider.cartItems.length}',
+                        Icons.shopping_cart,
+                        AppColors.secondary),
                   ),
                   Expanded(
                     child: _buildStatItem(
@@ -271,52 +283,120 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Widget _buildMenuOptions() {
     final options = [
-      {'icon': Icons.person_outline,         'title': 'Mes informations personnelles', 'action': _showPersonalInfo},
-      {'icon': Icons.location_on_outlined,   'title': 'Adresses de livraison',          'action': _showDeliveryAddresses},
-      {'icon': Icons.payment_outlined,       'title': 'Méthodes de paiement',           'action': _showPaymentMethods},
-      {'icon': Icons.history,                'title': 'Historique des commandes',       'action': _showOrderHistory},
-      {'icon': Icons.notifications_outlined, 'title': 'Notifications',                  'action': _showNotificationSettings},
-      {'icon': Icons.help_outline,           'title': 'Aide et support',                'action': _showHelp},
-      {'icon': Icons.info_outline,           'title': 'À propos',                       'action': _showAbout},
+      {
+        'icon': Icons.person_outline,
+        'title': 'Mes informations personnelles',
+        'action': _showPersonalInfo
+      },
+      {
+        'icon': Icons.location_on_outlined,
+        'title': 'Adresses de livraison',
+        'action': _showDeliveryAddresses
+      },
+      {
+        'icon': Icons.payment_outlined,
+        'title': 'Méthodes de paiement',
+        'action': _showPaymentMethods
+      },
+      {
+        'icon': Icons.history,
+        'title': 'Historique des commandes',
+        'action': _showOrderHistory
+      },
+      {
+        'icon': Icons.notifications_outlined,
+        'title': 'Notifications',
+        'action': _showNotificationSettings
+      },
+      {
+        'icon': Icons.help_outline,
+        'title': 'Aide et support',
+        'action': _showHelp
+      },
+      {'icon': Icons.info_outline, 'title': 'À propos', 'action': _showAbout},
     ];
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
-          ...options.map((opt) => Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 6,
-                    offset: const Offset(0, 3)),
-              ],
-            ),
-            child: ListTile(
-              leading: Container(
-                width: 40,
-                height: 40,
+          // Toggle dark mode
+          Consumer<ThemeProvider>(
+            builder: (context, themeProvider, _) {
+              return Container(
+                margin: const EdgeInsets.only(bottom: 10),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 6,
+                        offset: const Offset(0, 3)),
+                  ],
                 ),
-                child: Icon(opt['icon'] as IconData,
-                    color: AppColors.primary),
-              ),
-              title: Text(
-                opt['title'] as String,
-                style: AppTextStyles.bodyMedium
-                    .copyWith(fontWeight: FontWeight.w500),
-              ),
-              trailing:
-              const Icon(Icons.chevron_right, color: Colors.grey),
-              onTap: opt['action'] as VoidCallback,
-            ),
-          )),
+                child: ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      themeProvider.isDarkMode
+                          ? Icons.dark_mode
+                          : Icons.light_mode,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  title: Text(
+                    'Mode sombre',
+                    style: AppTextStyles.bodyMedium
+                        .copyWith(fontWeight: FontWeight.w500),
+                  ),
+                  trailing: Switch(
+                    value: themeProvider.isDarkMode,
+                    onChanged: (_) => themeProvider.toggle(),
+                    activeColor: AppColors.primary,
+                  ),
+                  onTap: () => themeProvider.toggle(),
+                ),
+              );
+            },
+          ),
+          ...options.map((opt) => Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 6,
+                        offset: const Offset(0, 3)),
+                  ],
+                ),
+                child: ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child:
+                        Icon(opt['icon'] as IconData, color: AppColors.primary),
+                  ),
+                  title: Text(
+                    opt['title'] as String,
+                    style: AppTextStyles.bodyMedium
+                        .copyWith(fontWeight: FontWeight.w500),
+                  ),
+                  trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                  onTap: opt['action'] as VoidCallback,
+                ),
+              )),
           const SizedBox(height: 10),
           ElevatedButton.icon(
             onPressed: _logout,
@@ -357,7 +437,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   size: 50, color: AppColors.textLight),
             ),
             const SizedBox(height: 16),
-            Text('Créez votre compte NOOGO',
+            const Text('Créez votre compte NOOGO',
                 style: AppTextStyles.heading2, textAlign: TextAlign.center),
             const SizedBox(height: 5),
             Text(
@@ -396,9 +476,21 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Widget _buildBenefitsList() {
     final benefits = [
-      {'icon': Icons.history,       'title': 'Historique des commandes', 'subtitle': 'Retrouvez toutes vos commandes'},
-      {'icon': Icons.favorite,      'title': 'Favoris',                  'subtitle': 'Sauvegardez vos plats préférés'},
-      {'icon': Icons.notifications, 'title': 'Notifications',            'subtitle': 'Recevez des offres exclusives'},
+      {
+        'icon': Icons.history,
+        'title': 'Historique des commandes',
+        'subtitle': 'Retrouvez toutes vos commandes'
+      },
+      {
+        'icon': Icons.favorite,
+        'title': 'Favoris',
+        'subtitle': 'Sauvegardez vos plats préférés'
+      },
+      {
+        'icon': Icons.notifications,
+        'title': 'Notifications',
+        'subtitle': 'Recevez des offres exclusives'
+      },
     ];
 
     return Column(
@@ -409,8 +501,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           decoration: BoxDecoration(
             color: AppColors.cardBackground,
             borderRadius: BorderRadius.circular(10),
-            border:
-            Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
           ),
           child: Row(
             children: [
@@ -549,7 +640,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       builder: (context) => AlertDialog(
         title: const Text('Adresses de livraison'),
         content:
-        const Text('Fonctionnalité à venir dans la prochaine version.'),
+            const Text('Fonctionnalité à venir dans la prochaine version.'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
@@ -759,9 +850,8 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
                 labelText: 'Nom complet',
                 prefixIcon: Icon(Icons.person_outline),
               ),
-              validator: (value) => (value?.isEmpty ?? true)
-                  ? 'Veuillez entrer votre nom'
-                  : null,
+              validator: (value) =>
+                  (value?.isEmpty ?? true) ? 'Veuillez entrer votre nom' : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -796,9 +886,9 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
           onPressed: _isLoading ? null : _saveProfile,
           child: _isLoading
               ? const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2))
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2))
               : const Text('Enregistrer'),
         ),
       ],

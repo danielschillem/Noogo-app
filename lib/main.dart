@@ -1,9 +1,15 @@
+import 'dart:async';
+
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:noogo/services/crash_reporting_service.dart';
+import 'package:noogo/services/deep_link_service.dart';
+import 'package:noogo/services/fcm_service.dart';
 import 'package:noogo/services/restaurant_storage_service.dart';
+import 'package:noogo/services/theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'l10n/generated/app_localizations.dart';
@@ -18,7 +24,18 @@ import 'screens/splash_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await dotenv.load(fileName: "assets/env/.env");
+  await dotenv.load(fileName: 'assets/env/.env');
+
+  // Initialiser Firebase (requis pour FCM)
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('Firebase non configuré: $e');
+  }
+
+  // Charger le thème sauvegardé avant le premier frame
+  final themeProvider = ThemeProvider();
+  await themeProvider.init();
 
   // Configuration de la barre de statut
   SystemChrome.setSystemUIOverlayStyle(
@@ -42,42 +59,271 @@ Future<void> main() async {
   };
 
   await CrashReportingService.init(() async {
-    runApp(const NooqoApp());
+    runApp(NooqoApp(themeProvider: themeProvider));
   });
 }
 
-class NooqoApp extends StatelessWidget {
-  const NooqoApp({super.key});
+class NooqoApp extends StatefulWidget {
+  final ThemeProvider themeProvider;
+
+  const NooqoApp({super.key, required this.themeProvider});
+
+  @override
+  State<NooqoApp> createState() => _NooqoAppState();
+}
+
+class _NooqoAppState extends State<NooqoApp> {
+  /// Clé globale pour accéder au Navigator sans BuildContext (deep links)
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  StreamSubscription<int>? _deepLinkSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _initServices();
+  }
+
+  Future<void> _initServices() async {
+    // Initialiser FCM
+    await FCMService.init();
+
+    // Initialiser les deep links
+    await DeepLinkService.init();
+    _deepLinkSub =
+        DeepLinkService.restaurantIdStream.listen(_onDeepLinkRestaurant);
+  }
+
+  /// Appelé quand un deep link noogo://restaurant/{id} est reçu.
+  void _onDeepLinkRestaurant(int restaurantId) {
+    final ctx = _navigatorKey.currentContext;
+    if (ctx == null) return;
+
+    final qrUrl =
+        'https://dashboard-noogo.quickdev-it.com/restaurant/$restaurantId';
+
+    // Charger le restaurant via le provider
+    ctx.read<RestaurantProvider>().validateRestaurantQRCode(qrUrl).then((_) {
+      _navigatorKey.currentState
+          ?.pushNamedAndRemoveUntil('/home', (route) => false);
+    }).catchError((_) {
+      // Restaurant invalide — on reste sur l'écran courant
+    });
+  }
+
+  @override
+  void dispose() {
+    _deepLinkSub?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider.value(value: widget.themeProvider),
         ChangeNotifierProvider(create: (_) => RestaurantProvider()),
       ],
-      child: MaterialApp(
-        title: 'Noogo',
-        debugShowCheckedModeBanner: false,
-        theme: _buildTheme(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            navigatorKey: _navigatorKey,
+            title: 'Noogo',
+            debugShowCheckedModeBanner: false,
+            theme: _buildLightTheme(),
+            darkTheme: _buildDarkTheme(),
+            themeMode: themeProvider.themeMode,
 
-        // I18N-001 : Localisation FR/EN
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: AppLocalizations.supportedLocales,
-        locale: const Locale('fr'), // Langue par défaut : français
+            // I18N-001 : Localisation FR/EN
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: const Locale('fr'),
 
-        // ✅ Page d'accueil = SplashChecker qui décide
-        home: const SplashChecker(),
+            // Page d'accueil = SplashChecker
+            home: const SplashChecker(),
 
-        // Routes
-        routes: {
-          '/onboarding': (context) => const OnboardingScreen(),
-          '/welcome': (context) => const WelcomeScreen(),
-          '/home': (context) => const HomeScreen(),
+            // Routes nommées avec transitions fade
+            onGenerateRoute: _onGenerateRoute,
+          );
+        },
+      ),
+    );
+  }
+
+  /// Routes nommées avec transition fade-through.
+  Route<dynamic>? _onGenerateRoute(RouteSettings settings) {
+    Widget? page;
+    switch (settings.name) {
+      case '/onboarding':
+        page = const OnboardingScreen();
+      case '/welcome':
+        page = const WelcomeScreen();
+      case '/home':
+        page = const HomeScreen();
+    }
+    if (page == null) return null;
+    return PageRouteBuilder(
+      settings: settings,
+      pageBuilder: (_, __, ___) => page!,
+      transitionsBuilder: (_, animation, __, child) {
+        return FadeTransition(
+          opacity: CurvedAnimation(parent: animation, curve: Curves.easeInOut),
+          child: child,
+        );
+      },
+      transitionDuration: const Duration(milliseconds: 250),
+    );
+  }
+
+  // ─── Thème clair ──────────────────────────────────────────────────────────
+
+  ThemeData _buildLightTheme() => _buildTheme();
+
+  // ─── Thème sombre ─────────────────────────────────────────────────────────
+
+  ThemeData _buildDarkTheme() {
+    const darkBg = Color(0xFF0F0F0F);
+    const darkSurface = Color(0xFF1C1C1E);
+    const darkCard = Color(0xFF2C2C2E);
+    const darkText = Color(0xFFF0F0F0);
+    const darkTextSec = Color(0xFF8E8E93);
+    const darkDivider = Color(0xFF38383A);
+
+    return ThemeData(
+      brightness: Brightness.dark,
+      primaryColor: AppColors.primary,
+      scaffoldBackgroundColor: darkBg,
+      fontFamily: 'Roboto',
+      colorScheme: const ColorScheme.dark(
+        primary: AppColors.primary,
+        secondary: AppColors.secondary,
+        surface: darkSurface,
+        error: AppColors.error,
+        onPrimary: Colors.white,
+        onSecondary: Colors.white,
+        onSurface: darkText,
+        onError: Colors.white,
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: darkBg,
+        foregroundColor: darkText,
+        elevation: 0,
+        scrolledUnderElevation: 1,
+        centerTitle: true,
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+        ),
+        titleTextStyle: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: darkText,
+          fontFamily: 'Roboto',
+        ),
+      ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: darkCard,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: darkTextSec,
+        type: BottomNavigationBarType.fixed,
+        elevation: 8,
+      ),
+      cardTheme: CardThemeData(
+        color: darkCard,
+        elevation: 0,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: darkDivider, width: 0.5),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: darkSurface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: darkDivider),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: darkDivider),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+        ),
+        hintStyle: const TextStyle(color: darkTextSec),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: darkCard,
+        elevation: 8,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        titleTextStyle: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: darkText,
+          fontFamily: 'Roboto',
+        ),
+        contentTextStyle: const TextStyle(
+          fontSize: 14,
+          color: darkTextSec,
+          fontFamily: 'Roboto',
+        ),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: darkCard,
+        contentTextStyle: const TextStyle(color: darkText),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        behavior: SnackBarBehavior.floating,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          side: const BorderSide(color: AppColors.primary, width: 1.5),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      ),
+      dividerTheme: const DividerThemeData(
+        color: darkDivider,
+        thickness: 1,
+        space: 1,
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? AppColors.primary
+              : darkTextSec,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? AppColors.primary.withValues(alpha: 0.4)
+              : darkSurface,
+        ),
+      ),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
         },
       ),
     );
@@ -102,13 +348,28 @@ class NooqoApp extends StatelessWidget {
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.textPrimary,
-        elevation: 2,
+        elevation: 0,
+        scrolledUnderElevation: 1,
         shadowColor: AppColors.shadowColor,
+        centerTitle: true,
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarIconBrightness: Brightness.dark,
         ),
         titleTextStyle: AppTextStyles.heading3,
+      ),
+      tabBarTheme: const TabBarThemeData(
+        labelColor: AppColors.primary,
+        unselectedLabelColor: AppColors.textSecondary,
+        labelPadding: EdgeInsets.symmetric(horizontal: 16),
+        indicatorSize: TabBarIndicatorSize.label,
+        labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        unselectedLabelStyle:
+            TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+        dividerColor: AppColors.dividerColor,
+        indicator: UnderlineTabIndicator(
+          borderSide: BorderSide(color: AppColors.primary, width: 2.5),
+        ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -146,11 +407,18 @@ class NooqoApp extends StatelessWidget {
       ),
       cardTheme: CardThemeData(
         color: AppColors.cardBackground,
-        elevation: 4,
+        elevation: 0,
         shadowColor: AppColors.shadowColor,
+        margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: AppColors.dividerColor, width: 0.5),
         ),
+      ),
+      sliderTheme: const SliderThemeData(
+        showValueIndicator: ShowValueIndicator.always,
+        thumbColor: Colors.white,
+        activeTrackColor: AppColors.primary,
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: AppColors.cardBackground,
@@ -255,8 +523,8 @@ class NooqoApp extends StatelessWidget {
   }
 
   MaterialColor _createMaterialColor(Color color) {
-    List strengths = <double>[.05];
-    Map<int, Color> swatch = {};
+    final List strengths = <double>[.05];
+    final Map<int, Color> swatch = {};
     final int r = (color.r * 255).round();
     final int g = (color.g * 255).round();
     final int b = (color.b * 255).round();
@@ -427,7 +695,7 @@ class _SplashCheckerState extends State<SplashChecker> {
 
     // ✅ ÉCRAN DE CHARGEMENT UNIQUE (suppression du doublon)
     return Scaffold(
-      body: Container(
+      body: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,

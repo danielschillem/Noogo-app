@@ -37,7 +37,7 @@ class Dish {
       }
 
       // Parsing robuste des images avec URL complète
-      String imageUrl = _parseImageUrl(json['images']);
+      final String imageUrl = _parseImageUrl(json['images']);
 
       if (kDebugMode) {
         debugPrint('🖼️ Image parsée:');
@@ -46,10 +46,10 @@ class Dish {
       }
 
       // Parsing robuste du category_id
-      int categoryId = _parseCategoryId(json);
+      final int categoryId = _parseCategoryId(json);
 
       // Parsing robuste du prix
-      double price = _parsePrice(json['prix']);
+      final double price = _parsePrice(json['prix']);
 
       final dish = Dish(
         id: _parseInt(json['id']) ?? 0,

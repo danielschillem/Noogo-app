@@ -23,7 +23,9 @@ class CrashReportingService {
     final dsn = ApiConfig.sentryDsn;
 
     if (dsn.isEmpty) {
-      AppLogger.warning('MON-002: SENTRY_DSN absent — crash reporting désactivé', tag: 'Sentry');
+      AppLogger.warning(
+          'MON-002: SENTRY_DSN absent — crash reporting désactivé',
+          tag: 'Sentry');
       await appRunner();
       return;
     }
@@ -31,7 +33,7 @@ class CrashReportingService {
     await SentryFlutter.init(
       (options) {
         options.dsn = dsn;
-        options.environment = ApiConfig.environment;          // development / production
+        options.environment = ApiConfig.environment; // development / production
         options.release = 'noogo@1.0.0+1';
         options.debug = kDebugMode;
 
@@ -57,7 +59,8 @@ class CrashReportingService {
     );
 
     _initialized = true;
-    AppLogger.info('MON-002: Sentry initialisé (env: ${ApiConfig.environment})', tag: 'Sentry');
+    AppLogger.info('MON-002: Sentry initialisé (env: ${ApiConfig.environment})',
+        tag: 'Sentry');
   }
 
   // ================================================================
@@ -125,7 +128,8 @@ class CrashReportingService {
   // ================================================================
 
   /// Ajoute un breadcrumb pour tracer les actions avant un crash.
-  static void addBreadcrumb(String message, {String? category, Map<String, dynamic>? data}) {
+  static void addBreadcrumb(String message,
+      {String? category, Map<String, dynamic>? data}) {
     if (!_initialized) return;
     Sentry.addBreadcrumb(Breadcrumb(
       message: message,

@@ -15,16 +15,19 @@ class CustomBottomNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<RestaurantProvider>(
-      builder: (context, provider, child) {
-        return Container(
-          decoration: BoxDecoration(
+    // PERF-001 : Selector ne déclenche un rebuild que si le nombre
+    // d'articles dans le panier change (vs Consumer qui réagit à tout).
+    return Selector<RestaurantProvider, int>(
+      selector: (_, p) => p.cartItems.length,
+      builder: (context, cartCount, _) {
+        return DecoratedBox(
+          decoration: const BoxDecoration(
             color: AppColors.cardBackground,
             boxShadow: [
               BoxShadow(
                 color: AppColors.shadowColor,
                 blurRadius: 8,
-                offset: const Offset(0, -2),
+                offset: Offset(0, -2),
               ),
             ],
           ),
@@ -49,43 +52,48 @@ class CustomBottomNavigation extends StatelessWidget {
                 activeIcon: Icon(Icons.restaurant_menu),
                 label: 'Menu',
               ),
+              // A11Y-001 : Label dynamique pour les lecteurs d'écran
               BottomNavigationBarItem(
-                icon: Stack(
-                  children: [
-                    const Icon(Icons.shopping_cart_outlined),
-                    if (provider.cartItems.isNotEmpty)
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        child: Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: const BoxDecoration(
-                            color: AppColors.error,
-                            shape: BoxShape.circle,
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 16,
-                            minHeight: 16,
-                          ),
-                          child: Text(
-                            provider.cartItems.length > 9
-                                ? '9+'
-                                : provider.cartItems.length.toString(),
-                            style: const TextStyle(
-                              color: AppColors.textLight,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
+                icon: Semantics(
+                  label: cartCount > 0
+                      ? 'Panier, $cartCount article${cartCount > 1 ? "s" : ""}'
+                      : 'Panier',
+                  excludeSemantics: true,
+                  child: Stack(
+                    children: [
+                      const Icon(Icons.shopping_cart_outlined),
+                      if (cartCount > 0)
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: const BoxDecoration(
+                              color: AppColors.error,
+                              shape: BoxShape.circle,
                             ),
-                            textAlign: TextAlign.center,
+                            constraints: const BoxConstraints(
+                              minWidth: 16,
+                              minHeight: 16,
+                            ),
+                            child: Text(
+                              cartCount > 9 ? '9+' : '$cartCount',
+                              style: const TextStyle(
+                                color: AppColors.textLight,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
                           ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
                 activeIcon: Stack(
                   children: [
                     const Icon(Icons.shopping_cart),
-                    if (provider.cartItems.isNotEmpty)
+                    if (cartCount > 0)
                       Positioned(
                         right: 0,
                         top: 0,
@@ -100,9 +108,7 @@ class CustomBottomNavigation extends StatelessWidget {
                             minHeight: 16,
                           ),
                           child: Text(
-                            provider.cartItems.length > 9
-                                ? '9+'
-                                : provider.cartItems.length.toString(),
+                            cartCount > 9 ? '9+' : '$cartCount',
                             style: const TextStyle(
                               color: AppColors.textLight,
                               fontSize: 10,

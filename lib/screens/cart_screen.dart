@@ -14,7 +14,10 @@ class CartScreen extends StatefulWidget {
   State<CartScreen> createState() => _CartScreenState();
 }
 
-class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
+class _CartScreenState extends State<CartScreen>
+    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin<CartScreen> {
+  @override
+  bool get wantKeepAlive => true;
   late AnimationController _animationController;
 
   // Controllers pour le flux de paiement
@@ -62,16 +65,16 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
         width: width,
         height: height,
         fit: fit,
-        placeholder: (context, url) => Container(
+        placeholder: (context, url) => const ColoredBox(
           color: AppColors.surface,
-          child: const Center(
+          child: Center(
             child: CircularProgressIndicator(
               color: AppColors.primary,
               strokeWidth: 2,
             ),
           ),
         ),
-        errorWidget: (context, url, error) => Container(
+        errorWidget: (context, url, error) => const ColoredBox(
           color: AppColors.surface,
           child: Icon(
             Icons.restaurant_menu,
@@ -86,7 +89,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
         width: width,
         height: height,
         fit: fit,
-        errorBuilder: (context, error, stackTrace) => Container(
+        errorBuilder: (context, error, stackTrace) => const ColoredBox(
           color: AppColors.surface,
           child: Icon(
             Icons.restaurant_menu,
@@ -100,6 +103,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // AutomaticKeepAliveClientMixin
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: const CustomAppBar(
@@ -133,7 +137,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
               builder: (context, value, child) {
                 return Transform.scale(
                   scale: value,
-                  child: Icon(
+                  child: const Icon(
                     Icons.shopping_cart_outlined,
                     size: 80,
                     color: AppColors.textSecondary,
@@ -142,9 +146,9 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
               },
             ),
             const SizedBox(height: 24),
-            Text('Votre panier est vide', style: AppTextStyles.heading2),
+            const Text('Votre panier est vide', style: AppTextStyles.heading2),
             const SizedBox(height: 8),
-            Text(
+            const Text(
               'Ajoutez des plats depuis le menu pour commencer votre commande',
               style: AppTextStyles.subtitle,
               textAlign: TextAlign.center,
@@ -203,7 +207,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          Text('Mon Panier', style: AppTextStyles.heading1),
+          const Text('Mon Panier', style: AppTextStyles.heading1),
           const Spacer(),
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
@@ -222,18 +226,18 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
           ),
           const SizedBox(width: 8),
           PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert, color: AppColors.textSecondary),
+            icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
             onSelected: (value) {
               if (value == 'clear') _confirmClearCart(provider);
             },
             itemBuilder: (context) => [
-              PopupMenuItem(
+              const PopupMenuItem(
                 value: 'clear',
                 child: Row(
                   children: [
                     Icon(Icons.delete_sweep, color: AppColors.error),
-                    const SizedBox(width: 8),
-                    const Text('Vider le panier'),
+                    SizedBox(width: 8),
+                    Text('Vider le panier'),
                   ],
                 ),
               ),
@@ -251,11 +255,11 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: AppColors.shadowColor,
             blurRadius: 6,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -343,7 +347,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
   Widget _buildQuantityControls(OrderItem item, RestaurantProvider provider) {
     return Column(
       children: [
-        Container(
+        DecoratedBox(
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(20),
@@ -385,7 +389,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
               color: AppColors.error.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(Icons.delete_outline, color: AppColors.error, size: 18),
+            child: const Icon(Icons.delete_outline, color: AppColors.error, size: 18),
           ),
         ),
       ],
@@ -415,9 +419,9 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
   Widget _buildOrderSummary(RestaurantProvider provider) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.cardBackground,
-        borderRadius: const BorderRadius.only(
+        borderRadius: BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
         ),
@@ -425,7 +429,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
           BoxShadow(
             color: AppColors.shadowColor,
             blurRadius: 8,
-            offset: const Offset(0, -2),
+            offset: Offset(0, -2),
           ),
         ],
       ),
@@ -449,7 +453,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Sous-total', style: AppTextStyles.bodyMedium),
+            const Text('Sous-total', style: AppTextStyles.bodyMedium),
             Text(
               '${subtotal.toStringAsFixed(0)} FCFA',
               style: AppTextStyles.bodyMedium,
@@ -460,7 +464,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Frais de livraison', style: AppTextStyles.bodyMedium),
+            const Text('Frais de livraison', style: AppTextStyles.bodyMedium),
             Text(
               'A partir de 1000 f',
               style: AppTextStyles.bodyMedium.copyWith(
@@ -474,7 +478,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Total', style: AppTextStyles.heading3),
+            const Text('Total', style: AppTextStyles.heading3),
             Text(
               '${total.toStringAsFixed(0)} FCFA',
               style: AppTextStyles.price.copyWith(fontSize: 20),
@@ -668,10 +672,10 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Row(
+        title: const Row(
           children: [
-            const SizedBox(width: 8),
-            const Text('Type de commande'),
+            SizedBox(width: 8),
+            Text('Type de commande'),
           ],
         ),
         content: Column(
@@ -752,7 +756,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios,
+            const Icon(Icons.arrow_forward_ios,
                 size: 16, color: AppColors.textSecondary),
           ],
         ),
@@ -768,11 +772,11 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.table_restaurant, color: AppColors.primary),
-            const SizedBox(width: 8),
-            const Text('Numéro de table'),
+            SizedBox(width: 8),
+            Text('Numéro de table'),
           ],
         ),
         content: Column(
@@ -844,11 +848,11 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.phone, color: AppColors.primary),
-            const SizedBox(width: 8),
-            const Text('Numéro de téléphone'),
+            SizedBox(width: 8),
+            Text('Numéro de téléphone'),
           ],
         ),
         content: Column(
@@ -877,7 +881,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                     return 'Entrez votre numéro de téléphone';
                   }
                   final cleaned = value.replaceAll(RegExp(r'[\s\-\.]'), '');
-                  if (!RegExp(r'^(?:\+?226|00226)?[0-9]{8}$').hasMatch(cleaned)) {
+                  if (!RegExp(r'^(?:\+?226|00226)?[0-9]{8}$')
+                      .hasMatch(cleaned)) {
                     return 'Numéro invalide (ex: 70 12 34 56)';
                   }
                   return null;
@@ -914,11 +919,11 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.payment, color: AppColors.primary),
-            const SizedBox(width: 8),
-            const Text('Mode de paiement'),
+            SizedBox(width: 8),
+            Text('Mode de paiement'),
           ],
         ),
         content: Column(
@@ -981,7 +986,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                   AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600),
             ),
             const Spacer(),
-            Icon(Icons.arrow_forward_ios,
+            const Icon(Icons.arrow_forward_ios,
                 size: 16, color: AppColors.textSecondary),
           ],
         ),
@@ -995,11 +1000,11 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.phone_android, color: AppColors.primary),
-            const SizedBox(width: 8),
-            const Text('Choisissez votre opérateur'),
+            SizedBox(width: 8),
+            Text('Choisissez votre opérateur'),
           ],
         ),
         content: Column(
@@ -1068,7 +1073,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                     .copyWith(fontWeight: FontWeight.w600),
               ),
             ),
-            Icon(Icons.arrow_forward_ios,
+            const Icon(Icons.arrow_forward_ios,
                 size: 16, color: AppColors.textSecondary),
           ],
         ),
@@ -1085,7 +1090,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.phone_android, color: AppColors.primary),
+            const Icon(Icons.phone_android, color: AppColors.primary),
             const SizedBox(width: 8),
             Text('Numéro ${provider.toUpperCase()}'),
           ],
@@ -1093,7 +1098,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
+            const Text(
               'Entrez le numéro qui recevra la demande de paiement',
               style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
             ),
@@ -1102,11 +1107,11 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
               key: _mobileMoneyFormKey,
               child: TextFormField(
                 controller: _mobileMoneyNumberController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Numéro Mobile Money',
                   hintText: 'Ex: 70123456',
-                  border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(Icons.phone),
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.phone),
                   helperText: 'Le code OTP sera envoyé à ce numéro',
                 ),
                 keyboardType: TextInputType.phone,
@@ -1117,7 +1122,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                     return 'Entrez votre numéro Mobile Money';
                   }
                   final cleaned = value.replaceAll(RegExp(r'[\s\-\.]'), '');
-                  if (!RegExp(r'^(?:\+?226|00226)?[0-9]{8}$').hasMatch(cleaned)) {
+                  if (!RegExp(r'^(?:\+?226|00226)?[0-9]{8}$')
+                      .hasMatch(cleaned)) {
                     return 'Numéro invalide (ex: 70 12 34 56)';
                   }
                   return null;
@@ -1134,7 +1140,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
           ElevatedButton(
             onPressed: () {
               if (_mobileMoneyFormKey.currentState!.validate()) {
-                Navigator.pop(context, _mobileMoneyNumberController.text.trim());
+                Navigator.pop(
+                    context, _mobileMoneyNumberController.text.trim());
               }
             },
             style: ElevatedButton.styleFrom(
@@ -1175,9 +1182,9 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => PopScope(
+      builder: (context) => const PopScope(
         canPop: false,
-        child: const Center(
+        child: Center(
           child: Card(
             child: Padding(
               padding: EdgeInsets.all(24),
@@ -1205,11 +1212,11 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.check_circle, color: AppColors.success),
-            const SizedBox(width: 8),
-            const Text('Demande envoyée'),
+            SizedBox(width: 8),
+            Text('Demande envoyée'),
           ],
         ),
         content: Column(
@@ -1228,7 +1235,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.phone_android, color: AppColors.primary),
+                  const Icon(Icons.phone_android, color: AppColors.primary),
                   const SizedBox(width: 8),
                   Text(
                     phone,
@@ -1241,7 +1248,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
               ),
             ),
             const SizedBox(height: 12),
-            Text(
+            const Text(
               'Veuillez composer le code USSD affiché sur votre téléphone et entrer votre code PIN pour générer l\'OTP.',
               style: TextStyle(
                 fontSize: 13,
@@ -1273,11 +1280,11 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.lock, color: AppColors.primary),
-            const SizedBox(width: 8),
-            const Text('Code OTP'),
+            SizedBox(width: 8),
+            Text('Code OTP'),
           ],
         ),
         content: Column(
@@ -1354,9 +1361,9 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => PopScope(
+      builder: (context) => const PopScope(
         canPop: false,
-        child: const Center(
+        child: Center(
           child: Card(
             child: Padding(
               padding: EdgeInsets.all(24),
@@ -1402,7 +1409,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                 color: AppColors.success.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.check_circle,
                 color: AppColors.success,
                 size: 64,
@@ -1540,9 +1547,9 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => PopScope(
+      builder: (context) => const PopScope(
         canPop: false,
-        child: const Center(
+        child: Center(
           child: Card(
             child: Padding(
               padding: EdgeInsets.all(24),
@@ -1637,7 +1644,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                         color: AppColors.success.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.check_circle,
                         color: AppColors.success,
                         size: 64,

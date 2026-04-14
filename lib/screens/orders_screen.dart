@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/order.dart';
@@ -17,7 +17,9 @@ class OrdersScreen extends StatefulWidget {
 }
 
 class _OrdersScreenState extends State<OrdersScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin<OrdersScreen> {
+  @override
+  bool get wantKeepAlive => true;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -73,16 +75,16 @@ class _OrdersScreenState extends State<OrdersScreen>
         width: width,
         height: height,
         fit: fit,
-        placeholder: (context, url) => Container(
+        placeholder: (context, url) => const ColoredBox(
           color: AppColors.surface,
-          child: const Center(
+          child: Center(
             child: CircularProgressIndicator(
               color: AppColors.primary,
               strokeWidth: 2,
             ),
           ),
         ),
-        errorWidget: (context, url, error) => Container(
+        errorWidget: (context, url, error) => const ColoredBox(
           color: AppColors.surface,
           child: Icon(
             Icons.restaurant_menu,
@@ -97,7 +99,7 @@ class _OrdersScreenState extends State<OrdersScreen>
         width: width,
         height: height,
         fit: fit,
-        errorBuilder: (context, error, stackTrace) => Container(
+        errorBuilder: (context, error, stackTrace) => const ColoredBox(
           color: AppColors.surface,
           child: Icon(
             Icons.restaurant_menu,
@@ -111,6 +113,7 @@ class _OrdersScreenState extends State<OrdersScreen>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // AutomaticKeepAliveClientMixin
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: const CustomAppBar(title: 'Vos commandes'),
@@ -140,7 +143,7 @@ class _OrdersScreenState extends State<OrdersScreen>
                     padding: const EdgeInsets.all(16),
                     child: Row(
                       children: [
-                        Text('Mes Commandes', style: AppTextStyles.heading1),
+                        const Text('Mes Commandes', style: AppTextStyles.heading1),
                         const Spacer(),
 
                         // Indicateur auto-refresh
@@ -191,7 +194,7 @@ class _OrdersScreenState extends State<OrdersScreen>
 
   /// Indicateur d'auto-refresh (toujours actif)
   Widget _buildAutoRefreshIndicator() {
-    return Tooltip(
+    return const Tooltip(
       message: 'Mises à jour automatiques toutes les 30s',
     );
   }
@@ -201,18 +204,18 @@ class _OrdersScreenState extends State<OrdersScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.receipt_long_outlined,
             size: 80,
             color: AppColors.textSecondary,
           ),
           const SizedBox(height: 24),
-          Text(
+          const Text(
             'Aucune commande',
             style: AppTextStyles.heading2,
           ),
           const SizedBox(height: 8),
-          Text(
+          const Text(
             'Vous n\'avez pas encore passé de commande',
             style: AppTextStyles.subtitle,
             textAlign: TextAlign.center,
@@ -241,11 +244,11 @@ class _OrdersScreenState extends State<OrdersScreen>
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: AppColors.shadowColor,
             blurRadius: 6,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -316,7 +319,7 @@ class _OrdersScreenState extends State<OrdersScreen>
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Paiement', style: AppTextStyles.caption),
+                        const Text('Paiement', style: AppTextStyles.caption),
                         const SizedBox(height: 2),
                         Row(
                           children: [
@@ -348,7 +351,7 @@ class _OrdersScreenState extends State<OrdersScreen>
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text('Total', style: AppTextStyles.caption),
+                        const Text('Total', style: AppTextStyles.caption),
                         const SizedBox(height: 2),
                         Text(
                           '${order.totalAmount.toStringAsFixed(0)} FCFA',

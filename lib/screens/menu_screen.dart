@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/category.dart';
@@ -7,6 +7,7 @@ import '../services/restaurant_provider.dart';
 import '../utils/app_colors.dart';
 import '../utils/app_text_styles.dart';
 import '../widgets/custom_app_bar.dart';
+import '../widgets/section_header.dart';
 
 class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key});
@@ -15,10 +16,17 @@ class MenuScreen extends StatefulWidget {
   State<MenuScreen> createState() => _MenuScreenState();
 }
 
-class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
+class _MenuScreenState extends State<MenuScreen>
+    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin<MenuScreen> {
+  @override
+  bool get wantKeepAlive => true;
+
   int _selectedCategoryId = 0; // 0 = toutes les catégories, -1 = favoris
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   // Map pour stocker les quantités temporaires de chaque plat
   final Map<String, int> _tempQuantities = {};
@@ -39,6 +47,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
   @override
   void dispose() {
     _animationController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -78,16 +87,16 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
         width: width,
         height: height,
         fit: fit,
-        placeholder: (context, url) => Container(
+        placeholder: (context, url) => const ColoredBox(
           color: AppColors.surface,
-          child: const Center(
+          child: Center(
             child: CircularProgressIndicator(
               color: AppColors.primary,
               strokeWidth: 2,
             ),
           ),
         ),
-        errorWidget: (context, url, error) => Container(
+        errorWidget: (context, url, error) => const ColoredBox(
           color: AppColors.surface,
           child: Icon(
             Icons.restaurant_menu,
@@ -102,7 +111,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
         width: width,
         height: height,
         fit: fit,
-        errorBuilder: (context, error, stackTrace) => Container(
+        errorBuilder: (context, error, stackTrace) => const ColoredBox(
           color: AppColors.surface,
           child: Icon(
             Icons.restaurant_menu,
@@ -116,6 +125,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // AutomaticKeepAliveClientMixin
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: const CustomAppBar(
@@ -171,8 +181,8 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                         ),
                       ),
                     // Titre de la page
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
                         '',
                         style: AppTextStyles.heading1,
@@ -182,6 +192,11 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                     // Catégories circulaires
                     _buildCategoriesSection(
                         provider.categories.cast<Category>(), provider),
+
+                    const SizedBox(height: 12),
+
+                    // Barre de recherche
+                    _buildSearchBar(),
 
                     const SizedBox(height: 24),
 
@@ -199,18 +214,60 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
     );
   }
 
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: TextField(
+        controller: _searchController,
+        onChanged: (value) =>
+            setState(() => _searchQuery = value.toLowerCase()),
+        decoration: InputDecoration(
+          hintText: 'Rechercher un plat...',
+          hintStyle:
+              AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+          prefixIcon: const Icon(Icons.search, color: AppColors.primary),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear, color: AppColors.textSecondary),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() => _searchQuery = '');
+                  },
+                )
+              : null,
+          filled: true,
+          fillColor: AppColors.surface,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+      ),
+    );
+  }
+
   Widget _buildErrorWidget(RestaurantProvider provider) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.error_outline,
             size: 64,
             color: AppColors.error,
           ),
           const SizedBox(height: 16),
-          Text(
+          const Text(
             'Erreur de chargement',
             style: AppTextStyles.heading3,
           ),
@@ -242,16 +299,10 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'Catégories',
-            style: AppTextStyles.heading3,
-          ),
-        ),
-        const SizedBox(height: 16),
+        const SectionHeader(title: 'Catégories'),
+        const SizedBox(height: 12),
         SizedBox(
-          height: 120,
+          height: 110,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -286,78 +337,86 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
 
   Widget _buildFavoriteCategoryItem(int favCount) {
     final isSelected = _selectedCategoryId == -1;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedCategoryId = -1),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.only(right: 16),
-        child: Column(
-          children: [
-            Container(
-              width: 70,
-              height: 70,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isSelected
-                    ? AppColors.primary.withValues(alpha: 0.15)
-                    : AppColors.surface,
-                border: Border.all(
-                  color: isSelected ? AppColors.primary : Colors.transparent,
-                  width: 3,
+    // A11Y-005 : Semantics sur l'élément de catégorie favoris
+    return Semantics(
+      label: 'Catégorie Favoris${isSelected ? ", sélectionnée" : ""}',
+      button: true,
+      selected: isSelected,
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedCategoryId = -1),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.only(right: 16),
+          child: Column(
+            children: [
+              Container(
+                width: 70,
+                height: 70,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isSelected
+                      ? AppColors.primary.withValues(alpha: 0.15)
+                      : AppColors.surface,
+                  border: Border.all(
+                    color: isSelected ? AppColors.primary : Colors.transparent,
+                    width: 3,
+                  ),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: AppColors.shadowColor,
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.shadowColor,
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Icon(
-                    Icons.favorite,
-                    color: isSelected ? AppColors.primary : Colors.grey,
-                    size: 28,
-                  ),
-                  if (favCount > 0)
-                    Positioned(
-                      top: 4,
-                      right: 4,
-                      child: Container(
-                        padding: const EdgeInsets.all(3),
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(
-                          '$favCount',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Icon(
+                      Icons.favorite,
+                      color: isSelected ? AppColors.primary : Colors.grey,
+                      size: 28,
+                    ),
+                    if (favCount > 0)
+                      Positioned(
+                        top: 4,
+                        right: 4,
+                        child: Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            '$favCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: 70,
-              child: Text(
-                'Favoris',
-                style: AppTextStyles.caption.copyWith(
-                  color:
-                      isSelected ? AppColors.primary : AppColors.textSecondary,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  ],
                 ),
-                textAlign: TextAlign.center,
               ),
-            ),
-          ],
+              const SizedBox(height: 8),
+              SizedBox(
+                width: 70,
+                child: Text(
+                  'Favoris',
+                  style: AppTextStyles.caption.copyWith(
+                    color: isSelected
+                        ? AppColors.primary
+                        : AppColors.textSecondary,
+                    fontWeight:
+                        isSelected ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -369,62 +428,72 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
     required String imageUrl,
     required bool isSelected,
   }) {
-    return GestureDetector(
-      onTap: () => _onCategorySelected(id),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.only(right: 16),
-        child: Column(
-          children: [
-            Container(
-              width: 70,
-              height: 70,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isSelected ? AppColors.primary : Colors.transparent,
-                  width: 3,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.shadowColor,
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+    // A11Y-006 : Semantics sur chaque puce de catégorie
+    return Semantics(
+      label: '$name${isSelected ? ", sélectionnée" : ""}',
+      button: true,
+      selected: isSelected,
+      child: GestureDetector(
+        onTap: () => _onCategorySelected(id),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.only(right: 16),
+          child: Column(
+            children: [
+              Container(
+                width: 70,
+                height: 70,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isSelected ? AppColors.primary : Colors.transparent,
+                    width: 3,
                   ),
-                ],
-              ),
-              child: ClipOval(
-                child: _buildImage(
-                  imageUrl,
-                  width: 70,
-                  height: 70,
-                  fit: BoxFit.cover,
+                  boxShadow: const [
+                    BoxShadow(
+                      color: AppColors.shadowColor,
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: ClipOval(
+                  child: ExcludeSemantics(
+                    child: _buildImage(
+                      imageUrl,
+                      width: 70,
+                      height: 70,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: 70,
-              child: Text(
-                name,
-                style: AppTextStyles.caption.copyWith(
-                  color:
-                      isSelected ? AppColors.primary : AppColors.textSecondary,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              const SizedBox(height: 8),
+              SizedBox(
+                width: 70,
+                child: Text(
+                  name,
+                  style: AppTextStyles.caption.copyWith(
+                    color: isSelected
+                        ? AppColors.primary
+                        : AppColors.textSecondary,
+                    fontWeight:
+                        isSelected ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildDishesSection(RestaurantProvider provider) {
-    final List<Dish> filteredDishes;
+    List<Dish> filteredDishes;
     if (_selectedCategoryId == -1) {
       // Mode "Favoris"
       filteredDishes = provider.favoriteDishes;
@@ -436,7 +505,16 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
           .toList();
     }
 
+    // Filtre recherche texte
+    if (_searchQuery.isNotEmpty) {
+      filteredDishes = filteredDishes.where((dish) {
+        return dish.name.toLowerCase().contains(_searchQuery) ||
+            dish.description.toLowerCase().contains(_searchQuery);
+      }).toList();
+    }
+
     if (filteredDishes.isEmpty) {
+      final isSearching = _searchQuery.isNotEmpty;
       final isFiltered = _selectedCategoryId != 0;
       return Padding(
         padding: const EdgeInsets.all(32),
@@ -444,21 +522,32 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
           child: Column(
             children: [
               Icon(
-                Icons.restaurant_menu,
+                isSearching ? Icons.search_off : Icons.restaurant_menu,
                 size: 48,
                 color: AppColors.textSecondary,
               ),
               const SizedBox(height: 16),
               Text(
-                isFiltered
-                    ? 'Aucun plat dans cette catégorie'
-                    : _selectedCategoryId == -1
-                        ? 'Aucun plat en favori. Appuyez sur \u2665 pour en ajouter.'
-                        : 'Le menu est vide pour le moment',
+                isSearching
+                    ? 'Aucun plat pour "$_searchQuery"'
+                    : isFiltered
+                        ? 'Aucun plat dans cette catégorie'
+                        : _selectedCategoryId == -1
+                            ? 'Aucun plat en favori. Appuyez sur \u2665 pour en ajouter.'
+                            : 'Le menu est vide pour le moment',
                 style: AppTextStyles.subtitle,
                 textAlign: TextAlign.center,
               ),
-              if (isFiltered) ...[
+              if (isSearching) ...[
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() => _searchQuery = '');
+                  },
+                  child: const Text('Effacer la recherche'),
+                ),
+              ] else if (isFiltered) ...[
                 const SizedBox(height: 8),
                 TextButton(
                   onPressed: () => setState(() => _selectedCategoryId = 0),
@@ -474,16 +563,14 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            _selectedCategoryId == -1
-                ? 'Mes favoris (${filteredDishes.length})'
-                : 'Plats disponibles (${filteredDishes.length})',
-            style: AppTextStyles.heading3,
-          ),
+        SectionHeader(
+          title: _searchQuery.isNotEmpty
+              ? 'Résultats (${filteredDishes.length})'
+              : _selectedCategoryId == -1
+                  ? 'Mes favoris (${filteredDishes.length})'
+                  : 'Plats disponibles (${filteredDishes.length})',
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -491,7 +578,14 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
           itemCount: filteredDishes.length,
           itemBuilder: (context, index) {
             final dish = filteredDishes[index];
-            return _buildDishCard(dish, provider);
+            // PERF-004 + A11Y-007 : RepaintBoundary + Semantics sur chaque carte de plat
+            return RepaintBoundary(
+              child: Semantics(
+                label:
+                    '${dish.name}, ${dish.formattedPrice}${!dish.isAvailable ? ", non disponible" : ""}',
+                child: _buildDishCard(dish, provider),
+              ),
+            );
           },
         ),
       ],
@@ -504,14 +598,15 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
     final isFav = provider.isFavoriteDish(dish.id);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.dividerColor, width: 0.5),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowColor,
-            blurRadius: 6,
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
@@ -519,22 +614,21 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image du plat
+          // --- Image en haut (large, arrondie en haut) ---
           ClipRRect(
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(12),
-              topRight: Radius.circular(12),
-            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
             child: Stack(
               children: [
-                SizedBox(
-                  height: 200,
-                  width: double.infinity,
-                  child: _buildImage(
-                    dish.imageUrl,
-                    height: 200,
+                ExcludeSemantics(
+                  child: SizedBox(
+                    height: 180,
                     width: double.infinity,
-                    fit: BoxFit.cover,
+                    child: _buildImage(
+                      dish.imageUrl,
+                      height: 180,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
 
@@ -560,28 +654,32 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                     ),
                   ),
 
-                // Bouton favori (FEAT-004)
+                // Bouton favori (FEAT-004) — A11Y-008 : Tooltip lecteur d'écran
                 Positioned(
                   bottom: 8,
                   right: 8,
-                  child: GestureDetector(
-                    onTap: () => provider.toggleFavoriteDish(dish.id),
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.15),
-                            blurRadius: 4,
-                          )
-                        ],
-                      ),
-                      child: Icon(
-                        isFav ? Icons.favorite : Icons.favorite_border,
-                        color: isFav ? Colors.red : Colors.grey,
-                        size: 18,
+                  child: Tooltip(
+                    message:
+                        isFav ? 'Retirer des favoris' : 'Ajouter aux favoris',
+                    child: GestureDetector(
+                      onTap: () => provider.toggleFavoriteDish(dish.id),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.15),
+                              blurRadius: 4,
+                            )
+                          ],
+                        ),
+                        child: Icon(
+                          isFav ? Icons.favorite : Icons.favorite_border,
+                          color: isFav ? Colors.red : Colors.grey,
+                          size: 18,
+                        ),
                       ),
                     ),
                   ),
@@ -594,7 +692,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                     right: 12,
                     child: Container(
                       padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: AppColors.primary,
                         shape: BoxShape.circle,
                       ),
@@ -611,15 +709,16 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                 // Overlay si non disponible
                 if (!dish.isAvailable)
                   Container(
-                    height: 200,
+                    height: 180,
                     width: double.infinity,
-                    color: Colors.black.withValues(alpha: 0.6),
-                    child: Center(
+                    color: Colors.black.withValues(alpha: 0.55),
+                    child: const Center(
                       child: Text(
                         'Non disponible',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textLight,
-                          fontWeight: FontWeight.w600,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
                         ),
                       ),
                     ),
@@ -628,14 +727,15 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
             ),
           ),
 
-          // Informations du plat
+          // --- Infos plat ---
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Nom + Prix
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: Text(
@@ -645,9 +745,10 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    const SizedBox(width: 8),
                     Text(
                       dish.formattedPrice,
-                      style: AppTextStyles.price.copyWith(fontSize: 18),
+                      style: AppTextStyles.price.copyWith(fontSize: 16),
                     ),
                   ],
                 ),
@@ -661,7 +762,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.access_time,
                       size: 16,
                       color: AppColors.textSecondary,
@@ -700,12 +801,13 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                     Row(
                       children: [
                         // Bouton -
-                        Container(
+                        DecoratedBox(
                           decoration: BoxDecoration(
                             border: Border.all(color: AppColors.primary),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: IconButton(
+                            tooltip: 'Diminuer la quantité',
                             onPressed: dish.isAvailable && tempQuantity > 0
                                 ? () => _decrementQuantity(dish.id.toString())
                                 : null,
@@ -736,12 +838,13 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                         ),
 
                         // Bouton +
-                        Container(
+                        DecoratedBox(
                           decoration: BoxDecoration(
                             border: Border.all(color: AppColors.primary),
                             borderRadius: BorderRadius.circular(5),
                           ),
                           child: IconButton(
+                            tooltip: 'Augmenter la quantité',
                             onPressed: dish.isAvailable
                                 ? () => _incrementQuantity(dish.id.toString())
                                 : null,

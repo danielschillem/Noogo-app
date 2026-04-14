@@ -23,7 +23,7 @@ class Category {
       }
 
       // ✅ Parsing image robuste (même logique que Dish)
-      String imageUrl = _parseImageUrl(json);
+      final String imageUrl = _parseImageUrl(json);
 
       final category = Category(
         id: _parseCategoryId(json),

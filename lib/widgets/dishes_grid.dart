@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/dish.dart';
 import '../utils/app_colors.dart';
@@ -44,7 +44,7 @@ class DishesGrid extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(
+              const SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(
@@ -80,7 +80,7 @@ class DishesGrid extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
+              const Icon(
                 Icons.restaurant_menu,
                 color: AppColors.textSecondary,
                 size: 32,
@@ -153,7 +153,7 @@ class DishesGrid extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              const Text(
                 'Nos plats',
                 style: AppTextStyles.heading3,
               ),
@@ -253,7 +253,7 @@ class _AnimatedDishCardState extends State<_AnimatedDishCard>
           child: MouseRegion(
             onEnter: (_) => setState(() => _hovered = true),
             onExit: (_) => setState(() => _hovered = false),
-            child: Container(
+            child: DecoratedBox(
               decoration: BoxDecoration(
                 color: AppColors.cardBackground,
                 borderRadius: BorderRadius.circular(14),
@@ -318,7 +318,7 @@ class _AnimatedDishCardState extends State<_AnimatedDishCard>
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(
+                                    const Icon(
                                       Icons.star,
                                       size: 12,
                                       color: AppColors.textLight,
@@ -339,7 +339,7 @@ class _AnimatedDishCardState extends State<_AnimatedDishCard>
                           // ✅ AMÉLIORATION : Overlay "Non disponible" plus clair
                           if (!dish.isAvailable)
                             Positioned.fill(
-                              child: Container(
+                              child: DecoratedBox(
                                 decoration: BoxDecoration(
                                   color: Colors.black.withValues(alpha: 0.7),
                                   borderRadius: const BorderRadius.only(
@@ -351,7 +351,7 @@ class _AnimatedDishCardState extends State<_AnimatedDishCard>
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(
+                                      const Icon(
                                         Icons.block,
                                         color: AppColors.textLight,
                                         size: 32,
@@ -432,7 +432,7 @@ class _AnimatedDishCardState extends State<_AnimatedDishCard>
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(
+                                      const Icon(
                                         Icons.access_time,
                                         size: 12,
                                         color: AppColors.textSecondary,

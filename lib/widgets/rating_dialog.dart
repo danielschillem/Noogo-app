@@ -54,7 +54,7 @@ class _RatingDialogState extends State<RatingDialog> {
         children: [
           const Icon(Icons.star_rounded, size: 44, color: Colors.amber),
           const SizedBox(height: 8),
-          Text(
+          const Text(
             'Évaluer votre commande',
             style: AppTextStyles.heading3,
             textAlign: TextAlign.center,

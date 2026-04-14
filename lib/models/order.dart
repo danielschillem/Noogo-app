@@ -108,9 +108,28 @@ class Order {
     }
   }
 
+  static OrderType parseOrderType(String? type) {
+    switch (type?.toLowerCase().trim()) {
+      case 'sur_place':
+      case 'sur place':
+      case 'surplace':
+        return OrderType.surPlace;
+      case 'a_emporter':
+      case 'à emporter':
+      case 'a emporter':
+      case 'aemporter':
+        return OrderType.aEmporter;
+      case 'livraison':
+      case 'delivery':
+        return OrderType.livraison;
+      default:
+        return OrderType.surPlace;
+    }
+  }
+
   factory Order.fromJson(Map<String, dynamic> json) {
-    var itemsList = json['items'] as List;
-    List<OrderItem> orderItems =
+    final itemsList = json['items'] as List;
+    final List<OrderItem> orderItems =
         itemsList.map((i) => OrderItem.fromJson(i)).toList();
 
     OrderType parseOrderType(String? type) {

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/restaurant.dart';
 import '../utils/app_colors.dart';
@@ -21,16 +21,16 @@ class RestaurantHeader extends StatelessWidget {
       width: width,
       height: height,
       fit: fit,
-      placeholder: (context, url) => Container(
+      placeholder: (context, url) => const ColoredBox(
         color: AppColors.surface,
-        child: const Center(
+        child: Center(
           child: CircularProgressIndicator(
             color: AppColors.primary,
             strokeWidth: 2,
           ),
         ),
       ),
-      errorWidget: (context, url, error) => Container(
+      errorWidget: (context, url, error) => const ColoredBox(
         color: AppColors.surface,
         child: Icon(
           Icons.restaurant_menu,
@@ -126,7 +126,7 @@ class RestaurantHeader extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.location_on,
                         color: AppColors.primary,
                         size: 25,

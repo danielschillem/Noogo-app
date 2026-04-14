@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/restaurant_provider.dart';
 import '../services/restaurant_storage_service.dart';
@@ -248,7 +248,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.error_outline, color: AppColors.error),
+            const Icon(Icons.error_outline, color: AppColors.error),
             const SizedBox(width: 8),
             Expanded(child: Text(title, style: AppTextStyles.heading3)),
           ],
@@ -257,7 +257,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('Annuler',
+            child: const Text('Annuler',
                 style: TextStyle(color: AppColors.textSecondary)),
           ),
           ElevatedButton(
@@ -281,7 +281,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
+      body: DecoratedBox(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -417,7 +417,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                               child: Image.asset(
                                 'assets/images/03.png',
                                 errorBuilder: (context, error, stackTrace) {
-                                  return Icon(
+                                  return const Icon(
                                     Icons.restaurant,
                                     size: 70,
                                     color: AppColors.primary,

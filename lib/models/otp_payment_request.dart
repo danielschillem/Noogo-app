@@ -19,15 +19,15 @@ class OtpPaymentRequest {
 
   Map<String, dynamic> toJson() {
     return {
-      "order_type": orderType,
-      "table_number": tableNumber,
-      "phone": phone,
-      "payment_method": "mobile_money",
-      "provider": provider,
-      "amount": amount,
-      "otp": otp,
-      "otp_phone": phone,
-      "items": items,
+      'order_type': orderType,
+      'table_number': tableNumber,
+      'phone': phone,
+      'payment_method': 'mobile_money',
+      'provider': provider,
+      'amount': amount,
+      'otp': otp,
+      'otp_phone': phone,
+      'items': items,
     };
   }
 }

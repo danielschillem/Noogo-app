@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/flash_info.dart';
@@ -16,7 +17,7 @@ class FlashInfoSection extends StatelessWidget {
 
   Color _getBackgroundColor(String colorHex) {
     try {
-      String hex = colorHex.trim().replaceAll('#', '').replaceAll(' ', '');
+      final String hex = colorHex.trim().replaceAll('#', '').replaceAll(' ', '');
       if (hex.length == 6) {
         return Color(int.parse('0xFF$hex'));
       }
@@ -26,7 +27,8 @@ class FlashInfoSection extends StatelessWidget {
     }
   }
 
-  Widget _buildImage(String imageUrl, {double? width, double? height, BoxFit? fit}) {
+  Widget _buildImage(String imageUrl,
+      {double? width, double? height, BoxFit? fit}) {
     if (imageUrl.isEmpty) {
       return Container(
         width: width,
@@ -111,14 +113,21 @@ class FlashInfoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('🎨 FlashInfoSection build: ${flashInfos.length} flash infos');
+    if (kDebugMode) {
+      debugPrint('🎨 FlashInfoSection build: ${flashInfos.length} flash infos');
+    }
 
     if (flashInfos.isEmpty) {
-      debugPrint('⚠️ FlashInfoSection: Liste vide, widget caché');
+      if (kDebugMode) {
+        debugPrint('⚠️ FlashInfoSection: Liste vide, widget caché');
+      }
       return const SizedBox.shrink();
     }
 
-    debugPrint('✅ FlashInfoSection: Affichage de ${flashInfos.length} flash infos');
+    if (kDebugMode) {
+      debugPrint(
+          '✅ FlashInfoSection: Affichage de ${flashInfos.length} flash infos');
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,14 +152,15 @@ class FlashInfoSection extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Text(
+                  const Text(
                     'Offres spéciales',
                     style: AppTextStyles.heading3,
                   ),
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: AppColors.error.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
@@ -386,7 +396,8 @@ class FlashInfoSection extends StatelessWidget {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () => _showOfferDetails(context, flashInfo),
+                          onPressed: () =>
+                              _showOfferDetails(context, flashInfo),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
                             foregroundColor: Colors.black87,
@@ -443,7 +454,7 @@ class _OfferDetailsSheet extends StatelessWidget {
 
   Color _getBackgroundColor(String colorHex) {
     try {
-      String hex = colorHex.trim().replaceAll('#', '').replaceAll(' ', '');
+      final String hex = colorHex.trim().replaceAll('#', '').replaceAll(' ', '');
       if (hex.length == 6) {
         return Color(int.parse('0xFF$hex'));
       }
@@ -528,7 +539,7 @@ class _OfferDetailsSheet extends StatelessWidget {
       minChildSize: 0.5,
       maxChildSize: 0.95,
       builder: (context, scrollController) {
-        return Container(
+        return DecoratedBox(
           decoration: const BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.vertical(
@@ -578,7 +589,8 @@ class _OfferDetailsSheet extends StatelessWidget {
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.1),
+                                      color:
+                                          Colors.black.withValues(alpha: 0.1),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),
@@ -769,7 +781,8 @@ class _OfferDetailsSheet extends StatelessWidget {
                                     Expanded(
                                       child: Text(
                                         flashInfo.conditions!,
-                                        style: AppTextStyles.bodyMedium.copyWith(
+                                        style:
+                                            AppTextStyles.bodyMedium.copyWith(
                                           color: AppColors.textPrimary,
                                           height: 1.5,
                                         ),
@@ -792,7 +805,7 @@ class _OfferDetailsSheet extends StatelessWidget {
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Icon(
+                                  const Icon(
                                     Icons.location_on,
                                     color: AppColors.primary,
                                     size: 24,
@@ -868,12 +881,12 @@ class _OfferDetailsSheet extends StatelessWidget {
   }
 
   Widget _buildDetailRow(
-      IconData icon,
-      String label,
-      String value,
-      Color color, {
-        bool isWarning = false,
-      }) {
+    IconData icon,
+    String label,
+    String value,
+    Color color, {
+    bool isWarning = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(

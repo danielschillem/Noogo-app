@@ -162,8 +162,9 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                   },
                 ),
                 // Overlay pour le cadre de scan
+                // ignore: prefer_const_constructors
                 Container(
-                  decoration: ShapeDecoration(
+                  decoration: const ShapeDecoration(
                     shape: QrScannerOverlayShape(
                       borderColor: AppColors.primary,
                       borderRadius: 10,
@@ -184,7 +185,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.check_circle,
                             color: AppColors.success,
                             size: 40,
@@ -244,13 +245,14 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                   : Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        // ignore: prefer_const_constructors
                         Icon(
                           Icons.qr_code_scanner,
                           size: 48,
                           color: AppColors.primary.withValues(alpha: 0.5),
                         ),
                         const SizedBox(height: 8),
-                        Text(
+                        const Text(
                           'Pointez la caméra vers un QR code',
                           style: AppTextStyles.bodyMedium,
                           textAlign: TextAlign.center,
@@ -265,17 +267,20 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                                 Expanded(
                                   child: TextField(
                                     controller: _manualController,
-                                    decoration: InputDecoration(
-                                      hintText: 'Ou saisissez l\'ID du restaurant',
-                                      border: const OutlineInputBorder(),
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    decoration: const InputDecoration(
+                                      hintText:
+                                          'Ou saisissez l\'ID du restaurant',
+                                      border: OutlineInputBorder(),
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 8),
                                       isDense: true,
                                     ),
                                     keyboardType: TextInputType.number,
                                     onSubmitted: (val) {
                                       final trimmed = val.trim();
                                       if (trimmed.isNotEmpty && mounted) {
-                                        Navigator.of(context).pop('https://noogo.netlify.app/restaurant/$trimmed');
+                                        Navigator.of(context).pop(
+                                            'https://noogo.netlify.app/restaurant/$trimmed');
                                       }
                                     },
                                   ),
@@ -285,12 +290,15 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: AppColors.primary,
                                     foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 10),
                                   ),
                                   onPressed: () {
-                                    final trimmed = _manualController.text.trim();
+                                    final trimmed =
+                                        _manualController.text.trim();
                                     if (trimmed.isNotEmpty && mounted) {
-                                      Navigator.of(context).pop('https://noogo.netlify.app/restaurant/$trimmed');
+                                      Navigator.of(context).pop(
+                                          'https://noogo.netlify.app/restaurant/$trimmed');
                                     }
                                   },
                                   child: const Text('OK'),

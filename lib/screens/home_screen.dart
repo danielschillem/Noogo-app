@@ -1,9 +1,12 @@
-﻿import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/restaurant_header.dart';
 import '../widgets/contact_info.dart';
 import '../widgets/flash_info_section.dart';
 import '../widgets/custom_bottom_navigation.dart';
+import '../widgets/skeleton.dart';
+import '../widgets/section_header.dart';
 import '../services/restaurant_provider.dart';
 import '../utils/app_colors.dart';
 import '../utils/app_text_styles.dart';
@@ -24,6 +27,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late AnimationController _animationController;
+  late Animation<double> _tabFade;
   late PageController _pageController;
 
   // ✅ Flag pour éviter les navigations concurrentes
@@ -38,8 +42,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _pageController = PageController(initialPage: initialIndex);
 
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 220),
       vsync: this,
+    );
+
+    _tabFade = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeIn,
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -71,16 +80,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     _isNavigating = true;
 
-    // ✅ Mettre à jour le provider SANS écouter (évite la boucle)
+    // Mettre à jour le provider SANS écouter (évite la boucle)
     context.read<RestaurantProvider>().setNavIndex(index);
 
-    // ✅ Toujours utiliser jumpToPage pour éviter les animations qui crashent
-    // lors de navigations rapides ou depuis des écrans complexes (Profil, etc.)
-    _pageController.jumpToPage(index);
-
-    // Libérer le verrou après un court délai
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (mounted) _isNavigating = false;
+    // Fade out rapide, switch de page, fade in
+    _animationController.reverse().then((_) {
+      if (!mounted) return;
+      _pageController.jumpToPage(index);
+      _animationController.forward().then((_) {
+        if (mounted) _isNavigating = false;
+      });
     });
   }
 
@@ -123,23 +132,30 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             }
           });
 
-          return PageView(
-            controller: _pageController,
-            // ✅ onPageChanged uniquement pour les swipes manuels (désactivés ici)
-            onPageChanged: (index) {
-              if (!_isNavigating) {
-                context.read<RestaurantProvider>().setNavIndex(index);
-              }
-            },
-            // ✅ Swipe désactivé : évite les transitions accidentelles
-            physics: const NeverScrollableScrollPhysics(),
-            children: const [
-              _HomePage(),
-              MenuScreen(),
-              CartScreen(),
-              OrdersScreen(),
-              ProfileScreen(),
-            ],
+          return FadeTransition(
+            opacity: _tabFade,
+            // PERF-002 : RepaintBoundary isole le PageView du reste du
+            // Scaffold — les animations du bottom nav ne redessinent pas
+            // tout le contenu des pages.
+            child: RepaintBoundary(
+              child: PageView(
+                controller: _pageController,
+                // onPageChanged uniquement pour les swipes manuels (désactivés)
+                onPageChanged: (index) {
+                  if (!_isNavigating) {
+                    context.read<RestaurantProvider>().setNavIndex(index);
+                  }
+                },
+                physics: const NeverScrollableScrollPhysics(),
+                children: const [
+                  _HomePage(),
+                  MenuScreen(),
+                  CartScreen(),
+                  OrdersScreen(),
+                  ProfileScreen(),
+                ],
+              ),
+            ),
           );
         },
       ),
@@ -161,67 +177,65 @@ class _HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<RestaurantProvider>();
 
-    if (provider.isLoading && !provider.hasData) {
-      return const Center(
-          child: CircularProgressIndicator(color: AppColors.primary));
-    }
-
-    if (provider.error != null && !provider.hasData) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 64, color: AppColors.error),
-            const SizedBox(height: 16),
-            Text('Erreur de chargement', style: AppTextStyles.heading3),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Text(
-                provider.error!,
-                style: AppTextStyles.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: provider.refreshAllData,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.textLight,
-              ),
-              child: const Text('Réessayer'),
-            ),
-          ],
-        ),
-      );
-    }
-
     return RefreshIndicator(
       onRefresh: provider.refreshAllData,
       color: AppColors.primary,
-      child: SingleChildScrollView(
+      displacement: 80,
+      child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 16),
+        slivers: [
+          // --- SliverAppBar flottant (style Pro_Grocery) ---
+          SliverAppBar(
+            floating: true,
+            snap: true,
+            backgroundColor: AppColors.background,
+            elevation: 0,
+            scrolledUnderElevation: 1,
+            shadowColor: AppColors.shadowColor,
+            centerTitle: true,
+            title: provider.restaurant != null
+                ? Text(
+                    provider.restaurant!.name,
+                    style: AppTextStyles.heading3,
+                    overflow: TextOverflow.ellipsis,
+                  )
+                : Image.asset(
+                    'assets/images/logo.png',
+                    height: 32,
+                    errorBuilder: (_, __, ___) => Text(
+                      'Noogo',
+                      style: AppTextStyles.heading3
+                          .copyWith(color: AppColors.primary),
+                    ),
+                  ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.shopping_cart_outlined),
+                color: AppColors.textPrimary,
+                onPressed: () =>
+                    context.read<RestaurantProvider>().setNavIndex(2),
+                tooltip: 'Panier',
+              ),
+            ],
+          ),
 
-            // Bannière d'erreur réseau
-            if (provider.hasApiError)
-              Container(
-                width: double.infinity,
-                color: AppColors.secondary.withValues(alpha: 0.12),
+          // --- Bannière erreur réseau ---
+          if (provider.hasApiError || provider.isOffline)
+            SliverToBoxAdapter(
+              child: Container(
+                color: AppColors.secondary.withValues(alpha: 0.10),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 child: Row(
                   children: [
                     const Icon(Icons.wifi_off,
-                        size: 18, color: AppColors.error),
+                        size: 16, color: AppColors.error),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Connexion au serveur impossible — affichage des données locales',
+                        provider.isOffline
+                            ? 'Mode hors-ligne — données en cache'
+                            : 'Connexion limitée',
                         style: AppTextStyles.bodySmall
                             .copyWith(color: AppColors.textSecondary),
                       ),
@@ -233,298 +247,345 @@ class _HomePage extends StatelessWidget {
                   ],
                 ),
               ),
+            ),
 
-            const SizedBox(height: 16),
-
-            if (provider.restaurant != null)
-              RestaurantHeader(restaurant: provider.restaurant!),
-
-            const SizedBox(height: 16),
-
-            if (provider.restaurant != null)
-              ContactInfo(restaurant: provider.restaurant!),
-
-            const SizedBox(height: 24),
-
-            if (provider.flashInfos.isNotEmpty)
-              FlashInfoSection(
-                flashInfos: provider.flashInfos,
-                onOrderPressed: () => _showOrderDialog(context),
+          // --- En-tête restaurant ---
+          if (provider.restaurant != null)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: RestaurantHeader(restaurant: provider.restaurant!),
               ),
+            ),
 
-            const SizedBox(height: 24),
-
-            _buildFeaturedCategoriesSection(context, provider),
-
-            const SizedBox(height: 20),
-
-            _buildPopularDishesSection(context, provider),
-
-            const SizedBox(height: 100),
-          ],
-        ),
-      ),
-    );
-  }
-
-  static Widget _buildFeaturedCategoriesSection(
-      BuildContext context, RestaurantProvider provider) {
-    final categories = provider.categories.cast<Category>();
-    if (categories.isEmpty) return const SizedBox.shrink();
-
-    final featuredCategories = categories.take(4).toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Catégories', style: AppTextStyles.heading3),
-              TextButton(
-                onPressed: () =>
-                    context.read<RestaurantProvider>().setNavIndex(1),
-                child: Text(
-                  'Voir tout',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+          if (provider.restaurant != null)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: ContactInfo(restaurant: provider.restaurant!),
               ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 140,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            itemCount: featuredCategories.length,
-            itemBuilder: (context, index) {
-              final category = featuredCategories[index];
-              return _buildCategoryCard(category, provider, context);
-            },
-          ),
-        ),
-      ],
-    );
-  }
+            ),
 
-  static Widget _buildCategoryCard(
-      Category category, RestaurantProvider provider, BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        provider.filterDishesByCategory(category.id);
-        provider.setNavIndex(1);
-      },
-      child: Container(
-        width: 140,
-        margin: const EdgeInsets.only(right: 10),
-        decoration: BoxDecoration(
-          color: AppColors.cardBackground,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-                color: AppColors.shadowColor,
-                blurRadius: 5,
-                offset: const Offset(0, 2)),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 3,
-              child: ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(12)),
-                child: Image.network(
-                  category.imageUrl,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    color: AppColors.surface,
-                    child: const Center(
-                      child: Icon(Icons.fastfood,
-                          size: 40, color: AppColors.textPrimary),
-                    ),
-                  ),
+          // --- Flash infos ---
+          if (provider.flashInfos.isNotEmpty)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 20),
+                child: FlashInfoSection(
+                  flashInfos: provider.flashInfos,
+                  onOrderPressed: () => _showOrderDialog(context),
                 ),
               ),
             ),
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(7),
+
+          // --- Section Catégories ---
+          const SliverToBoxAdapter(child: SizedBox(height: 24)),
+          SliverToBoxAdapter(
+            child: SectionHeader(
+              title: 'Catégories',
+              onActionTap: () =>
+                  context.read<RestaurantProvider>().setNavIndex(1),
+            ),
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 12)),
+          SliverToBoxAdapter(
+            child: provider.isLoading && !provider.hasData
+                ? _buildCategorySkeleton()
+                : _buildCategoriesRow(
+                    provider.categories.cast<Category>(), context, provider),
+          ),
+
+          // --- Section Plats populaires ---
+          const SliverToBoxAdapter(child: SizedBox(height: 28)),
+          SliverToBoxAdapter(
+            child: SectionHeader(
+              title: 'Plats populaires',
+              onActionTap: () =>
+                  context.read<RestaurantProvider>().setNavIndex(1),
+            ),
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 12)),
+          SliverToBoxAdapter(
+            child: provider.isLoading && !provider.hasData
+                ? _buildDishSkeleton()
+                : _buildDishesRow(
+                    provider.availableDishes.cast<Dish>(), context, provider),
+          ),
+
+          // --- Erreur sans données ---
+          if (provider.error != null && !provider.hasData)
+            SliverFillRemaining(
+              child: Center(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    const Icon(Icons.wifi_off_outlined,
+                        size: 56, color: AppColors.textSecondary),
+                    const SizedBox(height: 16),
+                    const Text('Impossible de charger',
+                        style: AppTextStyles.heading3),
+                    const SizedBox(height: 8),
                     Text(
-                      category.name,
-                      style: AppTextStyles.bodySmall
-                          .copyWith(fontWeight: FontWeight.w600),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      provider.error!,
+                      style: AppTextStyles.bodySmall,
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: provider.refreshAllData,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Réessayer'),
+                    ),
                   ],
                 ),
               ),
             ),
-          ],
+
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+        ],
+      ),
+    );
+  }
+
+  // --- Skeleton catégories ---
+  static Widget _buildCategorySkeleton() {
+    return SizedBox(
+      height: 100,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: 4,
+        itemBuilder: (_, __) => const Padding(
+          padding: EdgeInsets.only(right: 12),
+          child: Column(
+            children: [
+              CircleSkeleton(size: 64),
+              SizedBox(height: 6),
+              Skeleton(height: 10, width: 60, radius: 6),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  static Widget _buildPopularDishesSection(
-      BuildContext context, RestaurantProvider provider) {
-    final availableDishes = provider.availableDishes;
-    if (availableDishes.isEmpty) return const SizedBox.shrink();
-
-    final firstRow = availableDishes.take(3).toList();
-    final secondRow = availableDishes.skip(3).take(3).toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Plats populaires', style: AppTextStyles.heading3),
-              TextButton(
-                onPressed: () =>
-                    context.read<RestaurantProvider>().setNavIndex(1),
-                child: Text(
-                  'Voir tout',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        _buildDishRow(firstRow, provider, context),
-        if (secondRow.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          _buildDishRow(secondRow, provider, context),
-        ],
-      ],
-    );
-  }
-
-  static Widget _buildDishRow(
-      List<dynamic> dishes, RestaurantProvider provider, BuildContext context) {
+  // --- Skeleton plats ---
+  static Widget _buildDishSkeleton() {
     return SizedBox(
       height: 200,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: dishes.length,
-        itemBuilder: (context, index) {
-          final dish = dishes[index];
-          return _buildDishCard(dish, provider, context);
+        itemCount: 3,
+        itemBuilder: (_, __) => const Padding(
+          padding: EdgeInsets.only(right: 12),
+          child: DishCardSkeleton(),
+        ),
+      ),
+    );
+  }
+
+  // --- Ligne de catégories ---
+  static Widget _buildCategoriesRow(List<Category> categories,
+      BuildContext context, RestaurantProvider provider) {
+    if (categories.isEmpty) return const SizedBox.shrink();
+    final featured = categories.take(6).toList();
+    return SizedBox(
+      height: 100,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: featured.length,
+        itemBuilder: (context, index) =>
+            _buildCategoryChip(featured[index], provider, context),
+      ),
+    );
+  }
+
+  // A11Y-002 : Semantics + Tooltip pour la navigation par catégorie
+  static Widget _buildCategoryChip(
+      Category category, RestaurantProvider provider, BuildContext context) {
+    return Semantics(
+      label: 'Catégorie ${category.name}',
+      button: true,
+      child: GestureDetector(
+        onTap: () {
+          provider.filterDishesByCategory(category.id);
+          provider.setNavIndex(1);
         },
+        child: Container(
+          margin: const EdgeInsets.only(right: 12),
+          child: Column(
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.surface,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: ClipOval(
+                  child: ExcludeSemantics(
+                    child: CachedNetworkImage(
+                      imageUrl: category.imageUrl,
+                      fit: BoxFit.cover,
+                      errorWidget: (_, __, ___) => const Icon(
+                        Icons.restaurant_menu,
+                        color: AppColors.primary,
+                        size: 28,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              SizedBox(
+                width: 72,
+                child: Text(
+                  category.name,
+                  style: AppTextStyles.caption
+                      .copyWith(fontWeight: FontWeight.w600, fontSize: 11),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- Ligne de plats ---
+  static Widget _buildDishesRow(
+      List<Dish> dishes, BuildContext context, RestaurantProvider provider) {
+    if (dishes.isEmpty) return const SizedBox.shrink();
+    final popular = dishes.take(8).toList();
+    return SizedBox(
+      height: 220,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: popular.length,
+        itemBuilder: (context, index) =>
+            _buildDishCard(popular[index], provider, context),
       ),
     );
   }
 
   static Widget _buildDishCard(
       Dish dish, RestaurantProvider provider, BuildContext context) {
-    return Container(
-      width: 160,
-      margin: const EdgeInsets.only(right: 12),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-              color: AppColors.shadowColor,
-              blurRadius: 6,
-              offset: const Offset(0, 2)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 3,
-            child: ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(12)),
-              child: Image.network(
-                dish.imageUrl,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  color: AppColors.surface,
-                  child: const Center(
-                    child: Icon(Icons.fastfood_outlined, size: 40),
+    // PERF-003 + A11Y-003 : RepaintBoundary + Semantics sur chaque carte
+    return RepaintBoundary(
+      child: Semantics(
+        label: '${dish.name}, ${dish.formattedPrice}',
+        child: Container(
+          width: 160,
+          margin: const EdgeInsets.only(right: 12),
+          decoration: BoxDecoration(
+            color: AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.dividerColor, width: 0.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Image
+              Expanded(
+                flex: 5,
+                child: ClipRRect(
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(12)),
+                  child: ExcludeSemantics(
+                    child: CachedNetworkImage(
+                      imageUrl: dish.imageUrl,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorWidget: (_, __, ___) => const ColoredBox(
+                        color: AppColors.surface,
+                        child: Center(
+                          child: Icon(Icons.fastfood_outlined,
+                              size: 36, color: AppColors.textSecondary),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    dish.name,
-                    style: AppTextStyles.bodySmall
-                        .copyWith(fontWeight: FontWeight.w600),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const Spacer(),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              // Info texte
+              Expanded(
+                flex: 4,
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(dish.formattedPrice,
-                          style: AppTextStyles.price.copyWith(fontSize: 14)),
-                      GestureDetector(
-                        onTap: () {
-                          provider.addToCart(dish);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('${dish.name} ajouté au panier'),
-                              backgroundColor: AppColors.success,
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
-                        },
-                        child: Container(
-                          width: 28,
-                          height: 28,
-                          decoration: const BoxDecoration(
-                            color: AppColors.primary,
-                            shape: BoxShape.circle,
+                      Text(
+                        dish.name,
+                        style: AppTextStyles.bodyMedium
+                            .copyWith(fontWeight: FontWeight.w600),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const Spacer(),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            dish.formattedPrice,
+                            style: AppTextStyles.price.copyWith(fontSize: 14),
                           ),
-                          child: const Icon(Icons.add,
-                              color: Colors.white, size: 16),
-                        ),
+                          // A11Y-004 : Semantics sur le bouton d'ajout rapide
+                          Semantics(
+                            label: 'Ajouter ${dish.name} au panier',
+                            button: true,
+                            child: GestureDetector(
+                              onTap: () {
+                                provider.addToCart(dish);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('${dish.name} ajouté'),
+                                    backgroundColor: AppColors.success,
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                width: 30,
+                                height: 30,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.add,
+                                    color: Colors.white, size: 18),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -545,10 +606,6 @@ class _HomePage extends StatelessWidget {
               Navigator.pop(context);
               context.read<RestaurantProvider>().setNavIndex(1);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-            ),
             child: const Text('Voir le menu'),
           ),
         ],

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -19,21 +19,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           'Scannez, commandez et profitez de votre repas en toute simplicité',
       imagePath: 'assets/icons/04.png',
       icon: Icons.restaurant_menu,
-      color: Color.fromARGB(255, 220, 220, 220),
+      color: const Color.fromARGB(255, 220, 220, 220),
     ),
     OnboardingPage(
       title: 'Commandez vos plats',
       description: 'Parcourez le menu et ajoutez vos plats préférés en un clic',
       imagePath: 'assets/icons/02.png',
       icon: Icons.shopping_cart,
-      color: Color.fromARGB(255, 220, 220, 220),
+      color: const Color.fromARGB(255, 220, 220, 220),
     ),
     OnboardingPage(
       title: 'Payez en ligne',
       description: 'Réglez votre addition directement depuis l\'application',
       imagePath: 'assets/icons/05.png',
       icon: Icons.payment,
-      color: Color.fromARGB(255, 220, 220, 220),
+      color: const Color.fromARGB(255, 220, 220, 220),
     ),
   ];
 
@@ -55,7 +55,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
+      body: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
