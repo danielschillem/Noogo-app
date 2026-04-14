@@ -124,7 +124,7 @@ class _ContactInfoState extends State<ContactInfo> {
         ),
       );
 
-      // Validation QR
+      // Validation QR + chargement des données (loadAllInitialData est appelé en interne)
       await provider.validateRestaurantQRCode(qrCode).timeout(
         const Duration(seconds: 15),
         onTimeout: () {
@@ -132,46 +132,34 @@ class _ContactInfoState extends State<ContactInfo> {
         },
       );
 
-      // Charger restaurant
-      final newRestaurant = provider.restaurant;
-      if (newRestaurant == null) {
-        throw Exception('Restaurant invalide');
-      }
-
-      await provider
-          .loadAllInitialData(
-        restaurantId: newRestaurant.id,
-      )
-          .timeout(
-        const Duration(seconds: 15),
-        onTimeout: () {
-          throw Exception('Timeout chargement restaurant');
-        },
-      );
-
-      if (!mounted) return;
-
-      // Fermer loader
+      // Fermer loader EN PREMIER (avant !mounted) — le ContactInfo peut être
+      // disposed pendant validateRestaurantQRCode (notifyListeners() quand
+      // _restaurant == null), mais le NavigatorState reste valide.
       if (navigator.canPop()) {
         navigator.pop();
       }
+
+      if (!mounted) return;
+
+      final newRestaurant = provider.restaurant;
 
       messenger.showSnackBar(
         SnackBar(
           backgroundColor: AppColors.success,
           content: Text(
-            'Restaurant changé : ${newRestaurant.name}',
+            'Restaurant changé : ${newRestaurant?.name ?? ""}',
           ),
         ),
       );
 
       provider.setNavIndex(0);
     } catch (e) {
-      if (!mounted) return;
-
+      // Fermer loader EN PREMIER même si le widget est disposed
       if (navigator.canPop()) {
         navigator.pop();
       }
+
+      if (!mounted) return;
 
       _showErrorDialog(
         'Erreur',

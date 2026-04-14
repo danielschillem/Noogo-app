@@ -9,6 +9,7 @@ import '../models/category.dart';
 import '../models/order.dart';
 import '../models/app_notification.dart';
 import '../config/api_config.dart';
+import '../utils/api_exceptions.dart';
 import 'auth_service.dart';
 
 class ApiService {
@@ -36,37 +37,48 @@ class ApiService {
 
     while (true) {
       try {
-        debugPrint('📡 API GET: $uri${attempt > 0 ? ' (retry $attempt)' : ''}');
+        if (kDebugMode) {
+          debugPrint(
+              '📡 API GET: $uri${attempt > 0 ? ' (retry $attempt)' : ''}');
+        }
 
         final headers = await _buildHeaders();
         final response = await http.get(uri, headers: headers).timeout(
-          const Duration(seconds: 15),
-          onTimeout: () {
-            throw Exception('Timeout: Impossible de se connecter à l\'API');
-          },
-        );
+              const Duration(seconds: 15),
+              onTimeout: () => throw const SocketException('Timeout GET'),
+            );
 
-        debugPrint('📡 Réponse: ${response.statusCode}');
+        if (kDebugMode) debugPrint('📡 Réponse: ${response.statusCode}');
 
         if (response.statusCode >= 200 && response.statusCode < 300) {
           if (response.body.isEmpty) return {};
-          return json.decode(response.body) as Map<String, dynamic>;
+          try {
+            return json.decode(response.body) as Map<String, dynamic>;
+          } on FormatException catch (e) {
+            throw ParseException('Réponse JSON invalide : $e');
+          }
         } else {
-          debugPrint(
-              'Erreur HTTP GET: ${response.statusCode} - ${response.body}');
-          throw Exception('Erreur API (GET): ${response.statusCode}');
+          if (kDebugMode) {
+            debugPrint(
+                'Erreur HTTP GET: ${response.statusCode} - ${response.body}');
+          }
+          throw ApiException.fromStatusCode(response.statusCode, response.body);
         }
       } on SocketException catch (e) {
         attempt++;
-        debugPrint(
-            '⚠️ Réseau indisponible GET (tentative $attempt/$maxRetries): $e');
+        if (kDebugMode) {
+          debugPrint(
+              '⚠️ Réseau indisponible GET (tentative $attempt/$maxRetries): $e');
+        }
         if (attempt > maxRetries) {
-          throw Exception(
-              'Impossible de se connecter au serveur. Vérifiez votre connexion.');
+          throw const NetworkException(
+              'Impossible de se connecter au serveur.');
         }
         await Future.delayed(Duration(seconds: attempt * 2));
+      } on ApiException {
+        rethrow;
       } catch (e) {
-        debugPrint('Erreur GET: $e');
+        if (kDebugMode) debugPrint('Erreur GET: $e');
         rethrow;
       }
     }
@@ -84,31 +96,39 @@ class ApiService {
         final response = await http
             .post(uri, headers: headers, body: json.encode(data))
             .timeout(
-          const Duration(seconds: 15),
-          onTimeout: () {
-            throw Exception('Timeout: Impossible de se connecter à l\'API');
-          },
-        );
+              const Duration(seconds: 15),
+              onTimeout: () => throw const SocketException('Timeout POST'),
+            );
 
         if (response.statusCode >= 200 && response.statusCode < 300) {
           if (response.body.isEmpty) return {};
-          return json.decode(response.body) as Map<String, dynamic>;
+          try {
+            return json.decode(response.body) as Map<String, dynamic>;
+          } on FormatException catch (e) {
+            throw ParseException('Réponse JSON invalide : $e');
+          }
         } else {
-          debugPrint(
-              'Erreur HTTP POST: ${response.statusCode} - ${response.body}');
-          throw Exception('Erreur API (POST): ${response.statusCode}');
+          if (kDebugMode) {
+            debugPrint(
+                'Erreur HTTP POST: ${response.statusCode} - ${response.body}');
+          }
+          throw ApiException.fromStatusCode(response.statusCode, response.body);
         }
       } on SocketException catch (e) {
         attempt++;
-        debugPrint(
-            '⚠️ Réseau indisponible POST (tentative $attempt/$maxRetries): $e');
+        if (kDebugMode) {
+          debugPrint(
+              '⚠️ Réseau indisponible POST (tentative $attempt/$maxRetries): $e');
+        }
         if (attempt > maxRetries) {
-          throw Exception(
-              'Impossible de se connecter au serveur. Vérifiez votre connexion.');
+          throw const NetworkException(
+              'Impossible de se connecter au serveur.');
         }
         await Future.delayed(Duration(seconds: attempt * 2));
+      } on ApiException {
+        rethrow;
       } catch (e) {
-        debugPrint('Erreur POST: $e');
+        if (kDebugMode) debugPrint('Erreur POST: $e');
         rethrow;
       }
     }
@@ -234,15 +254,18 @@ class ApiService {
   // ===================================================================
   // Orders & Notifications (OPTIONNELS - Ne font pas crasher l'app)
   // ===================================================================
-  Future<List<Order>> getOrders() async {
+  Future<List<Order>> getOrders({required int restaurantId}) async {
     try {
-      final data = await _get('/orders');
+      // Ne pas appeler si non authentifié (évite les 401 en boucle)
+      final token = await AuthService.getToken();
+      if (token == null) return [];
+
+      final data = await _get('/restaurants/$restaurantId/orders');
       if (data == null) return [];
       final List<dynamic> list = data['data'] ?? [];
       return list.map((json) => Order.fromJson(json)).toList();
     } catch (e) {
       debugPrint('⚠️ ApiService-getOrders: Endpoint non disponible ($e)');
-      // Retourner une liste vide si l'endpoint n'existe pas
       return [];
     }
   }
