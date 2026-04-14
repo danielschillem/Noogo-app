@@ -10,6 +10,7 @@ import {
   RefreshCw,
   Store,
   AlertCircle,
+  Download,
 } from 'lucide-react';
 import { ordersApi, restaurantsApi } from '../../services/api';
 import type { Order, OrderStatus, Restaurant } from '../../types';
@@ -95,6 +96,34 @@ export default function OrdersPage() {
     fetchOrders();
   };
 
+  // D10 — Export CSV
+  const handleExportCsv = () => {
+    if (orders.length === 0) return;
+    const headers = ['ID', 'Date', 'Client', 'Téléphone', 'Type', 'Table', 'Statut', 'Paiement', 'Total (FCFA)', 'Plats'];
+    const rows = orders.map(o => [
+      o.id,
+      new Date(o.order_date).toLocaleString('fr-FR'),
+      o.customer_name ?? '',
+      o.customer_phone ?? '',
+      o.order_type_text,
+      o.table_number ?? '',
+      o.status_text,
+      o.payment_method,
+      o.total_amount,
+      (o.items ?? []).map(i => `${i.quantity}x ${i.dish?.nom ?? ''}`).join(' | '),
+    ]);
+    const csv = [headers, ...rows]
+      .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';'))
+      .join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `commandes-${restaurantId ?? 'all'}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleUpdateStatus = async (orderId: number, newStatus: OrderStatus) => {
     if (!restaurantId) return;
     try {
@@ -164,6 +193,15 @@ export default function OrdersPage() {
             <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-semibold animate-pulse">
               🔔 {newCount} nouvelle{newCount > 1 ? 's' : ''}
             </span>
+          )}
+          {orders.length > 0 && (
+            <button
+              onClick={handleExportCsv}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+            >
+              <Download className="h-4 w-4" />
+              Exporter CSV
+            </button>
           )}
           <button
             onClick={handleManualRefresh}

@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import DashboardLayout from './components/layout/DashboardLayout';
 import LoginPage from './pages/auth/LoginPage';
+import RegisterPage from './pages/auth/RegisterPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import RestaurantsPage from './pages/restaurants/RestaurantsPage';
 import RestaurantFormPage from './pages/restaurants/RestaurantFormPage';
@@ -58,6 +59,14 @@ function AppRoutes() {
         element={
           <PublicRoute>
             <LoginPage />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <PublicRoute>
+            <RegisterPage />
           </PublicRoute>
         }
       />
