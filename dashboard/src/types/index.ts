@@ -9,6 +9,46 @@ export interface User {
   created_at: string;
 }
 
+export type StaffRole = 'owner' | 'manager' | 'cashier' | 'waiter';
+
+export const STAFF_ROLE_LABELS: Record<StaffRole, string> = {
+  owner: 'Propriétaire',
+  manager: 'Gérant',
+  cashier: 'Caissier',
+  waiter: 'Serveur',
+};
+
+export const STAFF_ROLE_COLORS: Record<StaffRole, string> = {
+  owner: 'bg-purple-100 text-purple-700',
+  manager: 'bg-blue-100 text-blue-700',
+  cashier: 'bg-green-100 text-green-700',
+  waiter: 'bg-orange-100 text-orange-700',
+};
+
+export interface StaffMember {
+  id: number;
+  user_id: number;
+  name: string;
+  email: string;
+  phone?: string;
+  role: StaffRole;
+  role_label: string;
+  permissions: string[];
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface MyRestaurant {
+  id: number;
+  nom: string;
+  logo?: string;
+  adresse: string;
+  is_active: boolean;
+  role: StaffRole;
+  role_label: string;
+  permissions: string[];
+}
+
 export interface Restaurant {
   id: number;
   user_id: number;
@@ -95,7 +135,7 @@ export interface Order {
   restaurant?: Restaurant;
 }
 
-export type OrderStatus = 
+export type OrderStatus =
   | 'pending'
   | 'confirmed'
   | 'preparing'

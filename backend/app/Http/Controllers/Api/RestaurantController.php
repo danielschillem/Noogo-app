@@ -23,7 +23,9 @@ class RestaurantController extends Controller
 
         // Filter by user if authenticated and not admin
         if ($request->user() && !$request->user()->is_admin) {
-            $query->forUser($request->user()->id);
+            // Accès : proprio (user_id) OU membre du personnel
+            $accessibleIds = $request->user()->accessibleRestaurantIds();
+            $query->whereIn('id', $accessibleIds);
         }
 
         // Filter by active status

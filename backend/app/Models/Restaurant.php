@@ -38,6 +38,14 @@ class Restaurant extends Model
         'longitude' => 'float',
     ];
 
+    /**
+     * Membres du personnel de ce restaurant.
+     */
+    public function staff(): HasMany
+    {
+        return $this->hasMany(RestaurantStaff::class);
+    }
+
     protected $appends = ['logo_url', 'is_open'];
 
     // Relations

@@ -16,6 +16,7 @@ import {
     Download,
     Printer,
     Image,
+    Users,
 } from 'lucide-react';
 import { restaurantsApi } from '../../services/api';
 import type { Restaurant } from '../../types';
@@ -262,6 +263,19 @@ export default function RestaurantDetailPage() {
                         <div>
                             <p className="text-sm font-medium text-gray-900">Gérer le menu</p>
                             <p className="text-xs text-gray-500">{stats?.total_dishes ?? 0} plats</p>
+                        </div>
+                    </Link>
+
+                    <Link
+                        to={`/restaurants/${restaurant.id}/staff`}
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-indigo-50 transition-colors group"
+                    >
+                        <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
+                            <Users className="h-5 w-5 text-indigo-600" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-gray-900">Personnel</p>
+                            <p className="text-xs text-gray-500">Gérants, caissiers, serveurs</p>
                         </div>
                     </Link>
 

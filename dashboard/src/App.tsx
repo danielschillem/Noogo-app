@@ -8,6 +8,7 @@ import DashboardPage from './pages/dashboard/DashboardPage';
 import RestaurantsPage from './pages/restaurants/RestaurantsPage';
 import RestaurantFormPage from './pages/restaurants/RestaurantFormPage';
 import RestaurantDetailPage from './pages/restaurants/RestaurantDetailPage';
+import StaffPage from './pages/restaurants/StaffPage';
 import ProfilePage from './pages/auth/ProfilePage';
 import OrdersPage from './pages/orders/OrdersPage';
 import MenuPage from './pages/menu/MenuPage';
@@ -86,6 +87,7 @@ function AppRoutes() {
         <Route path="restaurants/new" element={<RestaurantFormPage />} />
         <Route path="restaurants/:id" element={<RestaurantDetailPage />} />
         <Route path="restaurants/:id/edit" element={<RestaurantFormPage />} />
+        <Route path="restaurants/:id/staff" element={<StaffPage />} />
         <Route path="orders" element={<OrdersPage />} />
         <Route path="restaurants/:restaurantId/orders" element={<OrdersPage />} />
         <Route path="menu" element={<MenuPage />} />

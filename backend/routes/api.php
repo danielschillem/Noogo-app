@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\DishController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\FlashInfoController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\StaffController;
 
 /*
 |--------------------------------------------------------------------------
@@ -57,6 +58,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/refresh', [AuthController::class, 'refresh']);
         Route::put('/user/update', [AuthController::class, 'updateUser']);
+        // Retourne les restaurants accessibles (proprio + staff) — pour la vue propriétaire
+        Route::get('/my-restaurants', [StaffController::class, 'myRestaurants']);
     });
 
     // Dashboard — limité à 120 requêtes/minute (protection contre scraping / boucles)
@@ -98,6 +101,12 @@ Route::middleware('auth:sanctum')->group(function () {
         // Flash Infos / Offres
         Route::apiResource('flash-infos', FlashInfoController::class);
         Route::post('/flash-infos/{flashInfo}/toggle-active', [FlashInfoController::class, 'toggleActive']);
+
+        // Personnel du restaurant (owner + super admin uniquement)
+        Route::get('/staff', [StaffController::class, 'index']);
+        Route::post('/staff', [StaffController::class, 'store']);
+        Route::put('/staff/{staff}', [StaffController::class, 'update']);
+        Route::delete('/staff/{staff}', [StaffController::class, 'destroy']);
     });
 });
 

@@ -10,12 +10,15 @@ import {
   LogOut,
   ChevronDown,
   User,
+  Users,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { dashboardApi } from '../../services/api';
+import { dashboardApi, myRestaurantsApi } from '../../services/api';
+import type { MyRestaurant } from '../../types';
 
-const navigation = [
+// Navigation para super admin
+const ADMIN_NAV = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Restaurants', href: '/restaurants', icon: Store },
   { name: 'Commandes', href: '/orders', icon: ShoppingBag },
@@ -30,7 +33,26 @@ export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
+  const [myRestaurants, setMyRestaurants] = useState<MyRestaurant[]>([]);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Charger "mes restaurants" pour les non-admins
+  useEffect(() => {
+    if (user && !user.is_admin) {
+      myRestaurantsApi.get()
+        .then(res => setMyRestaurants(res.data.data ?? []))
+        .catch(() => {/* silencieux */ });
+    }
+  }, [user]);
+
+  // navigation dynamique selon le rôle
+  const navigation = user?.is_admin
+    ? ADMIN_NAV
+    : [
+      { name: 'Commandes', href: '/orders', icon: ShoppingBag },
+      { name: 'Menu', href: '/menu', icon: UtensilsCrossed },
+      { name: 'Promotions', href: '/promotions', icon: Tag },
+    ];
 
   // Polling commandes en attente (toutes les 30s)
   useEffect(() => {
@@ -90,6 +112,43 @@ export default function Sidebar() {
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+            {/* Mes Restaurants (non-admin) */}
+            {!user?.is_admin && myRestaurants.length > 0 && (
+              <div className="mb-4">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 mb-2">
+                  Mes restaurants
+                </p>
+                {myRestaurants.map(r => {
+                  const href = `/restaurants/${r.id}`;
+                  const isActive = location.pathname.startsWith(href);
+                  return (
+                    <Link
+                      key={r.id}
+                      to={href}
+                      onClick={() => setIsOpen(false)}
+                      className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 ${isActive ? 'bg-orange-50 text-orange-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
+                    >
+                      <Store className={`h-4 w-4 flex-shrink-0 ${isActive ? 'text-orange-500' : 'text-gray-400'}`} />
+                      <div className="flex-1 min-w-0">
+                        <p className="truncate">{r.nom}</p>
+                        <p className="text-xs text-gray-400">{r.role_label}</p>
+                      </div>
+                    </Link>
+                  );
+                })}
+                {myRestaurants.some(r => ['owner', 'manager'].includes(r.role)) && (
+                  <Link
+                    to="/restaurants"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2 rounded-lg text-xs text-orange-500 hover:bg-orange-50 transition-colors mt-1"
+                  >
+                    <Users className="h-3.5 w-3.5" /> Gérer le personnel
+                  </Link>
+                )}
+                <div className="border-t border-gray-100 my-3" />
+              </div>
+            )}
+
             {navigation.map((item) => {
               const isActive = location.pathname === item.href ||
                 (item.href !== '/' && location.pathname.startsWith(item.href));

@@ -60,4 +60,34 @@ class User extends Authenticatable
     {
         return $this->hasMany(Order::class);
     }
+
+    /**
+     * Staff records (roles dans des restaurants tiers).
+     */
+    public function staffRoles(): HasMany
+    {
+        return $this->hasMany(RestaurantStaff::class);
+    }
+
+    /**
+     * Retourne le rôle de l'utilisateur dans un restaurant donné, ou null s'il n'en a pas.
+     */
+    public function staffRoleFor(int $restaurantId): ?RestaurantStaff
+    {
+        return $this->staffRoles()
+            ->where('restaurant_id', $restaurantId)
+            ->where('is_active', true)
+            ->first();
+    }
+
+    /**
+     * Retourne tous les IDs de restaurants auxquels l'utilisateur a accès
+     * (en tant que propriétaire via restaurants.user_id OU via restaurant_staff).
+     */
+    public function accessibleRestaurantIds(): array
+    {
+        $owned = $this->restaurants()->pluck('id')->toArray();
+        $staffed = $this->staffRoles()->where('is_active', true)->pluck('restaurant_id')->toArray();
+        return array_unique(array_merge($owned, $staffed));
+    }
 }

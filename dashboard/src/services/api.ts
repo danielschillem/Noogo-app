@@ -149,4 +149,24 @@ export const flashInfosApi = {
     api.post(`/restaurants/${restaurantId}/flash-infos/${id}/toggle-active`),
 };
 
+// Staff API
+export const staffApi = {
+  getAll: (restaurantId: number) =>
+    api.get(`/restaurants/${restaurantId}/staff`),
+  create: (restaurantId: number, data: {
+    name: string; email: string; phone?: string;
+    role: string; password?: string;
+  }) => api.post(`/restaurants/${restaurantId}/staff`, data),
+  update: (restaurantId: number, staffId: number, data: {
+    role?: string; is_active?: boolean;
+  }) => api.put(`/restaurants/${restaurantId}/staff/${staffId}`, data),
+  remove: (restaurantId: number, staffId: number) =>
+    api.delete(`/restaurants/${restaurantId}/staff/${staffId}`),
+};
+
+// My restaurants (pour les non-admins)
+export const myRestaurantsApi = {
+  get: () => api.get('/auth/my-restaurants'),
+};
+
 export default api;
