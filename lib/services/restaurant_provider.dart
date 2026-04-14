@@ -14,6 +14,7 @@ import '../utils/qr_helper.dart';
 import 'api_service.dart';
 import 'notification_service.dart';
 import 'realtime_service.dart';
+import 'analytics_service.dart';
 import 'favorites_service.dart';
 
 /// Machine d'état pour la soumission de commandes
@@ -605,7 +606,13 @@ class RestaurantProvider with ChangeNotifier {
       // 6️⃣ Sauvegarde du QR
       _scannedQRCode = qrData;
 
-      // 7️⃣ Redémarrer l'auto-refresh
+      // 7️⃣ Analytics
+      unawaited(AnalyticsService.qrValidated(
+        _restaurant!.id,
+        _restaurant!.nom,
+      ));
+
+      // 8️⃣ Redémarrer l'auto-refresh
       _startAutoRefresh();
 
       debugPrint('✅ Validation complète réussie');
@@ -1186,6 +1193,16 @@ class RestaurantProvider with ChangeNotifier {
         _cartItems.clear();
         _orderSubmitState = OrderSubmitState.success;
         notifyListeners();
+
+        // Analytics — MON-001
+        unawaited(AnalyticsService.orderPlaced(
+          orderId: newOrder.id,
+          totalAmount: totalAmount,
+          orderType: normalizedOrderType,
+          paymentMethod: paymentMethod,
+          restaurantId: _restaurant!.id,
+          itemCount: newOrder.items.length,
+        ));
 
         return newOrder.id;
       } else {

@@ -232,13 +232,20 @@
     - `RestaurantProvider` : `favoriteDishes`, `isFavoriteDish()`, `toggleFavoriteDish()`
     - `MenuScreen` : onglet ❤️ « Favoris » dans la barre catégories + icône toggle par plat
 
-- [ ] **FEAT-002** : Système de notation post-commande
-  - Ajouter écran notation (1-5 étoiles) accessible depuis OrdersScreen
-  - Intégrer API backend (endpoint `POST /api/orders/{id}/rate`)
+- [x] **FEAT-002** : Système de notation post-commande
+  - ✅ Corrigé le 14/04/2026 :
+    - `lib/services/rating_service.dart` — persistance des notes (SharedPreferences)
+    - `lib/widgets/rating_dialog.dart` — dialog 5 étoiles + champ commentaire
+    - `OrdersScreen` : bouton **Évaluer** (commandes livrées/terminées), chip **Noté** après soumission
 
-- [ ] **FEAT-003** : Géolocalisation restaurant
-  - Afficher distance restaurant
-  - Carte interactive
+- [x] **FEAT-003** : Géolocalisation restaurant
+  - ✅ Corrigé le 14/04/2026 :
+    - `geolocator: ^13.0.2` ajouté dans `pubspec.yaml`
+    - Permissions Android (`ACCESS_FINE_LOCATION` / `ACCESS_COARSE_LOCATION`) + iOS (`NSLocationWhenInUseUsageDescription`)
+    - `lib/services/geolocation_service.dart` — `getDistanceToRestaurant()`, `formatDistance()`, `openMapsForRestaurant()`
+    - `lib/models/restaurant.dart` — champs `latitude` / `longitude` optionnels + `_parseDouble()`
+    - `ContactInfo` widget — badge distance + bouton **Itinéraire** (Google Maps)
+    - Backend : migration `2026_04_14_000001_add_coordinates_to_restaurants_table.php` + `$fillable` + casts `float`
 
 ---
 
@@ -262,7 +269,12 @@
     - `main.dart` : `localizationsDelegates`, `supportedLocales`, `locale: fr` par défaut
     - Usage : `AppLocalizations.of(context).cartEmpty` dans les widgets
 
-- [ ] **MON-001** : Intégrer analytics (Firebase Analytics ou Mixpanel)
+- [x] **MON-001** : Analytics léger custom
+  - ✅ Corrigé le 14/04/2026 :
+    - `lib/services/analytics_service.dart` — service stateless événements clés : `qrScanned`, `orderPlaced`, `dishAddedToCart`, `orderRated`, `screenViewed`, `userLoggedIn`…
+    - En debug : logging via `AppLogger` ; en production : POST JSON vers `ANALYTICS_ENDPOINT` (.env)
+    - Intégré dans `RestaurantProvider.submitOrder()` (appel `unawaited` — non-bloquant)
+    - Architecture extensible : remplacer `_send()` par SDK Mixpanel/PostHog/Firebase sans changer le reste
 
 ---
 

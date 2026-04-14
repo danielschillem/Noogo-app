@@ -45,6 +45,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- FEAT-003 : Géolocalisation -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Noogo utilise votre position pour afficher la distance avec le restaurant.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Noogo utilise votre position pour afficher la distance avec le restaurant.</string>
 </dict>
 <key>NSAppTransportSecurity</key>
 <dict>

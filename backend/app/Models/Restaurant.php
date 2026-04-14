@@ -25,11 +25,15 @@ class Restaurant extends Model
         'images',
         'is_active',
         'qr_code',
+        'latitude',
+        'longitude',
     ];
 
     protected $casts = [
         'images' => 'array',
         'is_active' => 'boolean',
+        'latitude' => 'float',
+        'longitude' => 'float',
     ];
 
     protected $appends = ['logo_url', 'is_open'];
