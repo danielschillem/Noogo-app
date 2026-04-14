@@ -32,7 +32,10 @@ services:
       - key: APP_DEBUG
         value: false
       - key: APP_KEY
-        generateValue: true   # Render génère une clé unique
+        sync: false           # ← Format requis: base64:xxx (32 octets)
+                              #   Générer via: php artisan key:generate --show
+                              #   OU laisser vide → start.sh génère au démarrage
+                              #   (mais clé change à chaque restart, sessions invalidées)
 
       # ── URL — À mettre à jour après le 1er déploiement ──
       - key: APP_URL
