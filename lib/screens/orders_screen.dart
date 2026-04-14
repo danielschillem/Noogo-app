@@ -2,10 +2,12 @@
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/order.dart';
+import '../services/rating_service.dart';
 import '../services/restaurant_provider.dart';
 import '../utils/app_colors.dart';
 import '../utils/app_text_styles.dart';
 import '../widgets/custom_app_bar.dart';
+import '../widgets/rating_dialog.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -20,6 +22,8 @@ class _OrdersScreenState extends State<OrdersScreen>
   late Animation<double> _fadeAnimation;
 
   late AnimationController _pulseController;
+
+  Set<int> _ratedOrderIds = {};
 
   @override
   void initState() {
@@ -44,8 +48,14 @@ class _OrdersScreenState extends State<OrdersScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<RestaurantProvider>().forceRefreshOrders();
+        _loadRatedOrders();
       }
     });
+  }
+
+  Future<void> _loadRatedOrders() async {
+    final ids = await RatingService.loadRatedOrderIds();
+    if (mounted) setState(() => _ratedOrderIds = ids);
   }
 
   @override
@@ -389,18 +399,70 @@ class _OrdersScreenState extends State<OrdersScreen>
                       child: const Text('Suivre la commande'),
                     ),
                   ),
-                ] else if (order.status == OrderStatus.delivered) ...[
+                ] else if (order.status == OrderStatus.delivered ||
+                    order.status == OrderStatus.completed) ...[
                   const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton(
-                      onPressed: () => _reorderItems(order, provider),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.primary,
-                        side: const BorderSide(color: AppColors.primary),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => _reorderItems(order, provider),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.primary,
+                            side: const BorderSide(color: AppColors.primary),
+                          ),
+                          child: const Text('Recommander'),
+                        ),
                       ),
-                      child: const Text('Commander à nouveau'),
-                    ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _ratedOrderIds.contains(order.id)
+                            ? Container(
+                                alignment: Alignment.center,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 10),
+                                decoration: BoxDecoration(
+                                  color:
+                                      Colors.amber.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color:
+                                        Colors.amber.withValues(alpha: 0.4),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.star_rounded,
+                                      color: Colors.amber,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Noté',
+                                      style: AppTextStyles.caption.copyWith(
+                                        color: Colors.amber,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : ElevatedButton.icon(
+                                onPressed: () =>
+                                    _showRatingDialog(order),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.amber,
+                                  foregroundColor: Colors.white,
+                                ),
+                                icon: const Icon(Icons.star_outline,
+                                    size: 16),
+                                label: const Text('Évaluer'),
+                              ),
+                      ),
+                    ],
                   ),
                 ],
               ],
@@ -566,6 +628,26 @@ class _OrdersScreenState extends State<OrdersScreen>
             child: const Text('Fermer'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showRatingDialog(Order order) {
+    showDialog(
+      context: context,
+      builder: (context) => RatingDialog(
+        order: order,
+        onRated: () {
+          setState(() => _ratedOrderIds.add(order.id));
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Merci pour votre évaluation !'),
+                backgroundColor: AppColors.success,
+              ),
+            );
+          }
+        },
       ),
     );
   }
