@@ -19,7 +19,7 @@ class DashboardController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        
+
         // Get user's restaurants
         $restaurantIds = Restaurant::forUser($user->id)->pluck('id');
 
@@ -123,7 +123,7 @@ class DashboardController extends Controller
     {
         $user = $request->user();
         $restaurantIds = Restaurant::forUser($user->id)->pluck('id');
-        
+
         $days = $request->get('days', 7);
         $startDate = Carbon::now()->subDays($days - 1)->startOfDay();
 
@@ -159,14 +159,22 @@ class DashboardController extends Controller
     {
         $user = $request->user();
         $restaurantIds = Restaurant::forUser($user->id)->pluck('id');
-        
+
         $months = $request->get('months', 6);
         $startDate = Carbon::now()->subMonths($months - 1)->startOfMonth();
+
+        $driver = DB::getDriverName();
+        $yearExpr = $driver === 'sqlite'
+            ? "CAST(strftime('%Y', order_date) AS INTEGER)"
+            : 'EXTRACT(YEAR FROM order_date)';
+        $monthExpr = $driver === 'sqlite'
+            ? "CAST(strftime('%m', order_date) AS INTEGER)"
+            : 'EXTRACT(MONTH FROM order_date)';
 
         $revenues = Order::whereIn('restaurant_id', $restaurantIds)
             ->where('order_date', '>=', $startDate)
             ->whereNotIn('status', ['cancelled'])
-            ->selectRaw('YEAR(order_date) as year, MONTH(order_date) as month, SUM(total_amount) as revenue, COUNT(*) as orders')
+            ->selectRaw("$yearExpr as year, $monthExpr as month, SUM(total_amount) as revenue, COUNT(*) as orders")
             ->groupBy('year', 'month')
             ->orderBy('year')
             ->orderBy('month')
@@ -177,7 +185,7 @@ class DashboardController extends Controller
             $date = $startDate->copy()->addMonths($i);
             $year = $date->year;
             $month = $date->month;
-            
+
             $monthData = $revenues->first(function ($item) use ($year, $month) {
                 return $item->year == $year && $item->month == $month;
             });
