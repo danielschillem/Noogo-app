@@ -62,6 +62,8 @@ class RestaurantController extends Controller
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'description' => 'nullable|string',
             'heures_ouverture' => 'nullable|string|max:100',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
@@ -139,7 +141,10 @@ class RestaurantController extends Controller
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'description' => 'nullable|string',
             'heures_ouverture' => 'nullable|string|max:100',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'is_active' => 'nullable|boolean',
+            'is_open_override' => 'nullable|boolean',
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
@@ -225,6 +230,22 @@ class RestaurantController extends Controller
             'success' => true,
             'message' => $restaurant->is_active ? 'Restaurant activé' : 'Restaurant désactivé',
             'data' => $restaurant
+        ]);
+    }
+
+    /**
+     * Toggle restaurant open/closed status (override manual)
+     */
+    public function toggleOpen(Restaurant $restaurant): JsonResponse
+    {
+        // Si aucun override, utiliser l'état calculé depuis les horaires comme point de départ
+        $currentIsOpen = $restaurant->is_open;
+        $restaurant->update(['is_open_override' => !$currentIsOpen]);
+
+        return response()->json([
+            'success' => true,
+            'message' => $restaurant->fresh()->is_open ? 'Restaurant marqué comme ouvert' : 'Restaurant marqué comme fermé',
+            'data' => $restaurant->fresh(),
         ]);
     }
 

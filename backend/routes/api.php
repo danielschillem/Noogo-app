@@ -70,6 +70,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('restaurants', RestaurantController::class);
     Route::prefix('restaurants/{restaurant}')->group(function () {
         Route::post('/toggle-active', [RestaurantController::class, 'toggleActive']);
+        Route::post('/toggle-open', [RestaurantController::class, 'toggleOpen']);
         Route::get('/statistics', [RestaurantController::class, 'statistics']);
         Route::post('/generate-qr', [RestaurantController::class, 'generateQrCode']);
 

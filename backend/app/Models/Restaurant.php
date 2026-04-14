@@ -24,6 +24,7 @@ class Restaurant extends Model
         'heures_ouverture',
         'images',
         'is_active',
+        'is_open_override',
         'qr_code',
         'latitude',
         'longitude',
@@ -32,6 +33,7 @@ class Restaurant extends Model
     protected $casts = [
         'images' => 'array',
         'is_active' => 'boolean',
+        'is_open_override' => 'boolean',
         'latitude' => 'float',
         'longitude' => 'float',
     ];
@@ -80,6 +82,11 @@ class Restaurant extends Model
 
     public function getIsOpenAttribute(): bool
     {
+        // Override manuel prioritaire
+        if ($this->is_open_override !== null) {
+            return $this->is_open_override;
+        }
+
         if (!$this->heures_ouverture) {
             return false;
         }
@@ -94,7 +101,7 @@ class Restaurant extends Model
                 if (count($times) === 2) {
                     $openTime = trim($times[0]);
                     $closeTime = trim($times[1]);
-                    
+
                     if ($currentTime >= $openTime && $currentTime < $closeTime) {
                         return true;
                     }
@@ -122,9 +129,11 @@ class Restaurant extends Model
     public function getMenuData(): array
     {
         $categories = $this->categories()
-            ->with(['dishes' => function ($query) {
-                $query->where('disponibilite', true)->orderBy('ordre');
-            }])
+            ->with([
+                'dishes' => function ($query) {
+                    $query->where('disponibilite', true)->orderBy('ordre');
+                }
+            ])
             ->where('is_active', true)
             ->get();
 

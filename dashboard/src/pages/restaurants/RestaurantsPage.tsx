@@ -13,6 +13,8 @@ import {
   Trash2,
   Power,
   QrCode,
+  DoorOpen,
+  DoorClosed,
 } from 'lucide-react';
 import { restaurantsApi } from '../../services/api';
 import type { Restaurant } from '../../types';
@@ -43,6 +45,15 @@ export default function RestaurantsPage() {
       fetchRestaurants();
     } catch (error) {
       console.error('Error toggling restaurant:', error);
+    }
+  };
+
+  const handleToggleOpen = async (id: number) => {
+    try {
+      await restaurantsApi.toggleOpen(id);
+      fetchRestaurants();
+    } catch (error) {
+      console.error('Error toggling open status:', error);
     }
   };
 
@@ -102,10 +113,11 @@ export default function RestaurantsPage() {
       {filteredRestaurants.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredRestaurants.map((restaurant) => (
-            <RestaurantCard
+          <RestaurantCard
               key={restaurant.id}
               restaurant={restaurant}
               onToggleActive={handleToggleActive}
+              onToggleOpen={handleToggleOpen}
               onDelete={handleDelete}
             />
           ))}
@@ -133,10 +145,11 @@ export default function RestaurantsPage() {
 interface RestaurantCardProps {
   restaurant: Restaurant;
   onToggleActive: (id: number) => void;
+  onToggleOpen: (id: number) => void;
   onDelete: (id: number) => void;
 }
 
-function RestaurantCard({ restaurant, onToggleActive, onDelete }: RestaurantCardProps) {
+function RestaurantCard({ restaurant, onToggleActive, onToggleOpen, onDelete }: RestaurantCardProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -174,11 +187,17 @@ function RestaurantCard({ restaurant, onToggleActive, onDelete }: RestaurantCard
             </span>
           </div>
         )}
-        <div className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium ${restaurant.is_active
-          ? 'bg-green-100 text-green-700'
-          : 'bg-gray-100 text-gray-700'
+        <div className="absolute top-3 right-3 flex flex-col gap-1 items-end">
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+            restaurant.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
           }`}>
-          {restaurant.is_active ? 'Actif' : 'Inactif'}
+            {restaurant.is_active ? 'Actif' : 'Inactif'}
+          </span>
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+            restaurant.is_open ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'
+          }`}>
+            {restaurant.is_open ? 'Ouvert' : 'Fermé'}
+          </span>
         </div>
       </div>
 
@@ -230,6 +249,15 @@ function RestaurantCard({ restaurant, onToggleActive, onDelete }: RestaurantCard
                     {restaurant.is_active ? 'Désactiver' : 'Activer'}
                   </button>
                   <button
+                    onClick={() => { onToggleOpen(restaurant.id); setShowMenu(false); }}
+                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    {restaurant.is_open
+                      ? <DoorClosed className="h-4 w-4" />
+                      : <DoorOpen className="h-4 w-4" />}
+                    {restaurant.is_open ? 'Marquer fermé' : 'Marquer ouvert'}
+                  </button>
+                  <button
                     onClick={handleShowQr}
                     className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                   >
@@ -258,7 +286,11 @@ function RestaurantCard({ restaurant, onToggleActive, onDelete }: RestaurantCard
           {restaurant.heures_ouverture && (
             <div className="flex items-center gap-1">
               <Clock className="h-4 w-4" />
-              <span>{restaurant.is_open ? 'Ouvert' : 'Fermé'}</span>
+              <span>
+                {restaurant.is_open_override !== null && restaurant.is_open_override !== undefined
+                  ? (restaurant.is_open ? '🔓 Ouvert (forcé)' : '🔒 Fermé (forcé)')
+                  : (restaurant.is_open ? 'Ouvert' : 'Fermé')}
+              </span>
             </div>
           )}
         </div>

@@ -23,6 +23,9 @@ export interface Restaurant {
   images?: string[];
   is_active: boolean;
   is_open: boolean;
+  is_open_override?: boolean | null;
+  latitude?: number | null;
+  longitude?: number | null;
   qr_code?: string;
   created_at: string;
   categories_count?: number;
