@@ -16,7 +16,7 @@ class MenuScreen extends StatefulWidget {
 }
 
 class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
-  int _selectedCategoryId = 0; // 0 = toutes les catégories
+  int _selectedCategoryId = 0; // 0 = toutes les catégories, -1 = favoris
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -143,7 +143,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (provider.hasApiError)
+                    if (provider.hasApiError || provider.isOffline)
                       Container(
                         width: double.infinity,
                         color: AppColors.secondary.withValues(alpha: 0.12),
@@ -156,14 +156,16 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                '',
+                                provider.isOffline
+                                    ? 'Mode hors-ligne — menu mis en cache'
+                                    : '',
                                 style: AppTextStyles.bodySmall
                                     .copyWith(color: AppColors.textSecondary),
                               ),
                             ),
                             TextButton(
                               onPressed: provider.refreshAllData,
-                              child: const Text(''),
+                              child: const Text('Réessayer'),
                             ),
                           ],
                         ),
@@ -179,7 +181,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
 
                     // Catégories circulaires
                     _buildCategoriesSection(
-                        provider.categories.cast<Category>()),
+                        provider.categories.cast<Category>(), provider),
 
                     const SizedBox(height: 24),
 
@@ -235,7 +237,8 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildCategoriesSection(List<Category> categories) {
+  Widget _buildCategoriesSection(
+      List<Category> categories, RestaurantProvider provider) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -252,7 +255,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: categories.length + 1, // +1 pour "Toutes"
+            itemCount: categories.length + 2, // +1 "Toutes" +1 "Favoris"
             itemBuilder: (context, index) {
               if (index == 0) {
                 return _buildCategoryItem(
@@ -263,7 +266,11 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                   isSelected: _selectedCategoryId == 0,
                 );
               }
-              final category = categories[index - 1];
+              if (index == 1) {
+                final favCount = provider.favoriteDishes.length;
+                return _buildFavoriteCategoryItem(favCount);
+              }
+              final category = categories[index - 2];
               return _buildCategoryItem(
                 id: category.id,
                 name: category.name,
@@ -277,15 +284,91 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
     );
   }
 
+  Widget _buildFavoriteCategoryItem(int favCount) {
+    final isSelected = _selectedCategoryId == -1;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedCategoryId = -1),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.only(right: 16),
+        child: Column(
+          children: [
+            Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isSelected
+                    ? AppColors.primary.withValues(alpha: 0.15)
+                    : AppColors.surface,
+                border: Border.all(
+                  color: isSelected ? AppColors.primary : Colors.transparent,
+                  width: 3,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.shadowColor,
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Icon(
+                    Icons.favorite,
+                    color: isSelected ? AppColors.primary : Colors.grey,
+                    size: 28,
+                  ),
+                  if (favCount > 0)
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          '$favCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: 70,
+              child: Text(
+                'Favoris',
+                style: AppTextStyles.caption.copyWith(
+                  color:
+                      isSelected ? AppColors.primary : AppColors.textSecondary,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildCategoryItem({
     required int id,
     required String name,
     required String imageUrl,
     required bool isSelected,
   }) {
-    // ✅ DEBUG : Afficher l'URL de chaque catégorie
-    debugPrint('📸 Category "$name" - URL: "$imageUrl"');
-
     return GestureDetector(
       onTap: () => _onCategorySelected(id),
       child: AnimatedContainer(
@@ -341,11 +424,17 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildDishesSection(RestaurantProvider provider) {
-    final filteredDishes = _selectedCategoryId == 0
-        ? provider.dishes
-        : provider.dishes
-            .where((dish) => dish.categoryId == _selectedCategoryId)
-            .toList();
+    final List<Dish> filteredDishes;
+    if (_selectedCategoryId == -1) {
+      // Mode "Favoris"
+      filteredDishes = provider.favoriteDishes;
+    } else if (_selectedCategoryId == 0) {
+      filteredDishes = provider.dishes;
+    } else {
+      filteredDishes = provider.dishes
+          .where((dish) => dish.categoryId == _selectedCategoryId)
+          .toList();
+    }
 
     if (filteredDishes.isEmpty) {
       final isFiltered = _selectedCategoryId != 0;
@@ -363,7 +452,9 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
               Text(
                 isFiltered
                     ? 'Aucun plat dans cette catégorie'
-                    : 'Le menu est vide pour le moment',
+                    : _selectedCategoryId == -1
+                        ? 'Aucun plat en favori. Appuyez sur \u2665 pour en ajouter.'
+                        : 'Le menu est vide pour le moment',
                 style: AppTextStyles.subtitle,
                 textAlign: TextAlign.center,
               ),
@@ -386,7 +477,9 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            'Plats disponibles (${filteredDishes.length})',
+            _selectedCategoryId == -1
+                ? 'Mes favoris (${filteredDishes.length})'
+                : 'Plats disponibles (${filteredDishes.length})',
             style: AppTextStyles.heading3,
           ),
         ),
@@ -408,6 +501,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
   Widget _buildDishCard(Dish dish, RestaurantProvider provider) {
     final currentQuantity = _getDishQuantity(dish.id.toString(), provider);
     final tempQuantity = _tempQuantities[dish.id.toString()] ?? 0;
+    final isFav = provider.isFavoriteDish(dish.id);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -465,6 +559,33 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                       ),
                     ),
                   ),
+
+                // Bouton favori (FEAT-004)
+                Positioned(
+                  bottom: 8,
+                  right: 8,
+                  child: GestureDetector(
+                    onTap: () => provider.toggleFavoriteDish(dish.id),
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.15),
+                            blurRadius: 4,
+                          )
+                        ],
+                      ),
+                      child: Icon(
+                        isFav ? Icons.favorite : Icons.favorite_border,
+                        color: isFav ? Colors.red : Colors.grey,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                ),
 
                 // Badge quantité si > 0
                 if (currentQuantity > 0)
@@ -667,6 +788,8 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
     setState(() {
       _selectedCategoryId = categoryId;
     });
+
+    if (categoryId == -1) return; // Mode favoris — filtrage local
 
     final provider = context.read<RestaurantProvider>();
     if (categoryId == 0) {

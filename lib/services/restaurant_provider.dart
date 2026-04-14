@@ -14,6 +14,7 @@ import '../utils/qr_helper.dart';
 import 'api_service.dart';
 import 'notification_service.dart';
 import 'realtime_service.dart';
+import 'favorites_service.dart';
 
 /// Machine d'état pour la soumission de commandes
 enum OrderSubmitState { idle, submitting, success, error }
@@ -23,6 +24,7 @@ class RestaurantProvider with ChangeNotifier {
   final RealtimeService _realtimeService = RealtimeService();
 
   static const String _ordersKey = 'local_orders';
+  static const String _menuCacheKey = 'offline_menu_cache';
   static const int _maxStoredOrders = 50;
 
   // NOUVEAU: Timer et tracking des statuts
@@ -71,6 +73,17 @@ class RestaurantProvider with ChangeNotifier {
 
   List<Order> _orders = [];
   List<Order> get orders => _orders;
+
+  // --- Favoris ---
+  Set<int> _favoriteDishIds = {};
+  Set<int> get favoriteDishIds => Set.unmodifiable(_favoriteDishIds);
+  bool isFavoriteDish(int dishId) => _favoriteDishIds.contains(dishId);
+  List<Dish> get favoriteDishes =>
+      _dishes.where((d) => _favoriteDishIds.contains(d.id)).toList();
+
+  // --- Hors-ligne ---
+  bool _isOffline = false;
+  bool get isOffline => _isOffline;
 
   // --- Notifications ---
   List<AppNotification> _notifications = [];
@@ -705,10 +718,17 @@ class RestaurantProvider with ChangeNotifier {
       _dishes = menuData.dishes;
       _dishesOfTheDay = menuData.dishesOfTheDay;
       _categories = menuData.categories;
+      _isOffline = false;
 
       if (_restaurant == null) {
         throw Exception("Restaurant introuvable pour ID: $restaurantId");
       }
+
+      // ✅ Sauvegarder le menu en cache (FEAT-001)
+      _saveMenuCache(restaurantId, menuData);
+
+      // ✅ Charger les favoris (FEAT-004)
+      _favoriteDishIds = await FavoritesService.loadFavorites();
 
       // ✅ Notifier immédiatement après le chargement des données principales
       _isLoading = false; // ✅ Marquer comme terminé AVANT de notifier
@@ -745,14 +765,23 @@ class RestaurantProvider with ChangeNotifier {
       _setError("Erreur de connexion au restaurant");
       _hasApiError = true;
 
-      // Réinitialisation contrôlée
-      _restaurant = null;
-      _dishes = [];
-      _dishesOfTheDay = [];
-      _categories = [];
-      _flashInfos = [];
-
-      rethrow;
+      // Tentative de chargement depuis le cache (FEAT-001)
+      final cached = await _loadMenuCache(restaurantId);
+      if (cached) {
+        _isOffline = true;
+        _favoriteDishIds = await FavoritesService.loadFavorites();
+        _clearError();
+        _hasApiError = false;
+        debugPrint('📂 Menu chargé depuis le cache (mode hors-ligne)');
+      } else {
+        // Réinitialisation contrôlée
+        _restaurant = null;
+        _dishes = [];
+        _dishesOfTheDay = [];
+        _categories = [];
+        _flashInfos = [];
+        rethrow;
+      }
     } finally {
       if (_isLoading) {
         // Seulement si pas déjà fait
@@ -763,6 +792,77 @@ class RestaurantProvider with ChangeNotifier {
   }
 
 // ===== MÉTHODES DE CHARGEMENT EN ARRIÈRE-PLAN =====
+
+  // ===================================================================
+  // FEAT-001 — CACHE MENU HORS-LIGNE
+  // ===================================================================
+
+  void _saveMenuCache(int restaurantId, dynamic menuData) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final data = jsonEncode({
+        'restaurant_id': restaurantId,
+        'timestamp': DateTime.now().toIso8601String(),
+        'restaurant': _restaurant?.toJson(),
+        'dishes': _dishes.map((d) => d.toJson()).toList(),
+        'dishes_of_day': _dishesOfTheDay.map((d) => d.toJson()).toList(),
+        'categories': _categories.map((c) => c.toJson()).toList(),
+      });
+      await prefs.setString(_menuCacheKey, data);
+      debugPrint('💾 Menu mis en cache pour le restaurant $restaurantId');
+    } catch (e) {
+      debugPrint('⚠️ Impossible de mettre le menu en cache: $e');
+    }
+  }
+
+  Future<bool> _loadMenuCache(int restaurantId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final encoded = prefs.getString(_menuCacheKey);
+      if (encoded == null) return false;
+
+      final data = jsonDecode(encoded) as Map<String, dynamic>;
+      if (data['restaurant_id'] != restaurantId) return false;
+
+      _restaurant = data['restaurant'] != null
+          ? Restaurant.fromJson(data['restaurant'] as Map<String, dynamic>)
+          : null;
+      if (_restaurant == null) return false;
+
+      _dishes = ((data['dishes'] as List?) ?? [])
+          .map((j) => Dish.fromJson(Map<String, dynamic>.from(j as Map)))
+          .toList();
+      _dishesOfTheDay = ((data['dishes_of_day'] as List?) ?? [])
+          .map((j) => Dish.fromJson(Map<String, dynamic>.from(j as Map)))
+          .toList();
+      _categories = ((data['categories'] as List?) ?? [])
+          .map((j) => Category.fromJson(Map<String, dynamic>.from(j as Map)))
+          .toList();
+
+      return true;
+    } catch (e) {
+      debugPrint('⚠️ Impossible de charger le cache menu: $e');
+      return false;
+    }
+  }
+
+  // ===================================================================
+  // FEAT-004 — FAVORIS
+  // ===================================================================
+
+  Future<void> toggleFavoriteDish(int dishId) async {
+    _favoriteDishIds = await FavoritesService.toggleFavorite(dishId);
+    notifyListeners();
+  }
+
+  Future<void> loadFavorites() async {
+    _favoriteDishIds = await FavoritesService.loadFavorites();
+    notifyListeners();
+  }
+
+  // ===================================================================
+  // SECTION COMMANDES (LOCAL)
+  // ===================================================================
 
   /// Persiste les commandes en local pour survivre aux redémarrages
   Future<void> _saveOrdersLocally(List<Order> orders) async {
