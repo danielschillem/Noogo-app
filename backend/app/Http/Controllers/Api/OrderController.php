@@ -122,8 +122,12 @@ class OrderController extends Controller
 
             DB::commit();
 
-            // Broadcast temps réel (D11)
-            broadcast(new OrderStatusChanged($order, 'order.created'));
+            // Broadcast temps réel (D11) — silencieux si Pusher non configuré
+            try {
+                broadcast(new OrderStatusChanged($order, 'order.created'));
+            } catch (\Exception $broadcastEx) {
+                \Illuminate\Support\Facades\Log::warning('Broadcast failed: ' . $broadcastEx->getMessage());
+            }
 
             return response()->json([
                 'success' => true,
@@ -172,8 +176,12 @@ class OrderController extends Controller
 
         $order->updateStatus($request->status);
 
-        // Broadcast temps réel (D11)
-        broadcast(new OrderStatusChanged($order->fresh(), 'order.updated'));
+        // Broadcast temps réel (D11) — silencieux si Pusher non configuré
+        try {
+            broadcast(new OrderStatusChanged($order->fresh(), 'order.updated'));
+        } catch (\Exception $broadcastEx) {
+            \Illuminate\Support\Facades\Log::warning('Broadcast failed: ' . $broadcastEx->getMessage());
+        }
 
         return response()->json([
             'success' => true,
