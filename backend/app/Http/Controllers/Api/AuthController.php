@@ -19,7 +19,7 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'telephone' => 'required|string|max:20|unique:users,phone',
+            'telephone' => 'nullable|string|max:20|unique:users,phone',
             'email' => 'nullable|string|email|max:255|unique:users',
             'password' => 'required|string|min:6|confirmed',
         ]);
@@ -55,11 +55,13 @@ class AuthController extends Controller
     /**
      * Login user
      * Accepte "telephone" + "password" (app mobile)
+     * Accepte "email" + "password" (dashboard React)
      */
     public function login(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'telephone' => 'required|string',
+            'telephone' => 'nullable|string',
+            'email' => 'nullable|email',
             'password' => 'required|string',
         ]);
 
@@ -71,12 +73,23 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $user = User::where('phone', $request->telephone)->first();
+        if (empty($request->telephone) && empty($request->email)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email ou numéro de téléphone requis',
+                'errors' => ['login' => ['Email ou numéro de téléphone requis']]
+            ], 422);
+        }
+
+        // Recherche par email (dashboard) ou par téléphone (app mobile)
+        $user = $request->filled('email')
+            ? User::where('email', $request->email)->first()
+            : User::where('phone', $request->telephone)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Numéro de téléphone ou mot de passe incorrect'
+                'message' => 'Identifiants incorrects'
             ], 401);
         }
 
