@@ -57,8 +57,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/user/update', [AuthController::class, 'updateUser']);
     });
 
-    // Dashboard
-    Route::prefix('dashboard')->group(function () {
+    // Dashboard — limité à 120 requêtes/minute (protection contre scraping / boucles)
+    Route::middleware('throttle:120,1')->prefix('dashboard')->group(function () {
         Route::get('/', [DashboardController::class, 'index']);
         Route::get('/recent-orders', [DashboardController::class, 'recentOrders']);
         Route::get('/orders-chart', [DashboardController::class, 'ordersChart']);
