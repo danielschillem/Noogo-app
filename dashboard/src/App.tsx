@@ -5,6 +5,7 @@ import DashboardLayout from './components/layout/DashboardLayout';
 import LoginPage from './pages/auth/LoginPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import RestaurantsPage from './pages/restaurants/RestaurantsPage';
+import RestaurantFormPage from './pages/restaurants/RestaurantFormPage';
 import OrdersPage from './pages/orders/OrdersPage';
 import MenuPage from './pages/menu/MenuPage';
 import PromotionsPage from './pages/promotions/PromotionsPage';
@@ -70,6 +71,8 @@ function AppRoutes() {
       >
         <Route index element={<DashboardPage />} />
         <Route path="restaurants" element={<RestaurantsPage />} />
+        <Route path="restaurants/new" element={<RestaurantFormPage />} />
+        <Route path="restaurants/:id/edit" element={<RestaurantFormPage />} />
         <Route path="orders" element={<OrdersPage />} />
         <Route path="restaurants/:restaurantId/orders" element={<OrdersPage />} />
         <Route path="menu" element={<MenuPage />} />
