@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { 
-  ShoppingBag, 
-  DollarSign, 
-  TrendingUp, 
+import {
+  ShoppingBag,
+  DollarSign,
+  TrendingUp,
   Clock,
   ArrowUpRight,
   ArrowDownRight,
@@ -11,34 +11,40 @@ import {
 } from 'lucide-react';
 import { dashboardApi } from '../../services/api';
 import type { DashboardStats, Order } from '../../types';
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer 
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
 } from 'recharts';
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [chartData, setChartData] = useState<{ date: string; label: string; orders: number; revenue: number }[]>([]);
+  const [revenueData, setRevenueData] = useState<{ month: string; label: string; revenue: number; orders: number }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsRes, ordersRes, chartRes] = await Promise.all([
+        const [statsRes, ordersRes, chartRes, revenueRes] = await Promise.all([
           dashboardApi.getStats(),
           dashboardApi.getRecentOrders(5),
           dashboardApi.getOrdersChart(7),
+          dashboardApi.getRevenueChart(6),
         ]);
-        
+
         setStats(statsRes.data.data);
         setRecentOrders(ordersRes.data.data);
         setChartData(chartRes.data.data);
+        setRevenueData(revenueRes.data.data);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {
@@ -113,18 +119,18 @@ export default function DashboardPage() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="label" stroke="#9ca3af" fontSize={12} />
                 <YAxis stroke="#9ca3af" fontSize={12} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white', 
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'white',
                     border: '1px solid #e5e7eb',
                     borderRadius: '8px',
                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                   }}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="orders" 
-                  stroke="#f97316" 
+                <Line
+                  type="monotone"
+                  dataKey="orders"
+                  stroke="#f97316"
                   strokeWidth={2}
                   dot={{ fill: '#f97316', strokeWidth: 2 }}
                   name="Commandes"
@@ -159,6 +165,39 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* D4 — Graphique revenus 6 derniers mois */}
+      {revenueData.length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">Revenus — 6 derniers mois</h2>
+            <div className="flex items-center gap-1 text-sm text-green-600 font-medium">
+              <TrendingUp className="h-4 w-4" />
+              FCFA
+            </div>
+          </div>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={revenueData} barSize={28}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                <XAxis dataKey="label" stroke="#9ca3af" fontSize={12} tickLine={false} />
+                <YAxis
+                  stroke="#9ca3af"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)}
+                />
+                <Tooltip
+                  formatter={(value: number) => [`${new Intl.NumberFormat('fr-FR').format(value)} FCFA`, 'Revenus']}
+                  contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+                />
+                <Bar dataKey="revenue" fill="#22c55e" radius={[4, 4, 0, 0]} name="Revenus" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

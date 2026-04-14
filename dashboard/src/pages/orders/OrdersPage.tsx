@@ -7,15 +7,38 @@ import {
   ChefHat,
   Package,
   Filter,
-  RefreshCw
+  RefreshCw,
+  Store,
+  AlertCircle,
 } from 'lucide-react';
-import { ordersApi } from '../../services/api';
-import type { Order, OrderStatus } from '../../types';
+import { ordersApi, restaurantsApi } from '../../services/api';
+import type { Order, OrderStatus, Restaurant } from '../../types';
 
 const POLL_INTERVAL = 15_000; // 15 secondes
 
 export default function OrdersPage() {
-  const { restaurantId } = useParams();
+  const { restaurantId: paramRestaurantId } = useParams();
+
+  // ── Restaurant selector (quand `/orders` sans param) ──────────────────
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | undefined>(paramRestaurantId);
+
+  // L'ID effectif (depuis URL ou sélecteur)
+  const restaurantId = paramRestaurantId ?? selectedRestaurantId;
+
+  useEffect(() => {
+    if (!paramRestaurantId) {
+      restaurantsApi.getAll().then(res => {
+        const list: Restaurant[] = res.data.data?.data ?? res.data.data ?? [];
+        setRestaurants(list);
+        if (list.length > 0 && !selectedRestaurantId) {
+          setSelectedRestaurantId(String(list[0].id));
+        }
+      }).catch(console.error);
+    }
+  }, [paramRestaurantId, selectedRestaurantId]);
+
+  // ── Commandes ─────────────────────────────────────────────────────────
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -23,6 +46,9 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const prevIdsRef = useRef<Set<number>>(new Set());
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // ── Stats mini-barre (D5) ─────────────────────────────────────────────
+  const [pendingCounts, setPendingCounts] = useState<{ pending: number; confirmed: number; preparing: number; ready: number } | null>(null);
 
   const fetchOrders = useCallback(async (silent = false) => {
     if (!restaurantId) return;
@@ -39,6 +65,12 @@ export default function OrdersPage() {
       fetched.forEach(o => prevIdsRef.current.add(o.id));
 
       setOrders(fetched);
+
+      // D5 — stats mini-barre
+      try {
+        const statsRes = await ordersApi.getPendingCount(parseInt(restaurantId));
+        setPendingCounts(statsRes.data.data);
+      } catch { /* non bloquant */ }
     } catch (error) {
       console.error('Error fetching orders:', error);
     } finally {
@@ -48,6 +80,9 @@ export default function OrdersPage() {
   }, [restaurantId, statusFilter]);
 
   useEffect(() => {
+    prevIdsRef.current = new Set();
+    setOrders([]);
+    setIsLoading(true);
     if (restaurantId) {
       fetchOrders();
       intervalRef.current = setInterval(() => fetchOrders(true), POLL_INTERVAL);
@@ -93,7 +128,7 @@ export default function OrdersPage() {
     cancelled: 'bg-red-100 text-red-800 border-red-200',
   };
 
-  if (isLoading) {
+  if (isLoading && restaurantId) {
     return (
       <div className="flex items-center justify-center min-h-96">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500" />
@@ -110,6 +145,21 @@ export default function OrdersPage() {
           <p className="text-gray-600">Gérez les commandes en cours</p>
         </div>
         <div className="flex items-center gap-3">
+          {/* D3 — Sélecteur restaurant (visible quand pas de param URL) */}
+          {!paramRestaurantId && restaurants.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Store className="h-4 w-4 text-gray-400 flex-shrink-0" />
+              <select
+                value={selectedRestaurantId ?? ''}
+                onChange={e => { setSelectedRestaurantId(e.target.value); setNewCount(0); }}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white"
+              >
+                {restaurants.map(r => (
+                  <option key={r.id} value={r.id}>{r.nom}</option>
+                ))}
+              </select>
+            </div>
+          )}
           {newCount > 0 && (
             <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-semibold animate-pulse">
               🔔 {newCount} nouvelle{newCount > 1 ? 's' : ''}
@@ -126,6 +176,35 @@ export default function OrdersPage() {
         </div>
       </div>
 
+      {/* D3 — Message si aucun restaurant */}
+      {!restaurantId && (
+        <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
+          <Store className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun restaurant disponible</h3>
+          <p className="text-gray-500">Créez d'abord un restaurant pour voir ses commandes.</p>
+        </div>
+      )}
+
+      {/* D5 — Mini-barre de stats */}
+      {pendingCounts && restaurantId && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { label: 'En attente', value: pendingCounts.pending, icon: AlertCircle, color: 'text-yellow-600 bg-yellow-50 border-yellow-200' },
+            { label: 'Confirmées', value: pendingCounts.confirmed, icon: CheckCircle, color: 'text-blue-600 bg-blue-50 border-blue-200' },
+            { label: 'En préparation', value: pendingCounts.preparing, icon: ChefHat, color: 'text-purple-600 bg-purple-50 border-purple-200' },
+            { label: 'Prêtes', value: pendingCounts.ready, icon: Package, color: 'text-green-600 bg-green-50 border-green-200' },
+          ].map(({ label, value, icon: Icon, color }) => (
+            <div key={label} className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${color}`}>
+              <Icon className="h-5 w-5 flex-shrink-0" />
+              <div>
+                <p className="text-xl font-bold">{value}</p>
+                <p className="text-xs font-medium opacity-80">{label}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Filters */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2">
         <Filter className="h-5 w-5 text-gray-400 flex-shrink-0" />
@@ -134,8 +213,8 @@ export default function OrdersPage() {
             key={status}
             onClick={() => setStatusFilter(status)}
             className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${statusFilter === status
-                ? 'bg-orange-500 text-white'
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+              ? 'bg-orange-500 text-white'
+              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
               }`}
           >
             {status === 'all' ? 'Toutes' :
