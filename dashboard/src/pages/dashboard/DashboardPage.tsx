@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ShoppingBag,
   DollarSign,
@@ -7,7 +7,8 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Store,
-  UtensilsCrossed
+  UtensilsCrossed,
+  RefreshCw,
 } from 'lucide-react';
 import { dashboardApi, restaurantsApi } from '../../services/api';
 import type { DashboardStats, Order, Restaurant } from '../../types';
@@ -46,6 +47,9 @@ export default function DashboardPage() {
   const [chartData, setChartData] = useState<{ date: string; label: string; orders: number; revenue: number }[]>([]);
   const [revenueData, setRevenueData] = useState<{ month: string; label: string; revenue: number; orders: number }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     restaurantsApi.getAll().then(res => {
@@ -62,29 +66,34 @@ export default function DashboardPage() {
       .catch(console.error);
   }, [selectedRestaurantId]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [statsRes, ordersRes, chartRes, revenueRes] = await Promise.all([
-          dashboardApi.getStats(),
-          dashboardApi.getRecentOrders(5),
-          dashboardApi.getOrdersChart(7),
-          dashboardApi.getRevenueChart(6),
-        ]);
+  const fetchData = useCallback(async (silent = false) => {
+    try {
+      if (!silent) setIsRefreshing(true);
+      const [statsRes, ordersRes, chartRes, revenueRes] = await Promise.all([
+        dashboardApi.getStats(),
+        dashboardApi.getRecentOrders(5),
+        dashboardApi.getOrdersChart(7),
+        dashboardApi.getRevenueChart(6),
+      ]);
 
-        setStats(statsRes.data.data);
-        setRecentOrders(ordersRes.data.data);
-        setChartData(chartRes.data.data);
-        setRevenueData(revenueRes.data.data);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
+      setStats(statsRes.data.data);
+      setRecentOrders(ordersRes.data.data);
+      setChartData(chartRes.data.data);
+      setRevenueData(revenueRes.data.data);
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchData();
+    intervalRef.current = setInterval(() => fetchData(true), 30_000);
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [fetchData]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -109,22 +118,37 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600">Vue d'ensemble de votre activité</p>
         </div>
-        {/* D9 — Sélecteur restaurant */}
-        {restaurants.length > 1 && (
-          <div className="flex items-center gap-2">
-            <Store className="h-4 w-4 text-gray-400 flex-shrink-0" />
-            <select
-              value={selectedRestaurantId ?? ''}
-              onChange={e => setSelectedRestaurantId(e.target.value ? Number(e.target.value) : null)}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-orange-500 bg-white"
-            >
-              <option value="">Tous les restaurants</option>
-              {restaurants.map(r => (
-                <option key={r.id} value={r.id}>{r.nom}</option>
-              ))}
-            </select>
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          {lastUpdated && (
+            <span className="text-xs text-gray-400 hidden sm:block">
+              Mis à jour : {lastUpdated.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </span>
+          )}
+          <button
+            onClick={() => fetchData()}
+            disabled={isRefreshing}
+            title="Actualiser"
+            className="p-2 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </button>
+          {/* D9 — Sélecteur restaurant */}
+          {restaurants.length > 1 && (
+            <div className="flex items-center gap-2">
+              <Store className="h-4 w-4 text-gray-400 flex-shrink-0" />
+              <select
+                value={selectedRestaurantId ?? ''}
+                onChange={e => setSelectedRestaurantId(e.target.value ? Number(e.target.value) : null)}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-orange-500 bg-white"
+              >
+                <option value="">Tous les restaurants</option>
+                {restaurants.map(r => (
+                  <option key={r.id} value={r.id}>{r.nom}</option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Stats Cards */}

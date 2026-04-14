@@ -11,8 +11,9 @@ import {
   ChevronDown,
   User,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { dashboardApi } from '../../services/api';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -28,6 +29,23 @@ export default function Sidebar() {
   const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Polling commandes en attente (toutes les 30s)
+  useEffect(() => {
+    const fetchPending = () => {
+      dashboardApi.getStats()
+        .then(res => {
+          const count: number = res.data?.data?.today?.pending_orders ?? 0;
+          setPendingOrdersCount(count);
+        })
+        .catch(() => { /* silencieux si non connecté */ });
+    };
+    fetchPending();
+    intervalRef.current = setInterval(fetchPending, 30_000);
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -75,6 +93,7 @@ export default function Sidebar() {
             {navigation.map((item) => {
               const isActive = location.pathname === item.href ||
                 (item.href !== '/' && location.pathname.startsWith(item.href));
+              const showBadge = item.href === '/orders' && pendingOrdersCount > 0;
               return (
                 <Link
                   key={item.name}
@@ -89,8 +108,13 @@ export default function Sidebar() {
                     }
                   `}
                 >
-                  <item.icon className={`h-5 w-5 ${isActive ? 'text-orange-500' : 'text-gray-400'}`} />
-                  {item.name}
+                  <item.icon className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-orange-500' : 'text-gray-400'}`} />
+                  <span className="flex-1">{item.name}</span>
+                  {showBadge && (
+                    <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-xs font-bold">
+                      {pendingOrdersCount > 99 ? '99+' : pendingOrdersCount}
+                    </span>
+                  )}
                 </Link>
               );
             })}
