@@ -20,9 +20,9 @@ return [
         'http://localhost:3000',
     ],
 
-    // Autorise tous les sous-domaines netlify.app (prévisualisation de déploiement)
+    // Autorise uniquement le sous-domaine Netlify exact défini dans NETLIFY_SUBDOMAIN (ex: noogo-dashboard)
     'allowed_origins_patterns' => [
-        '#^https://[\w-]+\.netlify\.app$#',
+        '#^https://' . preg_quote(env('NETLIFY_SUBDOMAIN', 'noogo'), '#') . '\.netlify\.app$#',
     ],
 
     'allowed_headers' => ['*'],

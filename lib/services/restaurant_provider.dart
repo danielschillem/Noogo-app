@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/restaurant.dart';
 import '../models/dish.dart';
 import '../models/flash_info.dart';
@@ -17,6 +18,9 @@ import 'realtime_service.dart';
 class RestaurantProvider with ChangeNotifier {
   final ApiService _apiService = ApiService.instance;
   final RealtimeService _realtimeService = RealtimeService();
+
+  static const String _ordersKey = 'local_orders';
+  static const int _maxStoredOrders = 50;
 
   // NOUVEAU: Timer et tracking des statuts
   Timer? _autoRefreshTimer;
@@ -109,7 +113,10 @@ class RestaurantProvider with ChangeNotifier {
   /// Charger les commandes ET créer des notifications pour les changements
   Future<void> _autoLoadOrdersWithNotifications() async {
     try {
-      final fetchedOrders = await _apiService.getOrders();
+      if (_restaurant == null) return;
+
+      final fetchedOrders =
+          await _apiService.getOrders(restaurantId: _restaurant!.id);
 
       if (fetchedOrders.isEmpty) return;
 
@@ -130,6 +137,8 @@ class RestaurantProvider with ChangeNotifier {
 
       _orders = fetchedOrders
         ..sort((a, b) => b.orderDate.compareTo(a.orderDate));
+
+      await _saveOrdersLocally(_orders);
 
       debugPrint('✅ ${fetchedOrders.length} commandes mises à jour');
       notifyListeners();
@@ -744,17 +753,78 @@ class RestaurantProvider with ChangeNotifier {
 
 // ===== MÉTHODES DE CHARGEMENT EN ARRIÈRE-PLAN =====
 
+  /// Persiste les commandes en local pour survivre aux redémarrages
+  Future<void> _saveOrdersLocally(List<Order> orders) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final limited = orders.take(_maxStoredOrders).toList();
+      final encoded = jsonEncode(limited.map((o) => o.toJson()).toList());
+      await prefs.setString(_ordersKey, encoded);
+      debugPrint('💾 ${limited.length} commandes sauvegardées localement');
+    } catch (e) {
+      debugPrint('⚠️ Impossible de sauvegarder les commandes: $e');
+    }
+  }
+
+  /// Charge les commandes depuis le stockage local (après redémarrage)
+  Future<List<Order>> _loadOrdersLocally() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final encoded = prefs.getString(_ordersKey);
+      if (encoded == null || encoded.isEmpty) return [];
+      final List<dynamic> raw = jsonDecode(encoded);
+      final orders =
+          raw.map((j) => Order.fromJson(j as Map<String, dynamic>)).toList();
+      debugPrint(
+          '📂 ${orders.length} commandes chargées depuis le stockage local');
+      return orders;
+    } catch (e) {
+      debugPrint('⚠️ Impossible de charger les commandes locales: $e');
+      return [];
+    }
+  }
+
   void _loadOrdersInBackground() async {
     try {
       debugPrint('📡 [Background] Chargement des commandes...');
-      _orders = await _apiService.getOrders();
-      debugPrint('✅ [Background] ${_orders.length} commandes chargées');
+
+      // 1️⃣ Charger d'abord les commandes locales pour affichage immédiat
+      final localOrders = await _loadOrdersLocally();
+      if (localOrders.isNotEmpty && _orders.isEmpty) {
+        _orders = localOrders;
+        for (var order in _orders) {
+          _lastOrderStatuses[order.id] = order.status;
+        }
+        try {
+          notifyListeners();
+        } catch (e) {
+          debugPrint('⚠️ [Background] Widget détruit: $e');
+        }
+        debugPrint(
+            '✅ [Background] ${localOrders.length} commandes locales affichées');
+      }
+
+      // 2️⃣ Synchroniser avec le serveur si un restaurant est chargé
+      if (_restaurant != null) {
+        final serverOrders =
+            await _apiService.getOrders(restaurantId: _restaurant!.id);
+        if (serverOrders.isNotEmpty) {
+          // Fusionner : les commandes serveur écrasent les locales pour les IDs connus
+          final Map<int, Order> merged = {for (var o in localOrders) o.id: o};
+          for (var o in serverOrders) {
+            merged[o.id] = o;
+          }
+          _orders = merged.values.toList()
+            ..sort((a, b) => b.orderDate.compareTo(a.orderDate));
+          await _saveOrdersLocally(_orders);
+        }
+      }
 
       for (var order in _orders) {
         _lastOrderStatuses[order.id] = order.status;
       }
 
-      // ✅ Protection contre les widgets détruits
+      debugPrint('✅ [Background] ${_orders.length} commandes chargées');
       try {
         notifyListeners();
       } catch (e) {
@@ -834,18 +904,32 @@ class RestaurantProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final fetchedOrders = await _apiService.getOrders();
+      // Charger d'abord les commandes locales
+      final localOrders = await _loadOrdersLocally();
+      if (localOrders.isNotEmpty && _orders.isEmpty) {
+        _orders = localOrders;
+      }
 
-      if (fetchedOrders.isNotEmpty) {
-        _orders = fetchedOrders
-          ..sort((a, b) => b.orderDate.compareTo(a.orderDate));
+      // Puis synchroniser avec le serveur
+      if (_restaurant != null) {
+        final fetchedOrders =
+            await _apiService.getOrders(restaurantId: _restaurant!.id);
 
-        // Mettre à jour le tracking des statuts
-        for (var order in _orders) {
-          _lastOrderStatuses[order.id] = order.status;
+        if (fetchedOrders.isNotEmpty) {
+          final Map<int, Order> merged = {for (var o in localOrders) o.id: o};
+          for (var o in fetchedOrders) {
+            merged[o.id] = o;
+          }
+          _orders = merged.values.toList()
+            ..sort((a, b) => b.orderDate.compareTo(a.orderDate));
+
+          for (var order in _orders) {
+            _lastOrderStatuses[order.id] = order.status;
+          }
+
+          await _saveOrdersLocally(_orders);
+          _clearError();
         }
-
-        _clearError();
       }
     } catch (e) {
       _setError("Erreur lors du chargement des commandes");
@@ -885,38 +969,6 @@ class RestaurantProvider with ChangeNotifier {
   void clearCart() {
     _cartItems.clear();
     notifyListeners();
-  }
-
-  Future<void> placeNewOrder(String paymentMethod) async {
-    if (_cartItems.isEmpty) throw Exception("Le panier est vide");
-
-    _setLoading(true);
-    _clearError();
-
-    try {
-      final newOrder = Order(
-        id: 0,
-        items: List.from(_cartItems),
-        status: OrderStatus.pending,
-        orderDate: DateTime.now(),
-        paymentMethod: paymentMethod,
-        table: '',
-        orderType: OrderType.surPlace,
-      );
-
-      final placedOrder = await _apiService.placeOrder(newOrder);
-      if (placedOrder != null) {
-        _orders.insert(0, placedOrder);
-        await createOrderNotification(placedOrder);
-        clearCart();
-      } else {
-        throw Exception("Commande non confirmée");
-      }
-    } catch (e) {
-      _setError("Erreur lors de la commande : $e");
-    } finally {
-      _setLoading(false);
-    }
   }
 
   Future<int?> submitOrder({
@@ -969,7 +1021,6 @@ class RestaurantProvider with ChangeNotifier {
         'moyen_paiement': paymentMethod,
         'type': normalizedOrderType,
         'montant': totalAmount.toInt(),
-        'user_id': 1,
         'restaurant_id': _restaurant!.id,
         'total_plats': _cartItems.length,
         'plats': plats,
@@ -1010,14 +1061,14 @@ class RestaurantProvider with ChangeNotifier {
           transactionId: responseData['transaction_id']?.toString(),
           mobileMoneyProvider: mobileMoneyProvider,
           phoneNumber: phoneNumber,
-          userId: ' ',
           restaurantId: _restaurant!.id.toString(),
-          orderType: OrderType.surPlace,
+          orderType: Order.parseOrderType(orderType),
         );
 
         _orders.insert(0, newOrder);
         _lastOrderStatuses[newOrder.id] = newOrder.status;
         await createOrderNotification(newOrder);
+        await _saveOrdersLocally(_orders);
         _cartItems.clear();
         notifyListeners();
 
@@ -1054,10 +1105,6 @@ class RestaurantProvider with ChangeNotifier {
         .map((item) =>
             "${item.dish.name} x${item.quantity} = ${item.totalPrice.toStringAsFixed(0)} FCFA")
         .join(', ');
-  }
-
-  void _setLoading(bool value) {
-    _isLoading = value;
   }
 
   void _setError(String message) {
@@ -1128,6 +1175,9 @@ class RestaurantProvider with ChangeNotifier {
     _notifications = [];
     _cartItems.clear();
     _lastOrderStatuses.clear();
+
+    // Effacer les commandes persistées localement
+    SharedPreferences.getInstance().then((prefs) => prefs.remove(_ordersKey));
 
     // Réinitialiser le QR Code
     _scannedQRCode = null;
