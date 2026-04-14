@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { QRCodeCanvas } from 'qrcode.react';
 import {
     ArrowLeft,
     MapPin,
@@ -12,10 +13,8 @@ import {
     Clock,
     Tag,
     Power,
-    QrCode,
     Download,
     Printer,
-    RefreshCw,
 } from 'lucide-react';
 import { restaurantsApi } from '../../services/api';
 import type { Restaurant } from '../../types';
@@ -58,9 +57,7 @@ export default function RestaurantDetailPage() {
     const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
     const [stats, setStats] = useState<RestaurantStats | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [qrUrl, setQrUrl] = useState<string>('');
-    const [isGeneratingQr, setIsGeneratingQr] = useState(false);
-    const [qrSuccess, setQrSuccess] = useState(false);
+    const qrCanvasRef = useRef<HTMLCanvasElement>(null);
 
     useEffect(() => {
         if (!id) return;
@@ -74,10 +71,6 @@ export default function RestaurantDetailPage() {
                 const r: Restaurant = restaurantRes.data.data;
                 setRestaurant(r);
                 setStats(statsRes.data.data);
-                // Initialiser l'URL du QR code si deja genere
-                if (r.qr_code) {
-                    setQrUrl(buildImageUrl(r.qr_code));
-                }
             })
             .catch(() => navigate('/restaurants'))
             .finally(() => setIsLoading(false));
@@ -93,37 +86,21 @@ export default function RestaurantDetailPage() {
 
     if (!restaurant) return null;
 
-    const handleGenerateQr = async () => {
-        if (!restaurant) return;
-        setIsGeneratingQr(true);
-        setQrSuccess(false);
-        try {
-            const res = await restaurantsApi.generateQrCode(restaurant.id);
-            const rawUrl: string = res.data.data.qr_code_url ?? '';
-            // rawUrl peut etre /storage/... ou https://...
-            const base = (import.meta.env.VITE_IMAGE_BASE_URL || '').replace(/\/$/, '');
-            const full = rawUrl.startsWith('http') ? rawUrl : `${base}${rawUrl}`;
-            // Cache-bust pour forcer le rechargement de l'image
-            setQrUrl(`${full}?t=${Date.now()}`);
-            setQrSuccess(true);
-            setTimeout(() => setQrSuccess(false), 3000);
-        } catch {
-            // non-bloquant
-        } finally {
-            setIsGeneratingQr(false);
-        }
-    };
+    const qrValue = `${import.meta.env.VITE_APP_URL || window.location.origin}/restaurant/${restaurant.id}`;
 
     const handleDownloadQr = () => {
-        if (!qrUrl) return;
+        const canvas = qrCanvasRef.current;
+        if (!canvas) return;
         const link = document.createElement('a');
-        link.href = qrUrl;
-        link.download = `qrcode-${restaurant.nom.replace(/[^a-z0-9]/gi, '-')}.svg`;
+        link.download = `qrcode-${restaurant.nom.replace(/[^a-z0-9]/gi, '-')}.png`;
+        link.href = canvas.toDataURL('image/png');
         link.click();
     };
 
     const handlePrintQr = () => {
-        if (!qrUrl) return;
+        const canvas = qrCanvasRef.current;
+        if (!canvas) return;
+        const dataUrl = canvas.toDataURL('image/png');
         const win = window.open('', '_blank');
         if (!win) return;
         win.document.write(`
@@ -132,7 +109,7 @@ export default function RestaurantDetailPage() {
             img{width:300px;height:300px;} h2{margin-bottom:16px;} p{color:#666;margin-top:8px;font-size:14px;}
             @media print{button{display:none;}}</style></head>
             <body><h2>${restaurant.nom}</h2>
-            <img src="${qrUrl}" alt="QR Code" />
+            <img src="${dataUrl}" alt="QR Code" />
             <p>Scannez pour voir le menu</p>
             <button onclick="window.print()" style="margin-top:24px;padding:8px 20px;cursor:pointer;">Imprimer</button>
             </body></html>`);
@@ -309,65 +286,43 @@ export default function RestaurantDetailPage() {
                         <h2 className="text-base font-semibold text-gray-900">QR Code</h2>
                         <p className="text-xs text-gray-500 mt-0.5">Affichez ce QR code dans votre restaurant pour que les clients accèdent au menu</p>
                     </div>
-                    <button
-                        onClick={handleGenerateQr}
-                        disabled={isGeneratingQr}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm disabled:opacity-50"
-                    >
-                        {isGeneratingQr
-                            ? <><RefreshCw className="h-4 w-4 animate-spin" />Génération...</>
-                            : <><QrCode className="h-4 w-4" />{qrUrl ? 'Regénérer' : 'Générer le QR Code'}</>
-                        }
-                    </button>
                 </div>
 
-                {qrSuccess && (
-                    <div className="mb-4 px-3 py-2 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
-                        QR Code généré avec succès !
+                <div className="flex flex-col sm:flex-row items-center gap-6">
+                    <div className="flex-shrink-0 border border-gray-200 rounded-xl p-4 bg-white shadow-sm">
+                        <QRCodeCanvas
+                            ref={qrCanvasRef}
+                            value={qrValue}
+                            size={192}
+                            level="H"
+                            includeMargin={false}
+                        />
                     </div>
-                )}
-
-                {qrUrl ? (
-                    <div className="flex flex-col sm:flex-row items-center gap-6">
-                        <div className="flex-shrink-0 border border-gray-200 rounded-xl p-4 bg-white shadow-sm">
-                            <img
-                                src={qrUrl}
-                                alt={`QR Code ${restaurant.nom}`}
-                                className="w-48 h-48 object-contain"
-                            />
+                    <div className="flex flex-col items-start gap-3">
+                        <p className="text-sm text-gray-600">
+                            Scannez ce QR code pour accéder directement au menu du restaurant depuis un smartphone.
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                            <button
+                                onClick={handleDownloadQr}
+                                className="inline-flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                            >
+                                <Download className="h-4 w-4" />
+                                Télécharger PNG
+                            </button>
+                            <button
+                                onClick={handlePrintQr}
+                                className="inline-flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                            >
+                                <Printer className="h-4 w-4" />
+                                Imprimer
+                            </button>
                         </div>
-                        <div className="flex flex-col items-start gap-3">
-                            <p className="text-sm text-gray-600">
-                                Scannez ce QR code pour accéder directement au menu du restaurant depuis un smartphone.
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                                <button
-                                    onClick={handleDownloadQr}
-                                    className="inline-flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                                >
-                                    <Download className="h-4 w-4" />
-                                    Télécharger SVG
-                                </button>
-                                <button
-                                    onClick={handlePrintQr}
-                                    className="inline-flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                                >
-                                    <Printer className="h-4 w-4" />
-                                    Imprimer
-                                </button>
-                            </div>
-                            <p className="text-xs text-gray-400">
-                                Format SVG — compatible tous navigateurs et imprimantes
-                            </p>
-                        </div>
+                        <p className="text-xs text-gray-400">
+                            Format PNG — compatible tous navigateurs et imprimantes
+                        </p>
                     </div>
-                ) : (
-                    <div className="flex flex-col items-center justify-center py-10 border-2 border-dashed border-gray-200 rounded-xl">
-                        <QrCode className="h-14 w-14 text-gray-300 mb-3" />
-                        <p className="text-sm font-medium text-gray-500">Aucun QR code généré</p>
-                        <p className="text-xs text-gray-400 mt-1">Cliquez sur "Générer le QR Code" pour en créer un</p>
-                    </div>
-                )}
+                </div>
             </div>
         </div>
     );

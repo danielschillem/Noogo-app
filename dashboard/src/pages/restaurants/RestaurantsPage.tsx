@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { QRCodeCanvas } from 'qrcode.react';
 import {
   Plus,
   Search,
@@ -137,23 +138,23 @@ interface RestaurantCardProps {
 
 function RestaurantCard({ restaurant, onToggleActive, onDelete }: RestaurantCardProps) {
   const [showMenu, setShowMenu] = useState(false);
-  const [qrUrl, setQrUrl] = useState<string | null>(restaurant.qr_code ?? null);
-  const [isGeneratingQr, setIsGeneratingQr] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  const handleGenerateQr = async () => {
-    setIsGeneratingQr(true);
-    try {
-      const response = await restaurantsApi.generateQrCode(restaurant.id);
-      const data = response.data?.data ?? response.data;
-      setQrUrl(data?.qr_code_url ?? data?.qr_code ?? null);
-      setShowQrModal(true);
-    } catch (e) {
-      console.error('Erreur génération QR:', e);
-    } finally {
-      setIsGeneratingQr(false);
-      setShowMenu(false);
-    }
+  const qrValue = `${import.meta.env.VITE_APP_URL || window.location.origin}/restaurant/${restaurant.id}`;
+
+  const handleShowQr = () => {
+    setShowQrModal(true);
+    setShowMenu(false);
+  };
+
+  const handleDownloadQr = () => {
+    const canvas = qrCanvasRef.current;
+    if (!canvas) return;
+    const link = document.createElement('a');
+    link.download = `qr-${restaurant.nom.replace(/[^a-z0-9]/gi, '-')}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
   };
 
   return (
@@ -229,12 +230,11 @@ function RestaurantCard({ restaurant, onToggleActive, onDelete }: RestaurantCard
                     {restaurant.is_active ? 'Désactiver' : 'Activer'}
                   </button>
                   <button
-                    onClick={handleGenerateQr}
-                    disabled={isGeneratingQr}
-                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                    onClick={handleShowQr}
+                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                   >
                     <QrCode className="h-4 w-4" />
-                    {isGeneratingQr ? 'Génération...' : 'Générer QR Code'}
+                    Voir QR Code
                   </button>
                   <button
                     onClick={() => { onDelete(restaurant.id); setShowMenu(false); }}
@@ -279,10 +279,9 @@ function RestaurantCard({ restaurant, onToggleActive, onDelete }: RestaurantCard
           </div>
           <div className="ml-auto">
             <button
-              onClick={handleGenerateQr}
-              disabled={isGeneratingQr}
-              title="Générer / Voir QR Code"
-              className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs hover:bg-orange-50 hover:text-orange-600 disabled:opacity-50"
+              onClick={handleShowQr}
+              title="Voir QR Code"
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs hover:bg-orange-50 hover:text-orange-600"
             >
               <QrCode className="h-4 w-4" />
               QR Code
@@ -297,20 +296,25 @@ function RestaurantCard({ restaurant, onToggleActive, onDelete }: RestaurantCard
           <div className="bg-white rounded-xl p-6 text-center shadow-xl max-w-sm w-full" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-semibold mb-2">QR Code — {restaurant.nom}</h3>
             <p className="text-sm text-gray-500 mb-4">Affichez ce QR code sur les tables pour permettre aux clients de commander</p>
-            {qrUrl ? (
-              <img src={qrUrl} alt={`QR Code ${restaurant.nom}`} className="w-48 h-48 mx-auto border-2 border-gray-200 rounded-lg" />
-            ) : (
-              <p className="text-gray-400 py-8">QR Code non disponible</p>
-            )}
-            {qrUrl && (
-              <a
-                href={qrUrl}
-                download={`qr-${restaurant.nom}.png`}
-                className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 text-sm"
+            <div className="flex justify-center mb-4">
+              <div className="border-2 border-gray-200 rounded-lg p-3 bg-white">
+                <QRCodeCanvas
+                  ref={qrCanvasRef}
+                  value={qrValue}
+                  size={192}
+                  level="H"
+                  includeMargin={false}
+                />
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={handleDownloadQr}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 text-sm"
               >
-                Télécharger
-              </a>
-            )}
+                Télécharger PNG
+              </button>
+            </div>
             <button onClick={() => setShowQrModal(false)} className="mt-2 block w-full px-4 py-2 text-gray-500 text-sm">Fermer</button>
           </div>
         </div>
