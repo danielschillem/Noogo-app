@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:noogo/services/crash_reporting_service.dart';
 import 'package:noogo/services/restaurant_storage_service.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'l10n/generated/app_localizations.dart';
 import 'screens/home_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'screens/onboarding_screen.dart';
@@ -27,7 +30,20 @@ Future<void> main() async {
     ),
   );
 
-  runApp(const NooqoApp());
+  // MON-002 : Capture des erreurs Flutter non gérées
+  final originalOnError = FlutterError.onError;
+  FlutterError.onError = (FlutterErrorDetails details) {
+    originalOnError?.call(details);
+    CrashReportingService.captureException(
+      details.exception,
+      stackTrace: details.stack,
+      tag: 'FlutterError',
+    );
+  };
+
+  await CrashReportingService.init(() async {
+    runApp(const NooqoApp());
+  });
 }
 
 class NooqoApp extends StatelessWidget {
@@ -43,6 +59,16 @@ class NooqoApp extends StatelessWidget {
         title: 'Noogo',
         debugShowCheckedModeBanner: false,
         theme: _buildTheme(),
+
+        // I18N-001 : Localisation FR/EN
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('fr'), // Langue par défaut : français
 
         // ✅ Page d'accueil = SplashChecker qui décide
         home: const SplashChecker(),

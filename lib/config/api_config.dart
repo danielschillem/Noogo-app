@@ -50,6 +50,9 @@ class ApiConfig {
   /// Vérifie si en production
   static bool get isProduction => environment == 'production';
 
+  /// DSN Sentry pour le crash reporting (vide = désactivé)
+  static String get sentryDsn => dotenv.env['SENTRY_DSN'] ?? '';
+
   // ============================================
   // 🖼️ CONFIGURATION IMAGES
   // ============================================

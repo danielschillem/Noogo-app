@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   provider: ^6.0.5
   http: ^1.5.0
   cached_network_image: ^3.3.0
@@ -24,6 +26,7 @@ dependencies:
   qr_flutter: ^4.1.0
   mobile_scanner: ^7.1.4
   pusher_channels_flutter: ^2.5.0
+  sentry_flutter: ^8.14.0
 
 dev_dependencies:
   flutter_test:
@@ -52,6 +55,7 @@ flutter_icons:
 # ==========================================
 flutter:
   uses-material-design: true
+  generate: true
 
   assets:
     - assets/env/.env

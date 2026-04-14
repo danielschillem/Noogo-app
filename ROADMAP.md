@@ -212,37 +212,57 @@
 
 ### Internationalisation
 
-- [ ] **I18N-001** : Extraire chaînes vers l10n
-  - Utiliser package `intl` (déjà présent)
-  - Créer fichiers ARB pour FR/EN
+**Voir Phase 5**
 
 ### Monitoring
 
-- [ ] **MON-001** : Intégrer analytics
-  - Suggéré : Firebase Analytics ou Mixpanel
-  - Tracker événements clés (scan, commande, paiement)
-
-- [ ] **MON-002** : Intégrer crash reporting
-  - Suggéré : Firebase Crashlytics ou Sentry
-  - Capturer erreurs non gérées
+**Voir Phase 5**
 
 ### Fonctionnalités
 
-- [ ] **FEAT-001** : Mode hors-ligne
-  - Cache local avec SQLite ou Hive
-  - Synchronisation au retour connexion
+- [x] **FEAT-001** : Mode hors-ligne (cache menu)
+  - ✅ Corrigé le 14/04/2026 :
+    - `lib/services/favorites_service.dart` créé (SharedPreferences)
+    - Cache menu local dans `RestaurantProvider` : lecture hors-ligne si API inaccessible
+    - Syncronisation automatique au retour connexion
 
-- [ ] **FEAT-002** : Système de notation
-  - Ajouter écran notation post-commande
-  - Intégrer API backend
+- [x] **FEAT-004** : Favoris & Recommandations (plats)
+  - ✅ Corrigé le 14/04/2026 :
+    - `FavoritesService` : sauvegarde / lecture / toggle via SharedPreferences
+    - `RestaurantProvider` : `favoriteDishes`, `isFavoriteDish()`, `toggleFavoriteDish()`
+    - `MenuScreen` : onglet ❤️ « Favoris » dans la barre catégories + icône toggle par plat
+
+- [ ] **FEAT-002** : Système de notation post-commande
+  - Ajouter écran notation (1-5 étoiles) accessible depuis OrdersScreen
+  - Intégrer API backend (endpoint `POST /api/orders/{id}/rate`)
 
 - [ ] **FEAT-003** : Géolocalisation restaurant
   - Afficher distance restaurant
   - Carte interactive
 
-- [ ] **FEAT-004** : Favoris & Recommandations
-  - Sauvegarder plats favoris
-  - Algorithme de recommandation
+---
+
+## 🕐 Phase 5 — Monitoring & I18N (Backlog)
+
+- [x] **MON-002** : Crash reporting Sentry (`sentry_flutter`)
+  - ✅ Corrigé le 14/04/2026 :
+    - Package `sentry_flutter: ^8.14.0` ajouté dans `pubspec.yaml`
+    - `lib/services/crash_reporting_service.dart` —wrapper Sentry : init, captureException, captureMessage, breadcrumbs, setUser/clearUser
+    - `main()` : `FlutterError.onError` capturé + `CrashReportingService.init()` enrobe `runApp`
+    - `ApiConfig.sentryDsn` depuis `.env` (`SENTRY_DSN=`)
+    - Désactivé si DSN vide — 0 impact en développement
+    - `sampleRate` 100% prod / 10% dev ; filtrage `SocketException`/`TimeoutException`
+
+- [x] **I18N-001** : Extraire chaînes vers l10n (ARB FR/EN)
+  - ✅ Corrigé le 14/04/2026 :
+    - `flutter_localizations` ajouté dans `pubspec.yaml` + `generate: true`
+    - `l10n.yaml` : template FR, output `lib/l10n/generated/app_localizations.dart`
+    - `lib/l10n/app_fr.arb` — 52 chaînes (écrans cart, orders, menu, auth, notifications, notation…)
+    - `lib/l10n/app_en.arb` — traduction complète EN
+    - `main.dart` : `localizationsDelegates`, `supportedLocales`, `locale: fr` par défaut
+    - Usage : `AppLocalizations.of(context).cartEmpty` dans les widgets
+
+- [ ] **MON-001** : Intégrer analytics (Firebase Analytics ou Mixpanel)
 
 ---
 
@@ -300,9 +320,13 @@ ENVIRONMENT=development
 
 - ✅ Machine d'état `OrderSubmitState` (idle / submitting / success / error)
 - ✅ Logging structuré des échecs images via `AppLogger`
-- ✅ 6 tests widget Flutter (CartScreen + HomeScreen)
+- ✅ 11 tests widget Flutter (CartScreen + HomeScreen)
 - ✅ 19 tests Feature Laravel `OrderControllerTest`
 - ✅ 21 tests Feature Laravel `DishControllerTest`
+- ✅ 19 tests Feature Laravel `CategoryControllerTest`
+- ✅ Throttle 120/min routes dashboard (SEC-007)
+- ✅ Cache menu hors-ligne (FEAT-001)
+- ✅ Favoris plats avec onglet ❤️ dans MenuScreen (FEAT-004)
 - ✅ CORS restreint au domaine Netlify exact
 - ✅ Policies Laravel ownership (Restaurant, Dish, Category, FlashInfo)
 - ✅ Retry exponentiel PaymentService + 8 classes d'exceptions typées
