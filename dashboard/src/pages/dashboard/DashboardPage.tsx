@@ -21,7 +21,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from 'recharts';
 
 interface RestaurantStats {
@@ -211,130 +210,133 @@ export default function DashboardPage() {
           />
         </div>
       )}
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis dataKey="label" stroke="#9ca3af" fontSize={12} />
-          <YAxis stroke="#9ca3af" fontSize={12} />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: 'white',
-              border: '1px solid #e5e7eb',
-              borderRadius: '8px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-            }}
-          />
-          <Line
-            type="monotone"
-            dataKey="orders"
-            stroke="#f97316"
-            strokeWidth={2}
-            dot={{ fill: '#f97316', strokeWidth: 2 }}
-            name="Commandes"
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-        </div >
-
-    {/* Recent Orders */ }
-    < div className = "bg-white rounded-xl shadow-sm border border-gray-200 p-6" >
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Commandes récentes</h2>
-          <div className="space-y-4">
-            {recentOrders.length > 0 ? (
-              recentOrders.map((order) => (
-                <div key={order.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
-                  <div>
-                    <p className="font-medium text-gray-900">#{order.id}</p>
-                    <p className="text-sm text-gray-500">{order.customer_name || 'Client'}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-gray-900">{order.formatted_total}</p>
-                    <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                      {order.status_text}
-                    </span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-gray-500 text-center py-8">Aucune commande récente</p>
-            )}
-          </div>
-        </div >
-      </div >
-
-    {/* D4 — Graphique revenus 6 derniers mois */ }
-  {
-    revenueData.length > 0 && (
+      {/* Orders Chart */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Revenus — 6 derniers mois</h2>
-          <div className="flex items-center gap-1 text-sm text-green-600 font-medium">
-            <TrendingUp className="h-4 w-4" />
-            FCFA
-          </div>
-        </div>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Commandes — 7 derniers jours</h2>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={revenueData} barSize={28}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-              <XAxis dataKey="label" stroke="#9ca3af" fontSize={12} tickLine={false} />
-              <YAxis
-                stroke="#9ca3af"
-                fontSize={11}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)}
-              />
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="label" stroke="#9ca3af" fontSize={12} />
+              <YAxis stroke="#9ca3af" fontSize={12} />
               <Tooltip
-                formatter={(value: number) => [`${new Intl.NumberFormat('fr-FR').format(value)} FCFA`, 'Revenus']}
-                contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+                contentStyle={{
+                  backgroundColor: 'white',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}
               />
-              <Bar dataKey="revenue" fill="#22c55e" radius={[4, 4, 0, 0]} name="Revenus" />
-            </BarChart>
+              <Line
+                type="monotone"
+                dataKey="orders"
+                stroke="#f97316"
+                strokeWidth={2}
+                dot={{ fill: '#f97316', strokeWidth: 2 }}
+                name="Commandes"
+              />
+            </LineChart>
           </ResponsiveContainer>
         </div>
       </div>
-    )
-  }
 
-  {/* Quick Stats */ }
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center">
-          <UtensilsCrossed className="h-6 w-6 text-orange-600" />
+      {/* Recent Orders */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Commandes récentes</h2>
+        <div className="space-y-4">
+          {recentOrders.length > 0 ? (
+            recentOrders.map((order) => (
+              <div key={order.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                <div>
+                  <p className="font-medium text-gray-900">#{order.id}</p>
+                  <p className="text-sm text-gray-500">{order.customer_name || 'Client'}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-medium text-gray-900">{order.formatted_total}</p>
+                  <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                    {order.status_text}
+                  </span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-500 text-center py-8">Aucune commande récente</p>
+          )}
         </div>
-        <div>
-          <p className="text-sm text-gray-500">Total Plats</p>
-          <p className="text-2xl font-bold text-gray-900">{stats?.total_dishes ?? 0}</p>
+      </div>
+
+      {/* D4 — Graphique revenus 6 derniers mois */}
+      {
+        revenueData.length > 0 && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Revenus — 6 derniers mois</h2>
+              <div className="flex items-center gap-1 text-sm text-green-600 font-medium">
+                <TrendingUp className="h-4 w-4" />
+                FCFA
+              </div>
+            </div>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={revenueData} barSize={28}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                  <XAxis dataKey="label" stroke="#9ca3af" fontSize={12} tickLine={false} />
+                  <YAxis
+                    stroke="#9ca3af"
+                    fontSize={11}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)}
+                  />
+                  <Tooltip
+                    formatter={(value) => [`${new Intl.NumberFormat('fr-FR').format(Number(value))} FCFA`, 'Revenus']}
+                    contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+                  />
+                  <Bar dataKey="revenue" fill="#22c55e" radius={[4, 4, 0, 0]} name="Revenus" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )
+      }
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center">
+              <UtensilsCrossed className="h-6 w-6 text-orange-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Total Plats</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.total_dishes ?? 0}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
+              <TrendingUp className="h-6 w-6 text-green-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Commandes ce mois</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.this_month.orders ?? 0}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+              <DollarSign className="h-6 w-6 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Revenus ce mois</p>
+              <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats?.this_month.revenue ?? 0)}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-          <TrendingUp className="h-6 w-6 text-green-600" />
-        </div>
-        <div>
-          <p className="text-sm text-gray-500">Commandes ce mois</p>
-          <p className="text-2xl font-bold text-gray-900">{stats?.this_month.orders ?? 0}</p>
-        </div>
-      </div>
-    </div>
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-          <DollarSign className="h-6 w-6 text-blue-600" />
-        </div>
-        <div>
-          <p className="text-sm text-gray-500">Revenus ce mois</p>
-          <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats?.this_month.revenue ?? 0)}</p>
-        </div>
-      </div>
-    </div>
-  </div>
-    </div >
   );
 }
 

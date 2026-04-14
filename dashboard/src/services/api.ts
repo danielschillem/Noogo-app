@@ -107,6 +107,8 @@ export const dishesApi = {
   togglePlatDuJour: (restaurantId: number, id: number) =>
     api.post(`/restaurants/${restaurantId}/dishes/${id}/toggle-plat-du-jour`),
   getPlatsDuJour: (restaurantId: number) => api.get(`/restaurants/${restaurantId}/plats-du-jour`),
+  reorder: (restaurantId: number, dishes: { id: number; ordre: number }[]) =>
+    api.post(`/restaurants/${restaurantId}/dishes/reorder`, { dishes }),
 };
 
 // Orders API
