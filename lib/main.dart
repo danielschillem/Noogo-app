@@ -14,6 +14,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'screens/home_screen.dart';
+import 'screens/my_restaurants_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'services/restaurant_provider.dart';
@@ -164,6 +165,8 @@ class _NooqoAppState extends State<NooqoApp> {
         page = const WelcomeScreen();
       case '/home':
         page = const HomeScreen();
+      case '/my-restaurants':
+        page = const MyRestaurantsScreen();
     }
     if (page == null) return null;
     return PageRouteBuilder(

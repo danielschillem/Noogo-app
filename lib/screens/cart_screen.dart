@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/order.dart';
 import '../screens/payment_screen.dart';
+import '../services/client_prefs_service.dart';
 import '../services/payment_service.dart';
 import '../services/restaurant_provider.dart';
 import '../utils/app_colors.dart';
@@ -39,12 +40,21 @@ class _CartScreenState extends State<CartScreen>
       vsync: this,
     );
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final provider = context.read<RestaurantProvider>();
       debugPrint(
           'CartScreen initState: ${provider.cartItems.length} articles dans le panier');
       provider.debugPrintState();
       _animationController.forward();
+
+      // Préremplir les numéros depuis les préférences client
+      final savedPhone = await ClientPrefsService.getPhone();
+      final savedMmPhone = await ClientPrefsService.getMobileMoneyPhone();
+      if (mounted) {
+        if (savedPhone != null) _phoneNumberController.text = savedPhone;
+        if (savedMmPhone != null)
+          _mobileMoneyNumberController.text = savedMmPhone;
+      }
     });
   }
 
@@ -643,6 +653,12 @@ class _CartScreenState extends State<CartScreen>
         provider: provider,
       );
       if (otpConfirmed != true) return;
+
+      // Mémoriser le numéro Mobile Money pour la prochaine fois
+      await ClientPrefsService.saveMobileMoneyPrefs(
+        phone: mobileMoneyNumber,
+        provider: mobileMoneyProvider,
+      );
     }
 
     // Étape 6: Confirmation finale
@@ -666,6 +682,9 @@ class _CartScreenState extends State<CartScreen>
       paymentMethod: paymentMethod,
       mobileMoneyProvider: mobileMoneyProvider,
     );
+
+    // Mémoriser le numéro de contact après commande réussie
+    await ClientPrefsService.savePhone(phoneNumber);
   }
 
   // Étape 1: Choisir le type de commande
@@ -845,7 +864,8 @@ class _CartScreenState extends State<CartScreen>
 
   // Étape 3: Demander le numéro de téléphone
   Future<String?> _askPhoneNumber() async {
-    _phoneNumberController.clear();
+    // Ne pas effacer si déjà prérempli depuis les préférences
+    if (_phoneNumberController.text.isEmpty) _phoneNumberController.clear();
     return showDialog<String>(
       context: context,
       barrierDismissible: false,
@@ -1085,7 +1105,9 @@ class _CartScreenState extends State<CartScreen>
 
   // Étape 5.1: Demander le numéro Mobile Money
   Future<String?> _askMobileMoneyNumber(String provider) async {
-    _mobileMoneyNumberController.clear();
+    // Ne pas effacer si déjà prérempli depuis les préférences
+    if (_mobileMoneyNumberController.text.isEmpty)
+      _mobileMoneyNumberController.clear();
     return showDialog<String>(
       context: context,
       barrierDismissible: false,

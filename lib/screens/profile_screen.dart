@@ -8,6 +8,7 @@ import '../utils/app_colors.dart';
 import '../utils/app_text_styles.dart';
 import '../widgets/custom_app_bar.dart';
 import 'auth_screen.dart';
+import 'my_restaurants_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -284,6 +285,18 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget _buildMenuOptions() {
     final options = [
       {
+        'icon': Icons.store,
+        'title': 'Mes restaurants enregistrés',
+        'color': AppColors.primary,
+        'action': _showMyRestaurants,
+      },
+      {
+        'icon': Icons.swap_horiz,
+        'title': 'Changer de restaurant',
+        'color': AppColors.secondary,
+        'action': _changeRestaurant,
+      },
+      {
         'icon': Icons.person_outline,
         'title': 'Mes informations personnelles',
         'action': _showPersonalInfo
@@ -365,38 +378,40 @@ class _ProfileScreenState extends State<ProfileScreen>
               );
             },
           ),
-          ...options.map((opt) => Container(
-                margin: const EdgeInsets.only(bottom: 10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 6,
-                        offset: const Offset(0, 3)),
-                  ],
-                ),
-                child: ListTile(
-                  leading: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child:
-                        Icon(opt['icon'] as IconData, color: AppColors.primary),
+          ...options.map((opt) {
+            final iconColor = (opt['color'] as Color?) ?? AppColors.primary;
+            return Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 6,
+                      offset: const Offset(0, 3)),
+                ],
+              ),
+              child: ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: iconColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  title: Text(
-                    opt['title'] as String,
-                    style: AppTextStyles.bodyMedium
-                        .copyWith(fontWeight: FontWeight.w500),
-                  ),
-                  trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-                  onTap: opt['action'] as VoidCallback,
+                  child: Icon(opt['icon'] as IconData, color: iconColor),
                 ),
-              )),
+                title: Text(
+                  opt['title'] as String,
+                  style: AppTextStyles.bodyMedium
+                      .copyWith(fontWeight: FontWeight.w500),
+                ),
+                trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                onTap: opt['action'] as VoidCallback,
+              ),
+            );
+          }),
           const SizedBox(height: 10),
           ElevatedButton.icon(
             onPressed: _logout,
@@ -758,8 +773,22 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  void _showMyRestaurants() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const MyRestaurantsScreen()),
+    );
+  }
+
+  void _changeRestaurant() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const MyRestaurantsScreen()),
+      (route) => false,
+    );
+  }
+
   void _logout() {
-    // ✅ Capturer le messenger AVANT d'ouvrir le dialog
     final messenger = ScaffoldMessenger.of(context);
 
     showDialog(
