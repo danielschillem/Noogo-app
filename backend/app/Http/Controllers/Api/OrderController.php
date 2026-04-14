@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\OrderStatusChanged;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -121,6 +122,9 @@ class OrderController extends Controller
 
             DB::commit();
 
+            // Broadcast temps réel (D11)
+            broadcast(new OrderStatusChanged($order, 'order.created'));
+
             return response()->json([
                 'success' => true,
                 'message' => 'Commande créée avec succès',
@@ -167,6 +171,9 @@ class OrderController extends Controller
         }
 
         $order->updateStatus($request->status);
+
+        // Broadcast temps réel (D11)
+        broadcast(new OrderStatusChanged($order->fresh(), 'order.updated'));
 
         return response()->json([
             'success' => true,
@@ -283,14 +290,18 @@ class OrderController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'restaurant_id' => 'required|integer|exists:restaurants,id',
-            'telephone' => 'nullable|string|max:20',
-            'type' => 'required|string',
+            // Téléphone : chiffres, espaces, tirets, + autorisés — max 20 caractères
+            'telephone' => ['nullable', 'string', 'max:20', 'regex:/^[\+0-9\s\-]{6,20}$/'],
+            'type' => 'required|string|max:50',
             'moyen_paiement' => 'required|string|max:50',
-            'table' => 'nullable|string|max:20',
+            // Numéro de table : alphanumérique uniquement
+            'table' => ['nullable', 'string', 'max:10', 'regex:/^[A-Za-z0-9\-]{1,10}$/'],
             'mobile_money_provider' => 'nullable|string|max:50',
-            'plats' => 'required|array|min:1',
+            // Limiter le panier à 50 articles distincts pour éviter les abus
+            'plats' => 'required|array|min:1|max:50',
             'plats.*.id' => 'required|integer|exists:dishes,id',
-            'plats.*.quantite' => 'required|integer|min:1',
+            // Quantité max raisonnable par plat
+            'plats.*.quantite' => 'required|integer|min:1|max:100',
         ]);
 
         if ($validator->fails()) {
@@ -324,7 +335,26 @@ class OrderController extends Controller
             ], 422);
         }
 
-        $restaurant = Restaurant::findOrFail($request->restaurant_id);
+        // Vérifier que le restaurant existe ET est actif
+        $restaurant = Restaurant::where('id', $request->restaurant_id)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$restaurant) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Restaurant non trouvé ou temporairement fermé.',
+            ], 404);
+        }
+
+        // Vérifier l'unicité des plats pour éviter les doublons dans le payload
+        $platIds = array_column($request->plats, 'id');
+        if (count($platIds) !== count(array_unique($platIds))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Le panier contient des plats en double. Veuillez regrouper les quantités.',
+            ], 422);
+        }
 
         try {
             DB::beginTransaction();

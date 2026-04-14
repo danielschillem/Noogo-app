@@ -1,0 +1,85 @@
+# CHANGELOG — Noogo App
+
+Tous les changements notables de ce projet sont documentés ici.
+
+Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
+Versioning selon [Semantic Versioning](https://semver.org/).
+
+---
+
+## [1.1.0] — 14 avril 2026
+
+### Ajouté
+- **FEAT-001** : Cache menu hors-ligne (SharedPreferences) — lecture locale si API inaccessible, synchronisation au retour connexion
+- **FEAT-002** : Système de notation post-commande — dialog 5 étoiles + commentaire, bouton Évaluer sur commandes livrées/terminées
+- **FEAT-003** : Géolocalisation — badge distance utilisateur↔restaurant (Haversine), bouton Itinéraire  Google Maps, permissions Android/iOS
+- **FEAT-004** : Favoris plats — onglet ❤️ dans MenuScreen, toggle par plat, persistance SharedPreferences
+- **MON-001** : Service analytics léger — events typés (orderPlaced, qrScanned, dishFavoriteToggled…), POST JSON vers `ANALYTICS_ENDPOINT` en production
+- **MON-002** : Crash reporting Sentry via `sentry_flutter` — `FlutterError.onError`, filtre SocketException, configurable via `.env`
+- **I18N-001** : Internationalisation ARB FR/EN — 52 chaînes extraites, `flutter_localizations` intégré
+- **D11** : Dashboard temps réel Pusher — hook `usePusher`, canal `restaurant.{id}`, événements `order.created` / `order.updated`
+
+### Corrigé
+- **SEC-003** : Endpoint `storeMobile` sécurisé (validation regex téléphone/table, limite 50 plats, détection doublons)
+- **SEC-004** : Migration `email NOT NULL` → `nullable()` (crash silencieux en production)
+- **SEC-005** : Policies Laravel ownership (Restaurant, Dish, Category, FlashInfo)
+- **SEC-006** : CORS restreint au domaine Netlify exact via pattern regex
+- **PERF-002** : Machine d'état `OrderSubmitState` (idle / submitting / success / error)
+- **PERF-003** : Logging images via `AppLogger` (remplacement des `debugPrint` bruts)
+- Fix `.env.testing` manquant → `file_get_contents` PHP warning sur tous les tests Laravel (exit code 1)
+- Fix syntaxe `orders_screen.dart` (`}` au lieu de `]` pour bloc spread)
+- Fix lint `dish.dart` — accolades manquantes dans `if` flow controls
+
+### Dashboard
+- **D1** : Page création/édition de restaurant (RestaurantFormPage)
+- **D2** : `VITE_IMAGE_BASE_URL` en `.env.production`
+- **D3** : Sélecteur de restaurant dans OrdersPage
+- **D4** : Graphique revenus BarChart (DashboardPage)
+- **D5** : Mini-barre de stats dans OrdersPage
+- **D6** : ProfilePage + `updateProfile` dans AuthContext
+- **D7** : RestaurantDetailPage — 8 cartes stats + actions rapides
+- **D8** : Drag & drop HTML5 réordonnancement catégories/plats (MenuPage)
+- **D9** : Sélecteur de restaurant sur DashboardPage (stats par restaurant)
+- **D10** : Export CSV commandes (UTF-8 BOM, côté client)
+- **D12** : RegisterPage avec validation
+
+### Tests ajoutés
+- `tests/Feature/Api/OrderControllerTest.php` — 19 tests
+- `tests/Feature/Api/DishControllerTest.php` — 21 tests
+- `tests/Feature/Api/StoreMobileTest.php` — 11 tests
+- `tests/Feature/Api/AuthControllerTest.php` — 10 tests
+- `test/models/dish_test.dart` — 8 tests Flutter
+- `test/models/order_test.dart` — 19 tests Flutter
+- `test/services/payment_result_test.dart` — 3 tests Flutter
+- `test/utils/qr_helper_test.dart` — 11 tests Flutter
+- `test/widgets/cart_screen_test.dart` — 6 tests Flutter
+- `test/widgets/home_screen_test.dart` — 5 tests Flutter
+
+---
+
+## [1.0.0] — 19 mars 2026
+
+### Ajouté
+- Application Flutter complète avec 11 écrans
+- Backend Laravel 11 avec API REST
+- Dashboard React (Netlify)
+- Intégration Pusher (Flutter)
+- Scanner QR pour identification restaurant
+- Panier + passage de commande (espèces / Mobile Money)
+- Suivi de commande en temps réel (polling 30s)
+- Push notifications locales
+- **SEC-001** : Clés Pusher déplacées vers `.env` (flutter_dotenv)
+- **SEC-002** : Centralisation URLs via `ApiConfig`
+- **QA-001** : Suppression import dupliqué `dart:convert`
+- **QA-002** : Logger structuré `AppLogger`
+- **API-001** : HistoryService parallèle (`Future.wait`)
+- **API-002** : Retry exponentiel PaymentService (3 tentatives, backoff 2s/4s)
+- **API-003** : 8 classes d'exceptions typées (`ApiException`)
+- **UX-001/002/003** : Validations formulaires AuthScreen, CartScreen, états vides MenuScreen
+- **TEST-001/002** : Tests unitaires modèles et services Flutter
+- **TEST-003** : Tests Feature Laravel (StoreMobile, AuthController)
+- **INFRA-001** : Dockerfile production (`serversideup/php:8.3-fpm-nginx`)
+
+---
+
+*Maintenu par QUICK DEV-IT — © 2026. Tous droits réservés.*

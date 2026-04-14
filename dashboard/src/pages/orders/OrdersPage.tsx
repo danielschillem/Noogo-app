@@ -13,6 +13,7 @@ import {
   Download,
 } from 'lucide-react';
 import { ordersApi, restaurantsApi } from '../../services/api';
+import { usePusher } from '../../hooks/usePusher';
 import type { Order, OrderStatus, Restaurant } from '../../types';
 
 const POLL_INTERVAL = 15_000; // 15 secondes
@@ -95,6 +96,27 @@ export default function OrdersPage() {
     setNewCount(0);
     fetchOrders();
   };
+
+  // D11 — Pusher temps réel (complète le polling de 15s)
+  usePusher(
+    restaurantId ? `restaurant.${restaurantId}` : null,
+    {
+      'order.created': (data) => {
+        const newOrder = data as Order;
+        if (!prevIdsRef.current.has(newOrder.id)) {
+          prevIdsRef.current.add(newOrder.id);
+          setOrders(prev => [newOrder, ...prev]);
+          setNewCount(c => c + 1);
+        }
+      },
+      'order.updated': (data) => {
+        const updated = data as Order;
+        setOrders(prev =>
+          prev.map(o => (o.id === updated.id ? { ...o, ...updated } : o))
+        );
+      },
+    },
+  );
 
   // D10 — Export CSV
   const handleExportCsv = () => {
