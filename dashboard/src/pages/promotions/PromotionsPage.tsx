@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+﻿import { useEffect, useState, useCallback } from 'react';
 import { Plus, Pencil, Trash2, Tag, X, ToggleLeft, ToggleRight } from 'lucide-react';
 import { flashInfosApi, restaurantsApi } from '../../services/api';
 import type { FlashInfo, Restaurant } from '../../types';

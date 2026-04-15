@@ -139,7 +139,7 @@ export default function Sidebar() {
               <button onClick={() => setShowAll(v => !v)}
                 className="nav-item w-full text-xs gap-2">
                 <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showAll ? 'rotate-180' : ''}`} />
-                {showAll ? 'RÃ©duire' : `+${hiddenCount} restaurant${hiddenCount > 1 ? 's' : ''}`}
+                {showAll ? 'Réduire' : `+${hiddenCount} restaurant${hiddenCount > 1 ? 's' : ''}`}
               </button>
             )}
 
@@ -148,7 +148,7 @@ export default function Sidebar() {
                 className="nav-item text-xs mt-0.5"
                 style={{ color: '#f97316' }}>
                 <Users className="h-3.5 w-3.5" />
-                GÃ©rer le personnel
+                Gérer le personnel
               </Link>
             )}
 
@@ -218,7 +218,7 @@ export default function Sidebar() {
                 onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.08)'}
                 onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'transparent'}>
                 <LogOut className="h-4 w-4" />
-                DÃ©connexion
+                Déconnexion
               </button>
             </div>
           )}

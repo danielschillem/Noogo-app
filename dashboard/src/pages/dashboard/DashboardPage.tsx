@@ -165,7 +165,7 @@ export default function DashboardPage() {
           <div>
             <p className="text-sm font-medium text-white opacity-80 mb-1">{TODAY_LABEL}</p>
             <h1 className="text-2xl sm:text-3xl font-bold text-white">
-              {greet()}, {user?.name?.split(' ')[0] ?? 'Admin'} ðŸ‘‹
+              {greet()}, {user?.name?.split(' ')[0] ?? 'Admin'} 👋
             </h1>
             <p className="text-sm mt-1 text-white opacity-70">
               Livraison GRATUITE chaque weekend â€” Voici votre activité en temps réel.

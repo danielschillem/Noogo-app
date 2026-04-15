@@ -218,7 +218,7 @@ export default function OrdersPage() {
           {newCount > 0 && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold badge-pulse"
               style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}>
-              ðŸ”” {newCount} nouvelle{newCount > 1 ? 's' : ''}
+              👋 {newCount} nouvelle{newCount > 1 ? 's' : ''}
             </span>
           )}
           {/* Toggle vue */}
