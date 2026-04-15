@@ -6,7 +6,7 @@ const PUSHER_CLUSTER = import.meta.env.VITE_PUSHER_CLUSTER ?? 'eu';
 
 let pusherInstance: Pusher | null = null;
 
-function getPusher(): Pusher | null {
+export function getPusher(): Pusher | null {
     if (!PUSHER_KEY) return null;
     if (!pusherInstance) {
         pusherInstance = new Pusher(PUSHER_KEY, {
