@@ -2,7 +2,7 @@
 
 > Feuille de route du développement de l'application Noogo
 
-**Version actuelle :** 1.2.0  
+**Version actuelle :** 1.3.0  
 **Dernière mise à jour :** 15 avril 2026  
 **Développeur :** QUICK DEV-IT  
 **Licence :** Propriétaire  
@@ -15,16 +15,16 @@
 
 | Métrique | Valeur | Statut |
 | -------- | ------ | ------ |
-| Écrans | 14 | ✅ |
-| Services | 10 | ✅ |
+| Écrans | 15 | ✅ |
+| Services | 12 | ✅ |
 | Modèles | 9 | ✅ |
 | Widgets | 8 | ✅ |
 | Tests Flutter | 179 (16 fichiers) | ✅ |
-| Tests Laravel | 61 tests · 130+ assertions | ✅ |
+| Tests Laravel | 131 tests · 424 assertions | ✅ |
 | Couverture modèles/utils | ~80% | 🟢 |
 | Couverture globale (lcov) | ~17% | 🟡 |
-| Documentation | 85% | 🟢 |
-| Santé globale | 9.0/10 | 🟢 |
+| Documentation | 90% | 🟢 |
+| Santé globale | 9.3/10 | 🟢 |
 
 ---
 
@@ -397,7 +397,86 @@ noogo-app/
 
 ---
 
-## 🔒 Fichier .env Suggéré
+## � Phase 7 — Push Notifications FCM & Dashboard Redesign (Avril 2026)
+
+### Push Notifications FCM (Firebase Cloud Messaging)
+
+- [x] **FCM-001** : Migration colonne `fcm_token` sur la table `users`
+  - ✅ Corrigé le 15/04/2026
+  - Colonne `fcm_token` nullable, ajoutée dans `$fillable` du modèle `User`
+  - `php artisan migrate` → 131 tests passés, rien de cassé
+
+- [x] **FCM-002** : `FcmNotificationService` Laravel (API Legacy HTTP)
+  - ✅ Corrigé le 15/04/2026
+  - `notifyNewOrder(Restaurant, Order)` → topic `restaurant_{id}` + token owner
+  - `notifyOrderStatusChanged(Order, status)` → token FCM du client
+  - Titres avec emojis par statut (🍽️ 🔄 👨‍🍳 🟢 ✅ ❌)
+  - Silencieux si `FCM_SERVER_KEY` non configuré (Log::warning)
+  - `FCM_SERVER_KEY` lu depuis `config('services.fcm.server_key')`
+
+- [x] **FCM-003** : `DeviceTokenController` + routes
+  - ✅ Corrigé le 15/04/2026
+  - `POST /api/auth/device-token` → sauvegarde le token
+  - `DELETE /api/auth/device-token` → efface à la déconnexion
+  - Protégé par `auth:sanctum`
+
+- [x] **FCM-004** : `OrderController` intégration FCM non-bloquante
+  - ✅ Corrigé le 15/04/2026
+  - `store()` : `notifyNewOrder()` après création (try/catch, non-bloquant)
+  - `updateStatus()` : `notifyOrderStatusChanged()` après mise à jour statut
+
+- [x] **FCM-005** : Flutter `FCMService` — enregistrement token + stream
+  - ✅ Corrigé le 15/04/2026
+  - `registerTokenToBackend(token)` : POST `/auth/device-token` si connecté
+  - `unregisterTokenFromBackend()` : DELETE à la déconnexion
+  - `onTokenRefresh` → re-register automatique
+  - `StreamController<Map> orderEvents` : diffuse les data FCM foreground
+  - `_onForeground` : émet sur `orderEvents` si `type == order_status_changed`
+
+- [x] **FCM-006** : Topic restaurant + polling `OrdersScreen`
+  - ✅ Corrigé le 15/04/2026
+  - `restaurant_provider` : `subscribeToTopic('restaurant_{id}')` au scan QR
+  - `OrdersScreen` : `Timer.periodic(15s)` → `forceRefreshOrders()`
+  - `FCMService.orderEvents.listen()` → refresh immédiat à la réception FCM
+  - Indicateur **Live** animé (pulse vert) dans l'en-tête
+  - `dispose()` annule proprement timer + subscription
+
+### Dashboard React — Redesign Professionnel
+
+- [x] **DASH-08** : Design system CSS (`index.css`)
+  - ✅ Corrigé le 15/04/2026
+  - Variables CSS : `--sidebar-bg: #0f172a`, `--brand: #f97316`, `--radius-card: 16px`
+  - Classes utilitaires : `.nav-item`, `.nav-item.active`, `.input-pro`, `.btn-primary`
+  - Dégradés : `.stat-card-orange/green/blue/violet`
+  - Animations : `fadeIn`, `slideIn`, `pulse`, scrollbar slim
+
+- [x] **DASH-09** : Sidebar dark slate-900
+  - ✅ Corrigé le 15/04/2026
+  - Fond `#0f172a`, nav items semi-transparents avec hover/active
+  - Dot statut restaurant (vert ouvert / jaune fermé / gris inactif)
+  - Badge commandes en attente avec animation pulse
+  - Menu utilisateur flottant dark avec avatar dégradé orange
+  - Mobile : overlay `backdrop-blur` + transition transform
+
+- [x] **DASH-10** : DashboardPage — stat cards dégradées + charts
+  - ✅ Corrigé le 15/04/2026
+  - **4 stat cards** avec dégradés (orange/vert/bleu/violet), cercles décoratifs, badge tendance `%`
+  - **AreaChart** zone remplie pour commandes 7 jours (gradient orange)
+  - **BarChart** gradient vert pour revenus 6 mois
+  - Panneau commandes récentes avec `StatusBadge` coloré par statut
+  - `MiniStatCard` pour les 3 KPIs du bas
+  - Loading state avec icône animée `Activity`
+
+- [x] **DASH-11** : LoginPage — split-screen moderne
+  - ✅ Corrigé le 15/04/2026
+  - Gauche (52%) : fond dark `#0f172a` + blobs décoratifs flous + feature cards + headline dégradé
+  - Droite : formulaire épuré avec `input-pro`, toggle mot de passe "Voir/Masquer", `btn-primary` avec flèche
+  - Responsive : panneau gauche masqué sur mobile
+  - Hint démo discret en bas du formulaire
+
+---
+
+## �🔒 Fichier .env Suggéré
 
 ```env
 # API Configuration
@@ -425,10 +504,27 @@ ENVIRONMENT=development
 | Phase 4 - Évolutions | 1 semaine | S16 | S16 | ✅ Terminé |
 | Phase 5 - Monitoring & I18N | 1 semaine | S16 | S16 | ✅ Terminé |
 | Phase 6 - Dashboard & Mobile v1.2 | 1 semaine | S16 | S16 | ✅ Terminé |
+| Phase 7 - FCM Push + Dashboard Redesign | 1 jour | S16 | S16 | ✅ Terminé |
 
 ---
 
 ## ✅ Historique des Accomplissements
+
+### v1.3.0 (15 Avril 2026)
+
+- ✅ **FCM-001-006** : Notifications push Firebase Cloud Messaging bout en bout
+  - Backend : `FcmNotificationService`, `DeviceTokenController`, routes `auth:sanctum`
+  - `OrderController` : FCM non-bloquant à la création et au changement de statut
+  - Flutter : `FCMService` register/unregister token, `StreamController orderEvents`
+  - `OrdersScreen` : polling 15s + écoute stream FCM + indicateur Live animé
+  - `restaurant_provider` : subscribe au topic `restaurant_{id}` au scan
+- ✅ **DASH-08-11** : Dashboard complet redesign professionnel
+  - Design system CSS (design tokens, `.nav-item`, `.btn-primary`, `.input-pro`)
+  - Sidebar dark slate-900 avec dots de statut + avatar dégradé
+  - DashboardPage : stat cards dégradées, AreaChart commandes, BarChart revenus
+  - LoginPage : split-screen dark/clair avec blobs décoratifs
+- ✅ 131 tests Laravel, 424 assertions — rien de cassé
+- ✅ 0 erreurs TypeScript sur tous les fichiers modifiés
 
 ### v1.2.0 (15 Avril 2026)
 
@@ -492,4 +588,21 @@ ENVIRONMENT=development
 
 ---
 
-*Document mis à jour le 15 avril 2026 — v1.2.0*
+## 🔭 Backlog — Idées Futures
+
+| ID | Fonctionnalité | Priorité | Effort |
+|----|---------------|----------|--------|
+| BL-001 | Tests intégration Flutter (golden tests) | 🟡 Moyenne | M |
+| BL-002 | Coverage screens Flutter (`lcov`) → 40%+ | 🟡 Moyenne | M |
+| BL-003 | Mode tablette / iPad (layout adaptatif) | 🟢 Basse | L |
+| BL-004 | Dashboard : page staff redesign (table + avatars) | 🟡 Moyenne | S |
+| BL-005 | Dashboard : page menu redesign (grille image) | 🟡 Moyenne | S |
+| BL-006 | Dashboard : page commandes redesign (kanban) | 🟠 Haute | M |
+| BL-007 | Flutter : onboarding première utilisation | 🟢 Basse | M |
+| BL-008 | Backend : rate limiting par IP sur `storeMobile` | 🟠 Haute | S |
+| BL-009 | Paiement CinetPay en production (clés réelles) | 🔴 Critique | S |
+| BL-010 | Dashboard : notifications push temps réel (WebSocket) | 🟡 Moyenne | L |
+
+---
+
+*Document mis à jour le 15 avril 2026 — v1.3.0*
