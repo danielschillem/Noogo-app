@@ -129,7 +129,7 @@ class DashboardController extends Controller
 
         $orders = Order::whereIn('restaurant_id', $restaurantIds)
             ->where('order_date', '>=', $startDate)
-            ->selectRaw('DATE(order_date) as date, COUNT(*) as count, SUM(CASE WHEN status != "cancelled" THEN total_amount ELSE 0 END) as revenue')
+            ->selectRaw("DATE(order_date) as date, COUNT(*) as count, SUM(CASE WHEN status != 'cancelled' THEN total_amount ELSE 0 END) as revenue")
             ->groupBy('date')
             ->orderBy('date')
             ->get()

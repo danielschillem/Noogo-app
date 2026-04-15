@@ -273,9 +273,9 @@ export default function MenuPage() {
         Promise.all([categoriesApi.getAll(selectedRestaurantId), dishesApi.getAll(selectedRestaurantId)])
             .then(([catRes, dishRes]) => {
                 const cats: Category[] = catRes.data.data || catRes.data;
-                const dis: Dish[] = dishRes.data.data || dishRes.data;
-                setCategories(cats);
-                setDishes(dis);
+                const dis: Dish[] = dishRes.data.data?.data ?? dishRes.data.data ?? dishRes.data;
+                setCategories(Array.isArray(cats) ? cats : []);
+                setDishes(Array.isArray(dis) ? dis : []);
             }).catch(console.error).finally(() => setIsLoading(false));
     }, [selectedRestaurantId]);
 
@@ -283,8 +283,10 @@ export default function MenuPage() {
         if (!selectedRestaurantId) return;
         Promise.all([categoriesApi.getAll(selectedRestaurantId), dishesApi.getAll(selectedRestaurantId)])
             .then(([catRes, dishRes]) => {
-                setCategories(catRes.data.data || catRes.data);
-                setDishes(dishRes.data.data || dishRes.data);
+                const cats = catRes.data.data || catRes.data;
+                const dis = dishRes.data.data?.data ?? dishRes.data.data ?? dishRes.data;
+                setCategories(Array.isArray(cats) ? cats : []);
+                setDishes(Array.isArray(dis) ? dis : []);
             }).catch(console.error);
     };
 
