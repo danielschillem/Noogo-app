@@ -57,9 +57,11 @@ Route::middleware('throttle:30,1')->group(function () {
 
 // ============================================================================
 // ENDPOINT PUBLIC COMMANDES (app mobile Flutter, sans authentification)
-// Limité à 30 commandes/minute par IP pour contrer les abus
+// Limité via le rate-limiter nommé « order-mobile » (AppServiceProvider) :
+//   - 10 commandes / minute par IP (anti-flood global)
+//   - 3 commandes / minute par IP + restaurant (anti-spam ciblé)
 // ============================================================================
-Route::middleware('throttle:30,1')->post('/commandes', [OrderController::class, 'storeMobile']);
+Route::middleware('throttle:order-mobile')->post('/commandes', [OrderController::class, 'storeMobile']);
 
 
 // ============================================================================

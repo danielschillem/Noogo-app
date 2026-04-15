@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import {
     Users, Plus, Trash2, Edit2, Check, X, ShieldCheck, ChefHat, CreditCard, UtensilsCrossed,
@@ -16,10 +16,10 @@ const ROLE_ICONS: Record<StaffRole, React.ReactNode> = {
 };
 
 const ROLE_PERMISSIONS_FR: Record<string, string> = {
-    manage_staff: 'Gérer le personnel',
+    manage_staff: 'GÃ©rer le personnel',
     edit_restaurant: 'Modifier le restaurant',
-    manage_menu: 'Gérer le menu',
-    manage_orders: 'Gérer les commandes',
+    manage_menu: 'GÃ©rer le menu',
+    manage_orders: 'GÃ©rer les commandes',
     view_stats: 'Voir les statistiques',
 };
 
@@ -82,7 +82,7 @@ export default function StaffPage() {
             const e = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } };
             const msg = e.response?.data?.message ?? 'Erreur lors de l\'ajout';
             const fieldErrors = e.response?.data?.errors;
-            const detail = fieldErrors ? Object.values(fieldErrors).flat().join(' · ') : '';
+            const detail = fieldErrors ? Object.values(fieldErrors).flat().join(' Â· ') : '';
             setFormError(detail || msg);
         } finally {
             setSubmitting(false);
@@ -96,7 +96,7 @@ export default function StaffPage() {
             setEditingId(null);
             load();
         } catch {
-            alert('Erreur lors de la mise à jour du rôle');
+            alert('Erreur lors de la mise Ã  jour du rÃ´le');
         }
     };
 
@@ -106,13 +106,13 @@ export default function StaffPage() {
             await staffApi.update(Number(restaurantId), member.id, { is_active: !member.is_active });
             load();
         } catch {
-            alert('Erreur lors de la mise à jour');
+            alert('Erreur lors de la mise Ã  jour');
         }
     };
 
     const handleRemove = async (member: StaffMember) => {
         if (!restaurantId) return;
-        if (!confirm(`Retirer ${member.name} de l'équipe ?`)) return;
+        if (!confirm(`Retirer ${member.name} de l'Ã©quipe ?`)) return;
         try {
             await staffApi.remove(Number(restaurantId), member.id);
             load();
@@ -125,228 +125,240 @@ export default function StaffPage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center h-48">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500" />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center animate-pulse"
+                    style={{ background: 'linear-gradient(135deg,#f97316,#ea580c)' }}>
+                    <Users className="h-5 w-5 text-white" />
+                </div>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className="p-6 text-center text-red-600">
-                <p>{error}</p>
-                <button onClick={load} className="mt-3 text-sm text-orange-500 hover:underline">Réessayer</button>
+            <div className="p-8 text-center rounded-2xl" style={{ background: '#fef2f2', border: '1px solid #fecaca' }}>
+                <p className="text-sm font-medium" style={{ color: '#dc2626' }}>{error}</p>
+                <button onClick={load} className="mt-3 text-sm font-medium" style={{ color: '#f97316' }}>RÃ©essayer</button>
             </div>
         );
     }
 
+    const ROLE_STYLE: Record<string, { bg: string; color: string; border: string }> = {
+        owner: { bg: '#fff7ed', color: '#c2410c', border: '#fed7aa' },
+        manager: { bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
+        cashier: { bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0' },
+        waiter: { bg: '#faf5ff', color: '#6d28d9', border: '#ddd6fe' },
+    };
+
     return (
-        <div className="p-6 max-w-4xl mx-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                    <Users className="text-orange-500" size={24} />
-                    <div>
-                        <h1 className="text-xl font-bold text-gray-900">Personnel</h1>
-                        <p className="text-sm text-gray-500">{staff.length} membre{staff.length > 1 ? 's' : ''}</p>
-                    </div>
+        <div className="space-y-5 animate-fadeIn">
+
+            {/* â”€â”€ Header â”€â”€ */}
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold" style={{ color: '#0f172a' }}>Personnel</h1>
+                    <p className="text-sm mt-0.5" style={{ color: '#64748b' }}>
+                        {staff.length} membre{staff.length !== 1 ? 's' : ''} dans l'Ã©quipe
+                    </p>
                 </div>
-                {(user?.is_admin || true) && (
-                    <button
-                        onClick={() => { setShowForm(true); setFormError(null); setForm(EMPTY_FORM); }}
-                        className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors"
-                    >
-                        <Plus size={16} /> Ajouter un membre
-                    </button>
-                )}
+                <button onClick={() => { setShowForm(true); setFormError(null); setForm(EMPTY_FORM); }}
+                    className="btn-primary text-sm">
+                    <Plus size={16} /> Ajouter
+                </button>
             </div>
 
-            {/* Formulaire d'ajout */}
+            {/* â”€â”€ Role summary cards â”€â”€ */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {(Object.entries(STAFF_ROLE_LABELS) as [StaffRole, string][]).filter(([r]) => r !== 'owner').map(([role, label]) => {
+                    const count = staff.filter(s => s.role === role && s.is_active).length;
+                    const st = ROLE_STYLE[role] ?? ROLE_STYLE.waiter;
+                    return (
+                        <div key={role} className="p-4 rounded-2xl"
+                            style={{ background: 'white', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                            <div className="flex items-center gap-2 mb-3">
+                                <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                                    style={{ background: st.bg, border: `1px solid ${st.border}`, color: st.color }}>
+                                    {ROLE_ICONS[role]}
+                                </div>
+                                <span className="text-xs font-semibold" style={{ color: st.color }}>{label}</span>
+                            </div>
+                            <p className="text-2xl font-bold" style={{ color: '#0f172a' }}>{count}</p>
+                            <p className="text-xs" style={{ color: '#94a3b8' }}>actif{count !== 1 ? 's' : ''}</p>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* â”€â”€ Add form â”€â”€ */}
             {showForm && (
-                <form onSubmit={handleCreate} className="bg-white border border-gray-200 rounded-xl p-5 mb-6 shadow-sm">
-                    <h2 className="text-base font-semibold text-gray-800 mb-4">Nouveau membre</h2>
+                <form onSubmit={handleCreate} className="rounded-2xl p-6"
+                    style={{ background: 'white', border: '1px solid #f1f5f9', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
+                    <h2 className="text-base font-bold mb-4" style={{ color: '#0f172a' }}>Nouveau membre</h2>
                     {formError && (
-                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{formError}</div>
+                        <div className="mb-4 px-4 py-3 rounded-xl text-sm"
+                            style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}>
+                            {formError}
+                        </div>
                     )}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Nom complet *</label>
-                            <input
-                                required value={form.name}
-                                onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                                placeholder="Jean Dupont"
-                            />
+                            <label className="block text-xs font-semibold mb-1.5" style={{ color: '#374151' }}>Nom complet *</label>
+                            <input required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                                className="input-pro" placeholder="Jean Dupont" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                            <input
-                                required type="email" value={form.email}
-                                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                                placeholder="jean@example.com"
-                            />
+                            <label className="block text-xs font-semibold mb-1.5" style={{ color: '#374151' }}>Email *</label>
+                            <input required type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                                className="input-pro" placeholder="jean@example.com" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
-                            <input
-                                value={form.phone}
-                                onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                                placeholder="+226 70000000"
-                            />
+                            <label className="block text-xs font-semibold mb-1.5" style={{ color: '#374151' }}>TÃ©lÃ©phone</label>
+                            <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                                className="input-pro" placeholder="+226 70000000" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Rôle *</label>
-                            <select
-                                value={form.role}
-                                onChange={e => setForm(f => ({ ...f, role: e.target.value as StaffRole }))}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                            >
-                                <option value="manager">Gérant</option>
+                            <label className="block text-xs font-semibold mb-1.5" style={{ color: '#374151' }}>RÃ´le *</label>
+                            <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value as StaffRole }))}
+                                className="input-pro">
+                                <option value="manager">GÃ©rant</option>
                                 <option value="cashier">Caissier</option>
                                 <option value="waiter">Serveur</option>
                             </select>
                         </div>
                         <div className="sm:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Mot de passe <span className="text-gray-400 font-normal">(optionnel — généré automatiquement si vide)</span>
+                            <label className="block text-xs font-semibold mb-1.5" style={{ color: '#374151' }}>
+                                Mot de passe <span style={{ color: '#94a3b8', fontWeight: 400 }}>(optionnel)</span>
                             </label>
-                            <input
-                                type="password" value={form.password}
-                                onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                                placeholder="••••••••"
-                            />
+                            <input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                                className="input-pro" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" />
                         </div>
                     </div>
-                    <div className="flex justify-end gap-3 mt-4">
-                        <button
-                            type="button" onClick={() => setShowForm(false)}
-                            className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-                        >
+                    <div className="flex justify-end gap-3 mt-5">
+                        <button type="button" onClick={() => setShowForm(false)}
+                            className="px-4 py-2 rounded-xl text-sm font-medium transition-colors"
+                            style={{ background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0' }}>
                             Annuler
                         </button>
-                        <button
-                            type="submit" disabled={submitting}
-                            className="px-4 py-2 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg disabled:opacity-50"
-                        >
-                            {submitting ? 'Ajout…' : 'Ajouter'}
+                        <button type="submit" disabled={submitting} className="btn-primary">
+                            {submitting ? 'Ajoutâ€¦' : 'Ajouter le membre'}
                         </button>
                     </div>
                 </form>
             )}
 
-            {/* Rôles explication */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-                {(Object.entries(STAFF_ROLE_LABELS) as [StaffRole, string][])
-                    .filter(([r]) => r !== 'owner')
-                    .map(([role, label]) => {
-                        const roleStaff = staff.filter(s => s.role === role && s.is_active);
-                        return (
-                            <div key={role} className="bg-white border border-gray-200 rounded-xl p-3">
-                                <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium mb-2 ${STAFF_ROLE_COLORS[role]}`}>
-                                    {ROLE_ICONS[role]} {label}
-                                </div>
-                                <p className="text-2xl font-bold text-gray-900">{roleStaff.length}</p>
-                                <p className="text-xs text-gray-500 mt-0.5">actif{roleStaff.length > 1 ? 's' : ''}</p>
-                            </div>
-                        );
-                    })}
-            </div>
-
-            {/* Liste du personnel */}
+            {/* â”€â”€ Staff list â”€â”€ */}
             {staff.length === 0 ? (
-                <div className="text-center py-16 text-gray-400">
-                    <Users size={48} className="mx-auto mb-3 opacity-30" />
-                    <p className="font-medium">Aucun membre du personnel</p>
-                    <p className="text-sm mt-1">Ajoutez un gérant, caissier ou serveur</p>
+                <div className="text-center py-20 rounded-2xl"
+                    style={{ background: 'white', border: '1px solid #f1f5f9' }}>
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                        style={{ background: '#f8fafc' }}>
+                        <Users className="h-8 w-8" style={{ color: '#cbd5e1' }} />
+                    </div>
+                    <p className="font-semibold" style={{ color: '#374151' }}>Aucun membre</p>
+                    <p className="text-sm mt-1" style={{ color: '#94a3b8' }}>Ajoutez gÃ©rants, caissiers ou serveurs</p>
                 </div>
             ) : (
-                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                <div className="rounded-2xl overflow-hidden"
+                    style={{ background: 'white', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                     <table className="w-full text-sm">
-                        <thead className="bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                <th className="text-left px-4 py-3 font-semibold text-gray-600">Membre</th>
-                                <th className="text-left px-4 py-3 font-semibold text-gray-600">Rôle</th>
-                                <th className="text-left px-4 py-3 font-semibold text-gray-600 hidden md:table-cell">Permissions</th>
-                                <th className="text-left px-4 py-3 font-semibold text-gray-600">Statut</th>
-                                <th className="text-right px-4 py-3 font-semibold text-gray-600">Actions</th>
+                        <thead>
+                            <tr style={{ borderBottom: '1px solid #f1f5f9', background: '#f8fafc' }}>
+                                <th className="text-left px-5 py-3.5 text-xs font-semibold" style={{ color: '#64748b' }}>Membre</th>
+                                <th className="text-left px-5 py-3.5 text-xs font-semibold" style={{ color: '#64748b' }}>RÃ´le</th>
+                                <th className="text-left px-5 py-3.5 text-xs font-semibold hidden md:table-cell" style={{ color: '#64748b' }}>Permissions</th>
+                                <th className="text-left px-5 py-3.5 text-xs font-semibold" style={{ color: '#64748b' }}>Statut</th>
+                                <th className="text-right px-5 py-3.5 text-xs font-semibold" style={{ color: '#64748b' }}>Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {staff.map(member => (
-                                <tr key={member.id} className={`hover:bg-gray-50 transition-colors ${!member.is_active ? 'opacity-50' : ''}`}>
-                                    <td className="px-4 py-3">
-                                        <div className="font-medium text-gray-900">{member.name}</div>
-                                        <div className="text-xs text-gray-500">{member.email}</div>
-                                        {member.phone && <div className="text-xs text-gray-400">{member.phone}</div>}
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        {editingId === member.id ? (
-                                            <div className="flex items-center gap-2">
-                                                <select
-                                                    value={editRole}
-                                                    onChange={e => setEditRole(e.target.value as StaffRole)}
-                                                    className="border border-gray-300 rounded px-2 py-1 text-xs"
-                                                >
-                                                    <option value="manager">Gérant</option>
-                                                    <option value="cashier">Caissier</option>
-                                                    <option value="waiter">Serveur</option>
-                                                </select>
-                                                <button onClick={() => handleUpdateRole(member)} className="text-green-600 hover:text-green-700">
-                                                    <Check size={14} />
-                                                </button>
-                                                <button onClick={() => setEditingId(null)} className="text-gray-400 hover:text-gray-600">
-                                                    <X size={14} />
-                                                </button>
+                        <tbody>
+                            {staff.map((member, idx) => {
+                                const st = ROLE_STYLE[member.role] ?? ROLE_STYLE.waiter;
+                                return (
+                                    <tr key={member.id} className="table-row-hover"
+                                        style={{
+                                            borderBottom: idx < staff.length - 1 ? '1px solid #f8fafc' : 'none',
+                                            opacity: member.is_active ? 1 : 0.55
+                                        }}>
+                                        <td className="px-5 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 font-bold text-sm"
+                                                    style={{ background: st.bg, color: st.color, border: `1px solid ${st.border}` }}>
+                                                    {member.name.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="font-semibold truncate" style={{ color: '#0f172a' }}>{member.name}</p>
+                                                    <p className="text-xs truncate" style={{ color: '#94a3b8' }}>{member.email}</p>
+                                                </div>
                                             </div>
-                                        ) : (
-                                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${STAFF_ROLE_COLORS[member.role]}`}>
-                                                {ROLE_ICONS[member.role]} {member.role_label}
-                                            </span>
-                                        )}
-                                    </td>
-                                    <td className="px-4 py-3 hidden md:table-cell">
-                                        <div className="flex flex-wrap gap-1">
-                                            {member.permissions.map(p => (
-                                                <span key={p} className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
-                                                    {ROLE_PERMISSIONS_FR[p] ?? p}
+                                        </td>
+                                        <td className="px-5 py-4">
+                                            {editingId === member.id ? (
+                                                <div className="flex items-center gap-2">
+                                                    <select value={editRole} onChange={e => setEditRole(e.target.value as StaffRole)}
+                                                        className="text-xs px-2 py-1.5 rounded-lg border" style={{ borderColor: '#e2e8f0' }}>
+                                                        <option value="manager">GÃ©rant</option>
+                                                        <option value="cashier">Caissier</option>
+                                                        <option value="waiter">Serveur</option>
+                                                    </select>
+                                                    <button onClick={() => handleUpdateRole(member)}
+                                                        className="p-1 rounded-lg" style={{ background: '#f0fdf4', color: '#16a34a' }}>
+                                                        <Check size={14} />
+                                                    </button>
+                                                    <button onClick={() => setEditingId(null)}
+                                                        className="p-1 rounded-lg" style={{ background: '#f8fafc', color: '#64748b' }}>
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold"
+                                                    style={{ background: st.bg, color: st.color, border: `1px solid ${st.border}` }}>
+                                                    {ROLE_ICONS[member.role]} {member.role_label}
                                                 </span>
-                                            ))}
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <button
-                                            onClick={() => handleToggleActive(member)}
-                                            className={`text-xs px-2 py-1 rounded-full font-medium ${member.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}
-                                        >
-                                            {member.is_active ? 'Actif' : 'Inactif'}
-                                        </button>
-                                    </td>
-                                    <td className="px-4 py-3 text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            {member.role !== 'owner' && editingId !== member.id && (
-                                                <button
-                                                    onClick={() => { setEditingId(member.id); setEditRole(member.role); }}
-                                                    className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                    title="Modifier le rôle"
-                                                >
-                                                    <Edit2 size={14} />
-                                                </button>
                                             )}
-                                            {member.role !== 'owner' && (
-                                                <button
-                                                    onClick={() => handleRemove(member)}
-                                                    className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                    title="Retirer de l'équipe"
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            )}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                                        </td>
+                                        <td className="px-5 py-4 hidden md:table-cell">
+                                            <div className="flex flex-wrap gap-1">
+                                                {member.permissions.map(p => (
+                                                    <span key={p} className="text-[10px] px-1.5 py-0.5 rounded font-medium"
+                                                        style={{ background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0' }}>
+                                                        {ROLE_PERMISSIONS_FR[p] ?? p}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </td>
+                                        <td className="px-5 py-4">
+                                            <button onClick={() => handleToggleActive(member)}
+                                                className="text-xs px-2.5 py-1 rounded-lg font-semibold transition-colors"
+                                                style={member.is_active
+                                                    ? { background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0' }
+                                                    : { background: '#f8fafc', color: '#94a3b8', border: '1px solid #e2e8f0' }}>
+                                                {member.is_active ? 'Actif' : 'Inactif'}
+                                            </button>
+                                        </td>
+                                        <td className="px-5 py-4 text-right">
+                                            <div className="flex items-center justify-end gap-1.5">
+                                                {member.role !== 'owner' && editingId !== member.id && (
+                                                    <button onClick={() => { setEditingId(member.id); setEditRole(member.role); }}
+                                                        className="p-1.5 rounded-lg transition-colors"
+                                                        style={{ color: '#94a3b8' }}
+                                                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#eff6ff'; (e.currentTarget as HTMLButtonElement).style.color = '#2563eb'; }}
+                                                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#94a3b8'; }}>
+                                                        <Edit2 size={14} />
+                                                    </button>
+                                                )}
+                                                {member.role !== 'owner' && (
+                                                    <button onClick={() => handleRemove(member)}
+                                                        className="p-1.5 rounded-lg transition-colors"
+                                                        style={{ color: '#94a3b8' }}
+                                                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#fef2f2'; (e.currentTarget as HTMLButtonElement).style.color = '#dc2626'; }}
+                                                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#94a3b8'; }}>
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>
