@@ -52,7 +52,7 @@ const fmtCFA = (n: number) => fmt(n) + ' FCFA';
 function greet() {
   const h = new Date().getHours();
   if (h < 12) return 'Bonjour';
-  if (h < 18) return 'Bon aprÃ¨s-midi';
+  if (h < 18) return 'Bon après-midi';
   return 'Bonsoir';
 }
 
@@ -130,8 +130,8 @@ export default function DashboardPage() {
 
   const topDishes = [
     { name: 'Performance globale', pct: 85, color: '#f97316' },
-    { name: 'Commandes livrÃ©es', pct: Math.min(100, totalOrders > 0 ? Math.round((ordersToday / Math.max(totalOrders, 1)) * 100) : 72), color: '#10b981' },
-    { name: 'En prÃ©paration', pct: Math.min(100, pendingOrders > 0 ? 65 : 40), color: '#3b82f6' },
+    { name: 'Commandes livrées', pct: Math.min(100, totalOrders > 0 ? Math.round((ordersToday / Math.max(totalOrders, 1)) * 100) : 72), color: '#10b981' },
+    { name: 'En préparation', pct: Math.min(100, pendingOrders > 0 ? 65 : 40), color: '#3b82f6' },
     { name: 'Plats disponibles', pct: active ? Math.round((active.available_dishes / Math.max(active.total_dishes, 1)) * 100) : 78, color: '#7c3aed' },
     { name: 'Taux de satisfaction', pct: 92, color: '#f97316' },
   ];
@@ -144,7 +144,7 @@ export default function DashboardPage() {
             style={{ background: 'linear-gradient(135deg,#f97316,#ea580c)' }}>
             <Activity className="h-6 w-6 text-white" />
           </div>
-          <p className="text-sm font-medium" style={{ color: '#64748b' }}>Chargementâ€¦</p>
+          <p className="text-sm font-medium" style={{ color: '#64748b' }}>Chargement…</p>
         </div>
       </div>
     );
@@ -168,7 +168,7 @@ export default function DashboardPage() {
               {greet()}, {user?.name?.split(' ')[0] ?? 'Admin'} ðŸ‘‹
             </h1>
             <p className="text-sm mt-1 text-white opacity-70">
-              Livraison GRATUITE chaque weekend â€” Voici votre activitÃ© en temps rÃ©el.
+              Livraison GRATUITE chaque weekend â€” Voici votre activité en temps réel.
             </p>
           </div>
           <div className="flex items-center gap-2.5 flex-shrink-0">
@@ -206,7 +206,7 @@ export default function DashboardPage() {
         <KpiCard icon={<Clock className="h-5 w-5" />} label="En attente"
           value={pendingOrders} color="#7c3aed" bg="#faf5ff" />
         <KpiCard icon={<Store className="h-5 w-5" />}
-          label={selectedRestaurantId ? 'CatÃ©gories' : 'Restaurants'}
+          label={selectedRestaurantId ? 'Catégories' : 'Restaurants'}
           value={selectedRestaurantId ? (restaurantStats?.total_categories ?? 0) : (stats?.total_restaurants ?? 0)}
           color="#2563eb" bg="#eff6ff" />
       </div>
@@ -361,11 +361,11 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* DerniÃ¨res transactions */}
+        {/* Dernières transactions */}
         <div className="rounded-2xl p-6"
           style={{ background: 'white', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold text-base" style={{ color: '#0f172a' }}>DerniÃ¨res transactions</h2>
+            <h2 className="font-bold text-base" style={{ color: '#0f172a' }}>Dernières transactions</h2>
             <span className="text-xs font-semibold px-2 py-1 rounded-lg cursor-pointer"
               style={{ background: '#fff7ed', color: '#f97316' }}>Voir tout</span>
           </div>
@@ -482,7 +482,7 @@ export default function DashboardPage() {
                   <tr>
                     <td colSpan={5} className="px-5 py-12 text-center">
                       <ShoppingBag className="h-8 w-8 mx-auto mb-2" style={{ color: '#cbd5e1' }} />
-                      <p className="text-xs" style={{ color: '#94a3b8' }}>Aucune commande rÃ©cente</p>
+                      <p className="text-xs" style={{ color: '#94a3b8' }}>Aucune commande récente</p>
                     </td>
                   </tr>
                 )}

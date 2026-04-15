@@ -56,21 +56,21 @@ export default function LoginPage() {
           <div className="space-y-8">
             <div>
               <h1 className="text-4xl font-black leading-tight mb-4" style={{ color: 'white' }}>
-                GÃ©rez votre<br />
+                Gérez votre<br />
                 <span style={{ background: 'linear-gradient(90deg,#f97316,#fb923c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                   restaurant
                 </span>{' '}
                 avec style
               </h1>
               <p className="text-base leading-relaxed" style={{ color: '#94a3b8' }}>
-                Commandes en temps rÃ©el, gestion du menu, rapports de revenus â€” tout ce dont vous avez besoin dans un seul tableau de bord.
+                Commandes en temps réel, gestion du menu, rapports de revenus — tout ce dont vous avez besoin dans un seul tableau de bord.
               </p>
             </div>
 
             {/* Feature cards */}
             <div className="space-y-3">
               {[
-                { icon: <ShoppingBag className="h-4 w-4" />, label: 'Commandes en temps rÃ©el', color: '#f97316', bg: 'rgba(249,115,22,0.12)' },
+                { icon: <ShoppingBag className="h-4 w-4" />, label: 'Commandes en temps réel', color: '#f97316', bg: 'rgba(249,115,22,0.12)' },
                 { icon: <TrendingUp className="h-4 w-4" />, label: 'Rapports & analytics', color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
                 { icon: <Star className="h-4 w-4" />, label: 'Gestion des avis clients', color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)' },
               ].map(f => (
@@ -88,7 +88,7 @@ export default function LoginPage() {
 
           {/* Footer */}
           <p className="text-xs" style={{ color: '#475569' }}>
-            Â© 2026 Noogo â€” Tous droits rÃ©servÃ©s
+            © 2026 Noogo — Tous droits réservés
           </p>
         </div>
       </div>
@@ -107,9 +107,9 @@ export default function LoginPage() {
           </div>
 
           <div className="mb-8">
-            <h2 className="text-2xl font-bold mb-1.5" style={{ color: '#0f172a' }}>Bon retour ðŸ‘‹</h2>
+            <h2 className="text-2xl font-bold mb-1.5" style={{ color: '#0f172a' }}>Bon retour 👋</h2>
             <p className="text-sm" style={{ color: '#64748b' }}>
-              Connectez-vous Ã  votre espace de gestion
+              Connectez-vous à votre espace de gestion
             </p>
           </div>
 
@@ -117,7 +117,7 @@ export default function LoginPage() {
             {error && (
               <div className="flex items-start gap-3 px-4 py-3 rounded-xl text-sm"
                 style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}>
-                <span className="mt-0.5">âš </span>
+                <span className="mt-0.5">⚠</span>
                 <span>{error}</span>
               </div>
             )}
@@ -150,7 +150,7 @@ export default function LoginPage() {
                 <Link to="/forgot-password"
                   className="text-xs font-medium hover:underline"
                   style={{ color: '#f97316' }}>
-                  OubliÃ© ?
+                  Oublié ?
                 </Link>
               </div>
               <div className="relative">
@@ -161,7 +161,7 @@ export default function LoginPage() {
                   onChange={e => setPassword(e.target.value)}
                   required
                   autoComplete="current-password"
-                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                  placeholder="••••••••"
                   className="input-pro pl-10 pr-10"
                 />
                 <button type="button" onClick={() => setShowPw(v => !v)}
@@ -175,7 +175,7 @@ export default function LoginPage() {
             {/* Submit */}
             <button type="submit" disabled={isLoading} className="btn-primary w-full py-3 text-sm mt-1">
               {isLoading
-                ? <><Loader2 className="h-4 w-4 animate-spin" /> Connexionâ€¦</>
+                ? <><Loader2 className="h-4 w-4 animate-spin" /> Connexion…</>
                 : <> Se connecter <ArrowRight className="h-4 w-4" /></>
               }
             </button>
@@ -184,7 +184,7 @@ export default function LoginPage() {
           <p className="text-center text-sm mt-6" style={{ color: '#64748b' }}>
             Pas encore de compte ?{' '}
             <Link to="/register" className="font-semibold hover:underline" style={{ color: '#f97316' }}>
-              CrÃ©er un compte
+              Créer un compte
             </Link>
           </p>
 
@@ -192,7 +192,7 @@ export default function LoginPage() {
           <div className="mt-6 px-4 py-3 rounded-xl text-center"
             style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
             <p className="text-xs" style={{ color: '#64748b' }}>
-              <span className="font-semibold" style={{ color: '#374151' }}>DÃ©mo :</span>{' '}
+              <span className="font-semibold" style={{ color: '#374151' }}>Démo :</span>{' '}
               owner@noogo.com / password
             </p>
           </div>

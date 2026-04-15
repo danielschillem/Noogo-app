@@ -22,10 +22,10 @@ const POLL_INTERVAL = 15_000;
 /* â”€â”€ Kanban column config â”€â”€ */
 const KANBAN_COLUMNS: { status: string; label: string; color: string; bg: string; border: string; icon: React.ReactNode }[] = [
   { status: 'pending', label: 'En attente', color: '#ca8a04', bg: '#fefce8', border: '#fde68a', icon: <Clock className="h-4 w-4" /> },
-  { status: 'confirmed', label: 'ConfirmÃ©es', color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe', icon: <CheckCircle className="h-4 w-4" /> },
-  { status: 'preparing', label: 'En prÃ©paration', color: '#7c3aed', bg: '#faf5ff', border: '#ddd6fe', icon: <ChefHat className="h-4 w-4" /> },
-  { status: 'ready', label: 'PrÃªtes', color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0', icon: <Package className="h-4 w-4" /> },
-  { status: 'delivered', label: 'LivrÃ©es', color: '#0891b2', bg: '#ecfeff', border: '#a5f3fc', icon: <CheckCircle className="h-4 w-4" /> },
+  { status: 'confirmed', label: 'Confirmées', color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe', icon: <CheckCircle className="h-4 w-4" /> },
+  { status: 'preparing', label: 'En préparation', color: '#7c3aed', bg: '#faf5ff', border: '#ddd6fe', icon: <ChefHat className="h-4 w-4" /> },
+  { status: 'ready', label: 'Prêtes', color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0', icon: <Package className="h-4 w-4" /> },
+  { status: 'delivered', label: 'Livrées', color: '#0891b2', bg: '#ecfeff', border: '#a5f3fc', icon: <CheckCircle className="h-4 w-4" /> },
 ];
 
 const NEXT_STATUS: Record<string, OrderStatus> = {
@@ -79,7 +79,7 @@ export default function OrdersPage() {
     try {
       if (!silent) setIsRefreshing(true);
       const params: Record<string, unknown> = {};
-      // En vue kanban on rÃ©cupÃ¨re tout pour rÃ©partir dans les colonnes
+      // En vue kanban on récupère tout pour répartir dans les colonnes
       if (viewMode === 'list' && statusFilter !== 'all') params.status = statusFilter;
       const response = await ordersApi.getAll(parseInt(restaurantId), params);
       const fetched: Order[] = response.data.data.data || response.data.data;
@@ -127,7 +127,7 @@ export default function OrdersPage() {
 
   const handleExportCsv = () => {
     if (orders.length === 0) return;
-    const headers = ['ID', 'Date', 'Client', 'TÃ©lÃ©phone', 'Type', 'Table', 'Statut', 'Paiement', 'Total (FCFA)', 'Plats'];
+    const headers = ['ID', 'Date', 'Client', 'Téléphone', 'Type', 'Table', 'Statut', 'Paiement', 'Total (FCFA)', 'Plats'];
     const rows = orders.map(o => [
       o.id, new Date(o.order_date).toLocaleString('fr-FR'),
       o.customer_name ?? '', o.customer_phone ?? '',
@@ -187,7 +187,7 @@ export default function OrdersPage() {
             style={{ background: 'linear-gradient(135deg,#f97316,#ea580c)' }}>
             <Activity className="h-6 w-6 text-white" />
           </div>
-          <p className="text-sm font-medium" style={{ color: '#64748b' }}>Chargement des commandesâ€¦</p>
+          <p className="text-sm font-medium" style={{ color: '#64748b' }}>Chargement des commandes…</p>
         </div>
       </div>
     );
@@ -252,7 +252,7 @@ export default function OrdersPage() {
         <div className="text-center py-16 rounded-2xl" style={{ background: 'white', border: '1px solid #f1f5f9' }}>
           <Store className="h-12 w-12 mx-auto mb-3" style={{ color: '#cbd5e1' }} />
           <p className="font-medium" style={{ color: '#374151' }}>Aucun restaurant disponible</p>
-          <p className="text-sm mt-1" style={{ color: '#94a3b8' }}>CrÃ©ez d'abord un restaurant.</p>
+          <p className="text-sm mt-1" style={{ color: '#94a3b8' }}>Créez d'abord un restaurant.</p>
         </div>
       )}
 
@@ -261,9 +261,9 @@ export default function OrdersPage() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {([
             { label: 'En attente', value: pendingCounts.pending, icon: AlertCircle, ...STATUS_STYLES.pending },
-            { label: 'ConfirmÃ©es', value: pendingCounts.confirmed, icon: CheckCircle, ...STATUS_STYLES.confirmed },
-            { label: 'En prÃ©paration', value: pendingCounts.preparing, icon: ChefHat, ...STATUS_STYLES.preparing },
-            { label: 'PrÃªtes', value: pendingCounts.ready, icon: Package, ...STATUS_STYLES.ready },
+            { label: 'Confirmées', value: pendingCounts.confirmed, icon: CheckCircle, ...STATUS_STYLES.confirmed },
+            { label: 'En préparation', value: pendingCounts.preparing, icon: ChefHat, ...STATUS_STYLES.preparing },
+            { label: 'Prêtes', value: pendingCounts.ready, icon: Package, ...STATUS_STYLES.ready },
           ] as const).map(({ label, value, icon: Icon, color, bg, border }) => (
             <div key={label} className="flex items-center gap-3 px-4 py-3 rounded-xl"
               style={{ background: bg, border: `1px solid ${border}` }}>
@@ -375,8 +375,8 @@ export default function OrdersPage() {
           <div className="flex items-center gap-2 overflow-x-auto pb-1">
             {['all', 'pending', 'confirmed', 'preparing', 'ready', 'delivered', 'completed', 'cancelled'].map(s => {
               const label: Record<string, string> = {
-                all: 'Toutes', pending: 'En attente', confirmed: 'ConfirmÃ©es',
-                preparing: 'En prÃ©paration', ready: 'PrÃªtes', delivered: 'LivrÃ©es', completed: 'TerminÃ©es', cancelled: 'AnnulÃ©es'
+                all: 'Toutes', pending: 'En attente', confirmed: 'Confirmées',
+                preparing: 'En préparation', ready: 'Prêtes', delivered: 'Livrées', completed: 'Terminées', cancelled: 'Annulées'
               };
               const st = STATUS_STYLES[s];
               const active = statusFilter === s;
@@ -400,7 +400,7 @@ export default function OrdersPage() {
             <div className="text-center py-16 rounded-2xl" style={{ background: 'white', border: '1px solid #f1f5f9' }}>
               <Package className="h-12 w-12 mx-auto mb-3" style={{ color: '#cbd5e1' }} />
               <p className="font-medium" style={{ color: '#374151' }}>Aucune commande</p>
-              <p className="text-sm mt-1" style={{ color: '#94a3b8' }}>Les commandes apparaÃ®tront ici</p>
+              <p className="text-sm mt-1" style={{ color: '#94a3b8' }}>Les commandes apparaîtront ici</p>
             </div>
           )}
         </>
@@ -449,7 +449,7 @@ function KanbanCard({ order, col, isDragging, onDragStart, onDragEnd, onAdvance,
           {order.items.slice(0, 2).map((item, i) => (
             <span key={i} className="text-[10px] px-1.5 py-0.5 rounded font-medium"
               style={{ background: col.bg, color: col.color }}>
-              {item.quantity}Ã— {item.dish?.nom?.slice(0, 12) ?? 'Plat'}
+              {item.quantity}× {item.dish?.nom?.slice(0, 12) ?? 'Plat'}
             </span>
           ))}
           {order.items.length > 2 && (
@@ -466,9 +466,9 @@ function KanbanCard({ order, col, isDragging, onDragStart, onDragEnd, onAdvance,
             className="flex-1 py-1.5 rounded-lg text-[11px] font-semibold text-white transition-opacity hover:opacity-90"
             style={{ background: col.color }}>
             {NEXT_STATUS[order.status] === 'confirmed' ? 'Confirmer' :
-              NEXT_STATUS[order.status] === 'preparing' ? 'PrÃ©parer' :
-                NEXT_STATUS[order.status] === 'ready' ? 'PrÃªte' :
-                  NEXT_STATUS[order.status] === 'delivered' ? 'LivrÃ©e' : 'Avancer'}
+              NEXT_STATUS[order.status] === 'preparing' ? 'Préparer' :
+                NEXT_STATUS[order.status] === 'ready' ? 'Prête' :
+                  NEXT_STATUS[order.status] === 'delivered' ? 'Livrée' : 'Avancer'}
           </button>
         )}
         {['pending', 'confirmed'].includes(order.status) && (
@@ -511,7 +511,7 @@ function ListOrderCard({ order, onUpdateStatus }: { order: Order; onUpdateStatus
               {order.items?.slice(0, 3).map((item, i) => (
                 <span key={i} className="text-xs px-1.5 py-0.5 rounded"
                   style={{ background: '#f8fafc', color: '#374151' }}>
-                  {item.quantity}Ã— {item.dish?.nom ?? 'Plat'}
+                  {item.quantity}× {item.dish?.nom ?? 'Plat'}
                 </span>
               ))}
               {(order.items?.length ?? 0) > 3 && (
@@ -540,12 +540,12 @@ function ListOrderCard({ order, onUpdateStatus }: { order: Order; onUpdateStatus
             {order.status === 'confirmed' && (
               <button onClick={() => onUpdateStatus(order.id, 'preparing')}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white"
-                style={{ background: '#7c3aed' }}>PrÃ©parer</button>
+                style={{ background: '#7c3aed' }}>Préparer</button>
             )}
             {order.status === 'preparing' && (
               <button onClick={() => onUpdateStatus(order.id, 'ready')}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white"
-                style={{ background: '#16a34a' }}>PrÃªte</button>
+                style={{ background: '#16a34a' }}>Prête</button>
             )}
             {order.status === 'ready' && (
               <button onClick={() => onUpdateStatus(order.id, 'delivered')}
