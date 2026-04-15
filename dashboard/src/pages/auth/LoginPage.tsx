@@ -1,16 +1,16 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Mail, Lock, Loader2, ShoppingBag, TrendingUp, Star, ArrowRight } from 'lucide-react';
 
 export default function LoginPage() {
-  const [email, setEmail]       = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPw, setShowPw]     = useState(false);
-  const [error, setError]       = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login }   = useAuth();
-  const navigate    = useNavigate();
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,23 +30,23 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex" style={{ background: '#f1f5f9' }}>
 
-      {/* ── Left panel — branding (hidden on mobile) ── */}
+      {/* â”€â”€ Left panel â€” branding (hidden on mobile) â”€â”€ */}
       <div className="hidden lg:flex lg:w-[52%] relative overflow-hidden"
-           style={{ background: 'linear-gradient(145deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)' }}>
+        style={{ background: 'linear-gradient(145deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)' }}>
 
         {/* Decorative blobs */}
         <div className="absolute top-0 left-0 w-96 h-96 rounded-full opacity-20 blur-3xl"
-             style={{ background: 'radial-gradient(circle,#f97316,transparent)', transform: 'translate(-30%,-30%)' }} />
+          style={{ background: 'radial-gradient(circle,#f97316,transparent)', transform: 'translate(-30%,-30%)' }} />
         <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full opacity-15 blur-3xl"
-             style={{ background: 'radial-gradient(circle,#8b5cf6,transparent)', transform: 'translate(30%,30%)' }} />
+          style={{ background: 'radial-gradient(circle,#8b5cf6,transparent)', transform: 'translate(30%,30%)' }} />
         <div className="absolute top-1/2 left-1/2 w-64 h-64 rounded-full opacity-10 blur-2xl"
-             style={{ background: 'radial-gradient(circle,#3b82f6,transparent)', transform: 'translate(-50%,-50%)' }} />
+          style={{ background: 'radial-gradient(circle,#3b82f6,transparent)', transform: 'translate(-50%,-50%)' }} />
 
         <div className="relative flex flex-col justify-between p-12 w-full">
           {/* Logo */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                 style={{ background: 'linear-gradient(135deg,#f97316,#ea580c)' }}>
+              style={{ background: 'linear-gradient(135deg,#f97316,#ea580c)' }}>
               <span className="text-white font-black text-xl">N</span>
             </div>
             <span className="text-white font-bold text-xl">Noogo</span>
@@ -56,28 +56,28 @@ export default function LoginPage() {
           <div className="space-y-8">
             <div>
               <h1 className="text-4xl font-black leading-tight mb-4" style={{ color: 'white' }}>
-                Gérez votre<br />
+                GÃ©rez votre<br />
                 <span style={{ background: 'linear-gradient(90deg,#f97316,#fb923c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                   restaurant
                 </span>{' '}
                 avec style
               </h1>
               <p className="text-base leading-relaxed" style={{ color: '#94a3b8' }}>
-                Commandes en temps réel, gestion du menu, rapports de revenus — tout ce dont vous avez besoin dans un seul tableau de bord.
+                Commandes en temps rÃ©el, gestion du menu, rapports de revenus â€” tout ce dont vous avez besoin dans un seul tableau de bord.
               </p>
             </div>
 
             {/* Feature cards */}
             <div className="space-y-3">
               {[
-                { icon: <ShoppingBag className="h-4 w-4" />, label: 'Commandes en temps réel', color: '#f97316', bg: 'rgba(249,115,22,0.12)' },
+                { icon: <ShoppingBag className="h-4 w-4" />, label: 'Commandes en temps rÃ©el', color: '#f97316', bg: 'rgba(249,115,22,0.12)' },
                 { icon: <TrendingUp className="h-4 w-4" />, label: 'Rapports & analytics', color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
                 { icon: <Star className="h-4 w-4" />, label: 'Gestion des avis clients', color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)' },
               ].map(f => (
                 <div key={f.label} className="flex items-center gap-3 px-4 py-3 rounded-xl"
-                     style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                       style={{ background: f.bg, color: f.color }}>
+                    style={{ background: f.bg, color: f.color }}>
                     {f.icon}
                   </div>
                   <span className="text-sm font-medium" style={{ color: '#e2e8f0' }}>{f.label}</span>
@@ -88,36 +88,36 @@ export default function LoginPage() {
 
           {/* Footer */}
           <p className="text-xs" style={{ color: '#475569' }}>
-            © 2026 Noogo — Tous droits réservés
+            Â© 2026 Noogo â€” Tous droits rÃ©servÃ©s
           </p>
         </div>
       </div>
 
-      {/* ── Right panel — form ── */}
+      {/* â”€â”€ Right panel â€” form â”€â”€ */}
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-sm animate-fadeIn">
 
           {/* Mobile logo */}
           <div className="flex items-center gap-2.5 mb-8 lg:hidden">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-                 style={{ background: 'linear-gradient(135deg,#f97316,#ea580c)' }}>
+              style={{ background: 'linear-gradient(135deg,#f97316,#ea580c)' }}>
               <span className="text-white font-black text-lg">N</span>
             </div>
             <span className="font-bold text-xl" style={{ color: '#0f172a' }}>Noogo</span>
           </div>
 
           <div className="mb-8">
-            <h2 className="text-2xl font-bold mb-1.5" style={{ color: '#0f172a' }}>Bon retour 👋</h2>
+            <h2 className="text-2xl font-bold mb-1.5" style={{ color: '#0f172a' }}>Bon retour ðŸ‘‹</h2>
             <p className="text-sm" style={{ color: '#64748b' }}>
-              Connectez-vous à votre espace de gestion
+              Connectez-vous Ã  votre espace de gestion
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
               <div className="flex items-start gap-3 px-4 py-3 rounded-xl text-sm"
-                   style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}>
-                <span className="mt-0.5">⚠</span>
+                style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}>
+                <span className="mt-0.5">âš </span>
                 <span>{error}</span>
               </div>
             )}
@@ -150,7 +150,7 @@ export default function LoginPage() {
                 <Link to="/forgot-password"
                   className="text-xs font-medium hover:underline"
                   style={{ color: '#f97316' }}>
-                  Oublié ?
+                  OubliÃ© ?
                 </Link>
               </div>
               <div className="relative">
@@ -161,7 +161,7 @@ export default function LoginPage() {
                   onChange={e => setPassword(e.target.value)}
                   required
                   autoComplete="current-password"
-                  placeholder="••••••••"
+                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                   className="input-pro pl-10 pr-10"
                 />
                 <button type="button" onClick={() => setShowPw(v => !v)}
@@ -175,7 +175,7 @@ export default function LoginPage() {
             {/* Submit */}
             <button type="submit" disabled={isLoading} className="btn-primary w-full py-3 text-sm mt-1">
               {isLoading
-                ? <><Loader2 className="h-4 w-4 animate-spin" /> Connexion…</>
+                ? <><Loader2 className="h-4 w-4 animate-spin" /> Connexionâ€¦</>
                 : <> Se connecter <ArrowRight className="h-4 w-4" /></>
               }
             </button>
@@ -184,15 +184,15 @@ export default function LoginPage() {
           <p className="text-center text-sm mt-6" style={{ color: '#64748b' }}>
             Pas encore de compte ?{' '}
             <Link to="/register" className="font-semibold hover:underline" style={{ color: '#f97316' }}>
-              Créer un compte
+              CrÃ©er un compte
             </Link>
           </p>
 
           {/* Demo hint */}
           <div className="mt-6 px-4 py-3 rounded-xl text-center"
-               style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+            style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
             <p className="text-xs" style={{ color: '#64748b' }}>
-              <span className="font-semibold" style={{ color: '#374151' }}>Démo :</span>{' '}
+              <span className="font-semibold" style={{ color: '#374151' }}>DÃ©mo :</span>{' '}
               owner@noogo.com / password
             </p>
           </div>
@@ -202,124 +202,3 @@ export default function LoginPage() {
   );
 }
 
-
-export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
-  const navigate = useNavigate();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
-
-    try {
-      await login(email, password);
-      navigate('/');
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Identifiants invalides');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100 px-4">
-      <div className="max-w-md w-full">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-500 rounded-2xl mb-4">
-            <span className="text-white font-bold text-3xl">N</span>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">Noogo Dashboard</h1>
-          <p className="text-gray-600 mt-2">Connectez-vous pour gérer vos restaurants</p>
-        </div>
-
-        {/* Form */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
-
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                  placeholder="votre@email.com"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Mot de passe
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                  placeholder="••••••••"
-                />
-              </div>
-              <div className="flex justify-end mt-1">
-                <Link to="/forgot-password" className="text-sm text-orange-500 hover:text-orange-600">
-                  Mot de passe oublié ?
-                </Link>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-orange-500 text-white py-3 rounded-lg font-medium hover:bg-orange-600 focus:ring-4 focus:ring-orange-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  Connexion...
-                </>
-              ) : (
-                'Se connecter'
-              )}
-            </button>
-          </form>
-
-          <p className="text-center text-sm text-gray-600 mt-6">
-            Pas encore de compte ?{' '}
-            <Link to="/register" className="text-orange-500 hover:text-orange-600 font-medium">
-              Créer un compte
-            </Link>
-          </p>
-        </div>
-
-        {/* Demo credentials */}
-        <div className="mt-6 p-4 bg-white/60 backdrop-blur rounded-lg text-center">
-          <p className="text-sm text-gray-600">
-            <span className="font-medium">Demo:</span> owner@noogo.com / password
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}

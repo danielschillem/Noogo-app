@@ -5,8 +5,7 @@ import {
 } from 'lucide-react';
 import { staffApi } from '../../services/api';
 import type { StaffMember, StaffRole } from '../../types';
-import { STAFF_ROLE_LABELS, STAFF_ROLE_COLORS } from '../../types';
-import { useAuth } from '../../context/AuthContext';
+import { STAFF_ROLE_LABELS } from '../../types';
 
 const ROLE_ICONS: Record<StaffRole, React.ReactNode> = {
     owner: <ShieldCheck size={14} />,
@@ -35,7 +34,6 @@ const EMPTY_FORM: StaffForm = { name: '', email: '', phone: '', role: 'waiter', 
 
 export default function StaffPage() {
     const { id: restaurantId } = useParams<{ id: string }>();
-    const { user } = useAuth();
     const [staff, setStaff] = useState<StaffMember[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);

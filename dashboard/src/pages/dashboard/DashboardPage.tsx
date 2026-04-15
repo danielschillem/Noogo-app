@@ -249,7 +249,7 @@ export default function DashboardPage() {
                 <Tooltip
                   contentStyle={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.1)', fontSize: 12 }}
                   cursor={{ stroke: '#f97316', strokeWidth: 1, strokeDasharray: '4 4' }}
-                  formatter={(v: number) => [chartTab === 'revenue' ? fmtCFA(v) : v, chartTab === 'orders' ? 'Commandes' : 'Revenus']}
+                  formatter={(v) => [chartTab === 'revenue' ? fmtCFA(Number(v)) : v, chartTab === 'orders' ? 'Commandes' : 'Revenus']}
                 />
                 <Area type="monotone" dataKey={chartTab} stroke="#f97316" strokeWidth={2.5}
                   fill="url(#areaGrad)"
@@ -347,8 +347,8 @@ export default function DashboardPage() {
                 <Tooltip
                   contentStyle={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.1)', fontSize: 12 }}
                   cursor={{ fill: '#f8fafc' }}
-                  formatter={(v: number, name: string) => [
-                    name === 'revenue' ? fmtCFA(v) : v,
+                  formatter={(v, name) => [
+                    name === 'revenue' ? fmtCFA(Number(v)) : v,
                     name === 'revenue' ? 'Revenus' : 'Commandes',
                   ]}
                 />
@@ -381,7 +381,7 @@ export default function DashboardPage() {
                     {order.customer_name ?? `Commande #${order.id}`}
                   </p>
                   <p className="text-xs" style={{ color: '#94a3b8' }}>
-                    {new Date(order.created_at ?? Date.now()).toLocaleDateString('fr-FR')}
+                    {new Date(order.order_date ?? Date.now()).toLocaleDateString('fr-FR')}
                   </p>
                 </div>
                 <p className="text-sm font-bold shrink-0" style={{ color: '#0f172a' }}>
@@ -472,8 +472,8 @@ export default function DashboardPage() {
                     </td>
                     <td className="px-5 py-3.5">
                       <p className="text-xs" style={{ color: '#94a3b8' }}>
-                        {order.created_at
-                          ? new Date(order.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' })
+                        {order.order_date
+                          ? new Date(order.order_date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' })
                           : 'â€”'}
                       </p>
                     </td>
