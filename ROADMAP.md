@@ -601,7 +601,7 @@ ENVIRONMENT=development
 | BL-007 | Flutter : onboarding première utilisation | 🟢 Basse | M |
 | BL-008 | Backend : rate limiting par IP sur `storeMobile` | 🟠 Haute | S |
 | BL-009 | Paiement CinetPay en production (clés réelles) | 🔴 Critique | S |
-| BL-010 | Dashboard : notifications push temps réel (WebSocket) | 🟡 Moyenne | L |
+| BL-010 | Dashboard : notifications push temps réel (WebSocket) | ✅ Terminé | L |
 
 ---
 
