@@ -55,7 +55,23 @@ services:
       - key: CACHE_STORE
         value: file
       - key: FILESYSTEM_DISK
-        value: public
+        value: r2            # ← passer à 'r2' une fois les credentials R2 renseignés
+
+      # ── Cloudflare R2 (stockage persistant des images) ───
+      # 1. Créez un bucket R2 sur dash.cloudflare.com → R2
+      # 2. Créez un token API R2 (Read & Write) → copiez Access Key ID + Secret
+      # 3. Activez l'accès public du bucket (ou configurez un domaine custom)
+      # 4. Renseignez ces valeurs dans Render Dashboard > Environment
+      - key: CLOUDFLARE_R2_ACCESS_KEY_ID
+        sync: false           # ← Access Key ID du token R2
+      - key: CLOUDFLARE_R2_SECRET_ACCESS_KEY
+        sync: false           # ← Secret Access Key du token R2
+      - key: CLOUDFLARE_R2_BUCKET
+        value: noogo-media    # ← nom de votre bucket R2
+      - key: CLOUDFLARE_R2_ENDPOINT
+        sync: false           # ← https://<account-id>.r2.cloudflarestorage.com
+      - key: CLOUDFLARE_R2_PUBLIC_URL
+        sync: false           # ← https://pub-<hash>.r2.dev  OU votre domaine custom
 
       # ── Logs ─────────────────────────────────────────────
       - key: LOG_CHANNEL

@@ -9,7 +9,8 @@ FROM serversideup/php:8.4-fpm-nginx
 USER root
 
 # ── Extensions supplémentaires (pgsql, redis optionnel) ──────
-RUN install-php-extensions pdo_pgsql pdo_mysql
+# fileinfo is needed by Flysystem S3 (Cloudflare R2) for MIME detection
+RUN install-php-extensions pdo_pgsql pdo_mysql fileinfo
 
 # ── Composer ─────────────────────────────────────────────────
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer

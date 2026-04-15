@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\UsesStorageDisk;
 use App\Models\Restaurant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,6 +14,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class RestaurantController extends Controller
 {
+    use UsesStorageDisk;
     /**
      * Display a listing of restaurants
      */
@@ -83,14 +85,14 @@ class RestaurantController extends Controller
 
         // Handle logo upload
         if ($request->hasFile('logo')) {
-            $data['logo'] = $request->file('logo')->store('restaurants/logos', 'public');
+            $data['logo'] = $request->file('logo')->store('restaurants/logos', $this->disk());
         }
 
         // Handle images upload
         if ($request->hasFile('images')) {
             $images = [];
             foreach ($request->file('images') as $image) {
-                $images[] = $image->store('restaurants/images', 'public');
+                $images[] = $image->store('restaurants/images', $this->disk());
             }
             $data['images'] = $images;
         }
@@ -167,9 +169,9 @@ class RestaurantController extends Controller
         if ($request->hasFile('logo')) {
             // Delete old logo
             if ($restaurant->logo) {
-                Storage::disk('public')->delete($restaurant->logo);
+                Storage::disk($this->disk())->delete($restaurant->logo);
             }
-            $data['logo'] = $request->file('logo')->store('restaurants/logos', 'public');
+            $data['logo'] = $request->file('logo')->store('restaurants/logos', $this->disk());
         }
 
         // Handle image gallery (append new + delete specified)
@@ -180,7 +182,7 @@ class RestaurantController extends Controller
         if ($request->has('delete_images') && is_array($request->delete_images)) {
             foreach ($request->delete_images as $path) {
                 if (in_array($path, $currentImages, true)) {
-                    Storage::disk('public')->delete($path);
+                    Storage::disk($this->disk())->delete($path);
                     $currentImages = array_values(array_filter($currentImages, fn($img) => $img !== $path));
                     $imagesModified = true;
                 }
@@ -190,7 +192,7 @@ class RestaurantController extends Controller
         // Append new images (do not replace existing)
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
-                $currentImages[] = $image->store('restaurants/images', 'public');
+                $currentImages[] = $image->store('restaurants/images', $this->disk());
             }
             $imagesModified = true;
         }
@@ -275,7 +277,7 @@ class RestaurantController extends Controller
 
         // Generate QR code (using simple SVG generation)
         $qrCode = $this->generateSimpleQrSvg($qrContent);
-        Storage::disk('public')->put($filename, $qrCode);
+        Storage::disk($this->disk())->put($filename, $qrCode);
 
         $restaurant->update(['qr_code' => $filename]);
 
@@ -284,7 +286,7 @@ class RestaurantController extends Controller
                 'success' => true,
                 'message' => 'QR Code généré avec succès',
                 'data' => [
-                    'qr_code_url' => Storage::url($filename)
+                    'qr_code_url' => Storage::disk($this->disk())->url($filename)
                 ]
             ]);
         }

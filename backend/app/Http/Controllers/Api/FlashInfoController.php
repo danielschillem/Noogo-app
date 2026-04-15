@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\UsesStorageDisk;
 use App\Models\FlashInfo;
 use App\Models\Restaurant;
 use Illuminate\Http\JsonResponse;
@@ -12,6 +13,8 @@ use Illuminate\Support\Facades\Validator;
 
 class FlashInfoController extends Controller
 {
+    use UsesStorageDisk;
+
     /**
      * Display flash infos for a restaurant
      */
@@ -89,7 +92,7 @@ class FlashInfoController extends Controller
 
         // Handle image upload
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('flash_infos', 'public');
+            $data['image'] = $request->file('image')->store('flash_infos', $this->disk());
         }
 
         $flashInfo = FlashInfo::create($data);
@@ -145,9 +148,9 @@ class FlashInfoController extends Controller
         if ($request->hasFile('image')) {
             // Delete old image
             if ($flashInfo->image) {
-                Storage::disk('public')->delete($flashInfo->image);
+                Storage::disk($this->disk())->delete($flashInfo->image);
             }
-            $data['image'] = $request->file('image')->store('flash_infos', 'public');
+            $data['image'] = $request->file('image')->store('flash_infos', $this->disk());
         }
 
         $flashInfo->update($data);
@@ -168,7 +171,7 @@ class FlashInfoController extends Controller
 
         // Delete image
         if ($flashInfo->image) {
-            Storage::disk('public')->delete($flashInfo->image);
+            Storage::disk($this->disk())->delete($flashInfo->image);
         }
 
         $flashInfo->delete();

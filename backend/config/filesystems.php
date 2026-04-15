@@ -60,6 +60,23 @@ return [
             'report' => false,
         ],
 
+        // ── Cloudflare R2 (S3-compatible) ─────────────────────────────────
+        // R2 is S3-compatible — uses the same driver with path-style endpoint.
+        // Endpoint format: https://<account-id>.r2.cloudflarestorage.com
+        // Public URL format: https://pub-<hash>.r2.dev  OR  custom domain
+        'r2' => [
+            'driver' => 's3',
+            'key' => env('CLOUDFLARE_R2_ACCESS_KEY_ID'),
+            'secret' => env('CLOUDFLARE_R2_SECRET_ACCESS_KEY'),
+            'region' => 'auto',
+            'bucket' => env('CLOUDFLARE_R2_BUCKET', 'noogo-media'),
+            'endpoint' => env('CLOUDFLARE_R2_ENDPOINT'), // https://<account>.r2.cloudflarestorage.com
+            'url' => env('CLOUDFLARE_R2_PUBLIC_URL'),    // Public CDN URL (r2.dev or custom domain)
+            'use_path_style_endpoint' => true,
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*

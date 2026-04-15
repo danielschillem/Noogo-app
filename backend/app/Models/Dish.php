@@ -62,7 +62,10 @@ class Dish extends Model
             return $firstImage;
         }
 
-        return Storage::url($firstImage);
+        // Use R2 when configured, otherwise fall back to public disk
+        $disk = config('filesystems.disks.r2.endpoint') ? 'r2' : 'public';
+
+        return Storage::disk($disk)->url($firstImage);
     }
 
     public function getFormattedPriceAttribute(): string

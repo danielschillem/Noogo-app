@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\UsesStorageDisk;
 use App\Models\Category;
 use App\Models\Restaurant;
 use Illuminate\Http\JsonResponse;
@@ -12,6 +13,8 @@ use Illuminate\Support\Facades\Validator;
 
 class CategoryController extends Controller
 {
+    use UsesStorageDisk;
+
     /**
      * Display categories for a restaurant
      */
@@ -63,10 +66,8 @@ class CategoryController extends Controller
 
         // Handle image upload
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('categories', 'public');
+            $data['image'] = $request->file('image')->store('categories', $this->disk());
         }
-
-        $category = Category::create($data);
 
         return response()->json([
             'success' => true,
@@ -122,9 +123,9 @@ class CategoryController extends Controller
         if ($request->hasFile('image')) {
             // Delete old image
             if ($category->image) {
-                Storage::disk('public')->delete($category->image);
+                Storage::disk($this->disk())->delete($category->image);
             }
-            $data['image'] = $request->file('image')->store('categories', 'public');
+            $data['image'] = $request->file('image')->store('categories', $this->disk());
         }
 
         $category->update($data);
@@ -153,7 +154,7 @@ class CategoryController extends Controller
 
         // Delete image
         if ($category->image) {
-            Storage::disk('public')->delete($category->image);
+            Storage::disk($this->disk())->delete($category->image);
         }
 
         $category->delete();

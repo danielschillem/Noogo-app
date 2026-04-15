@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\UsesStorageDisk;
 use App\Models\Dish;
 use App\Models\Restaurant;
 use App\Models\Category;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\Validator;
 
 class DishController extends Controller
 {
+    use UsesStorageDisk;
     /**
      * Display dishes for a restaurant
      */
@@ -100,12 +102,10 @@ class DishController extends Controller
         if ($request->hasFile('images')) {
             $images = [];
             foreach ($request->file('images') as $image) {
-                $images[] = $image->store('dishes', 'public');
+                $images[] = $image->store('dishes', $this->disk());
             }
             $data['images'] = $images;
         }
-
-        $dish = Dish::create($data);
 
         return response()->json([
             'success' => true,
@@ -173,12 +173,12 @@ class DishController extends Controller
             // Delete old images
             if ($dish->images) {
                 foreach ($dish->images as $oldImage) {
-                    Storage::disk('public')->delete($oldImage);
+                    Storage::disk($this->disk())->delete($oldImage);
                 }
             }
             $images = [];
             foreach ($request->file('images') as $image) {
-                $images[] = $image->store('dishes', 'public');
+                $images[] = $image->store('dishes', $this->disk());
             }
             $data['images'] = $images;
         }
@@ -202,7 +202,7 @@ class DishController extends Controller
         // Delete images
         if ($dish->images) {
             foreach ($dish->images as $image) {
-                Storage::disk('public')->delete($image);
+                Storage::disk($this->disk())->delete($image);
             }
         }
 

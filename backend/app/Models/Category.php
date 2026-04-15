@@ -50,7 +50,9 @@ class Category extends Model
             return $this->image;
         }
 
-        return Storage::url($this->image);
+        $disk = config('filesystems.disks.r2.endpoint') ? 'r2' : 'public';
+
+        return Storage::disk($disk)->url($this->image);
     }
 
     // Scopes
