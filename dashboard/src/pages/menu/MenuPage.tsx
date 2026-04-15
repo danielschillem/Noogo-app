@@ -50,7 +50,7 @@ function CategoryModal({ restaurantId, category, onClose, onSaved }: { restauran
             const fd = new FormData();
             fd.append('nom', nom.trim());
             if (description) fd.append('description', description);
-            if (image) fd.append('image', image);
+            if (image) fd.append('image', image); // categories use singular 'image'
             category ? await categoriesApi.update(restaurantId, category.id, fd) : await categoriesApi.create(restaurantId, fd);
             onSaved(); onClose();
         } catch { setError('Erreur lors de la sauvegarde'); }
@@ -105,7 +105,7 @@ function DishModal({ restaurantId, categories, dish, defaultCategoryId, onClose,
             fd.append('nom', nom.trim()); fd.append('prix', prix);
             fd.append('category_id', categoryId.toString()); fd.append('temps_preparation', tempsPrep || '15');
             if (description) fd.append('description', description);
-            if (image) fd.append('image', image);
+            if (image) fd.append('images[]', image); // backend expects images[] array
             dish ? await dishesApi.update(restaurantId, dish.id, fd) : await dishesApi.create(restaurantId, fd);
             onSaved(); onClose();
         } catch { setError('Erreur lors de la sauvegarde'); }
