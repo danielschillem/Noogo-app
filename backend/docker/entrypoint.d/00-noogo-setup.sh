@@ -6,8 +6,24 @@
 # Génère un APP_KEY valide si absent ou mal formaté
 if [ -z "$APP_KEY" ] || ! echo "$APP_KEY" | grep -q "^base64:"; then
     echo "⚠️  APP_KEY absent ou format invalide — génération automatique..."
-    export APP_KEY=$(php -r "echo 'base64:' . base64_encode(random_bytes(32));")
+    APP_KEY=$(php -r "echo 'base64:' . base64_encode(random_bytes(32));")
     echo "⚠️  APP_KEY généré (éphémère — définissez APP_KEY dans Railway Variables)"
+fi
+
+export APP_KEY
+
+# Écrire APP_KEY dans .env pour que config:cache le lise (AUTORUN)
+ENV_FILE="/var/www/html/.env"
+if [ -f "$ENV_FILE" ]; then
+    sed -i '/^APP_KEY=/d' "$ENV_FILE"
+else
+    touch "$ENV_FILE"
+fi
+echo "APP_KEY=$APP_KEY" >> "$ENV_FILE"
+
+# Propager dans l'environnement s6 pour tous les services
+if [ -d "/run/s6/container_environment" ]; then
+    printf '%s' "$APP_KEY" > /run/s6/container_environment/APP_KEY
 fi
 
 # ── PORT → NGINX_HTTP_PORT ───────────────────────────────────
