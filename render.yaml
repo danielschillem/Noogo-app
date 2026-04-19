@@ -23,7 +23,7 @@ services:
     # Le tag 'develop' est mis à jour à chaque push via GitHub Actions.
     # Remplacer <DOCKERHUB_USERNAME> par votre username Docker Hub (ex: danielschillem)
     image:
-      url: docker.io/danielschillem/noogo-backend:develop
+      url: docker.io/schillem7/noogo-backend:develop
     plan: free               # Passer à "starter" pour 0 cold-start
     region: frankfurt
     healthCheckPath: /up     # Laravel health endpoint
