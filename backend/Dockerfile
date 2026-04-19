@@ -34,9 +34,10 @@ RUN mkdir -p storage/logs storage/framework/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# ── Configuration Nginx principale ──────────────────────────
-# On fournit notre propre nginx.conf (serversideup ne l'inclut pas toujours)
-COPY nginx.conf /etc/nginx/nginx.conf
+# ── Configuration Nginx ─────────────────────────────────────
+# serversideup génère nginx.conf depuis nginx.conf.template au démarrage
+# On fixe le port HTTP explicitement (Railway EXPOSE 8080)
+ENV NGINX_HTTP_PORT=8080
 
 # ── Script de démarrage ──────────────────────────────────────
 COPY start.sh /start-noogo.sh
