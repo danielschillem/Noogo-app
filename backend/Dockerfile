@@ -39,7 +39,6 @@ ENV PHP_OPCACHE_ENABLE=1
 # -- AUTORUN serversideup --------------------------------------
 # Nginx + PHP-FPM demarrent EN PREMIER via s6-overlay,
 # puis les autorun s executent en arriere-plan.
-# Cela garantit que Railway peut faire son healthcheck des le demarrage.
 ENV AUTORUN_ENABLED=true \
     AUTORUN_LARAVEL_MIGRATION=true \
     AUTORUN_LARAVEL_CONFIG_CACHE=true \
@@ -52,9 +51,8 @@ ENV AUTORUN_ENABLED=true \
 # L entrypoint.d mappe PORT -> NGINX_HTTP_PORT avant que s6 genere nginx.conf.
 ENV NGINX_HTTP_PORT=10000
 
-# -- Entrypoint personnalise : APP_KEY + PORT -> NGINX_HTTP_PORT --
+# -- Entrypoint personnalise : APP_KEY + .env + PORT -> NGINX_HTTP_PORT --
 COPY docker/entrypoint.d/00-noogo-setup.sh /etc/entrypoint.d/00-noogo-setup.sh
-COPY docker/entrypoint.d/99-noogo-seed.sh /etc/entrypoint.d/99-noogo-seed.sh
-RUN chmod +x /etc/entrypoint.d/00-noogo-setup.sh /etc/entrypoint.d/99-noogo-seed.sh
+RUN chmod +x /etc/entrypoint.d/00-noogo-setup.sh
 
 EXPOSE 10000
