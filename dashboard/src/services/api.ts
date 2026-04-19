@@ -4,6 +4,7 @@ const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const api = axios.create({
   baseURL: API_URL,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -53,6 +54,7 @@ export const authApi = {
 // Dashboard API
 export const dashboardApi = {
   getStats: () => api.get('/dashboard'),
+  getPendingCount: () => api.get('/dashboard/pending-count'),
   getRecentOrders: (limit = 10) => api.get(`/dashboard/recent-orders?limit=${limit}`),
   getOrdersChart: (days = 7) => api.get(`/dashboard/orders-chart?days=${days}`),
   getRevenueChart: (months = 6) => api.get(`/dashboard/revenue-chart?months=${months}`),
@@ -171,6 +173,26 @@ export const staffApi = {
 // My restaurants (pour les non-admins)
 export const myRestaurantsApi = {
   get: () => api.get('/auth/my-restaurants'),
+};
+
+// Admin API (super admin only)
+export const adminApi = {
+  getStats: () => api.get('/admin/stats'),
+
+  // Users
+  listUsers: (params?: { search?: string; page?: number; per_page?: number; is_admin?: boolean }) =>
+    api.get('/admin/users', { params }),
+  createUser: (data: { name: string; email: string; phone?: string; password: string; is_admin?: boolean }) =>
+    api.post('/admin/users', data),
+  updateUser: (id: number, data: { name?: string; email?: string; phone?: string; is_admin?: boolean; password?: string }) =>
+    api.put(`/admin/users/${id}`, data),
+  deleteUser: (id: number) => api.delete(`/admin/users/${id}`),
+  toggleAdmin: (id: number) => api.post(`/admin/users/${id}/toggle-admin`),
+
+  // Restaurants
+  listRestaurants: (params?: { search?: string; page?: number; per_page?: number; is_active?: boolean }) =>
+    api.get('/admin/restaurants', { params }),
+  toggleRestaurantActive: (id: number) => api.post(`/admin/restaurants/${id}/toggle-active`),
 };
 
 export default api;

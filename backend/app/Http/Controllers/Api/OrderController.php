@@ -288,16 +288,20 @@ class OrderController extends Controller
      */
     public function pendingCount(Restaurant $restaurant): JsonResponse
     {
-        $counts = [
-            'pending' => $restaurant->orders()->where('status', 'pending')->count(),
-            'confirmed' => $restaurant->orders()->where('status', 'confirmed')->count(),
-            'preparing' => $restaurant->orders()->where('status', 'preparing')->count(),
-            'ready' => $restaurant->orders()->where('status', 'ready')->count(),
-        ];
+        $counts = $restaurant->orders()
+            ->whereIn('status', ['pending', 'confirmed', 'preparing', 'ready'])
+            ->selectRaw("status, COUNT(*) as total")
+            ->groupBy('status')
+            ->pluck('total', 'status');
 
         return response()->json([
             'success' => true,
-            'data' => $counts
+            'data' => [
+                'pending' => $counts['pending'] ?? 0,
+                'confirmed' => $counts['confirmed'] ?? 0,
+                'preparing' => $counts['preparing'] ?? 0,
+                'ready' => $counts['ready'] ?? 0,
+            ]
         ]);
     }
 

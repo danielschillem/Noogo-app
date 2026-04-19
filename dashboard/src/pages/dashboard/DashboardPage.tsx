@@ -16,6 +16,7 @@ import {
 import { dashboardApi, restaurantsApi } from '../../services/api';
 import type { DashboardStats, Order, Restaurant } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import { useRestaurants } from '../../hooks/useQueries';
 import {
   BarChart,
   Bar,
@@ -65,7 +66,7 @@ const TODAY_LABEL = new Date().toLocaleDateString('fr-FR', {
 export default function DashboardPage() {
   const { user } = useAuth();
 
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const { data: restaurants = [] } = useRestaurants();
   const [selectedRestaurantId, setSelectedRestaurantId] = useState<number | null>(null);
   const [restaurantStats, setRestaurantStats] = useState<RestaurantStats | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -77,13 +78,6 @@ export default function DashboardPage() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [chartTab, setChartTab] = useState<'orders' | 'revenue'>('orders');
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    restaurantsApi.getAll().then(res => {
-      const list: Restaurant[] = res.data.data?.data ?? res.data.data ?? [];
-      setRestaurants(list);
-    }).catch(console.error);
-  }, []);
 
   useEffect(() => {
     if (!selectedRestaurantId) { setRestaurantStats(null); return; }

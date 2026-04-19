@@ -12,10 +12,12 @@ import {
   ChevronRight,
   User,
   Users,
+  ShieldCheck,
 } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { dashboardApi, myRestaurantsApi } from '../../services/api';
+import { myRestaurantsApi } from '../../services/api';
+import { usePendingCount } from '../../hooks/useQueries';
 import type { MyRestaurant } from '../../types';
 
 const ADMIN_NAV = [
@@ -24,6 +26,7 @@ const ADMIN_NAV = [
   { name: 'Commandes', href: '/orders', icon: ShoppingBag },
   { name: 'Menu', href: '/menu', icon: UtensilsCrossed },
   { name: 'Promotions', href: '/promotions', icon: Tag },
+  { name: 'Administration', href: '/admin', icon: ShieldCheck },
 ];
 
 export default function Sidebar() {
@@ -32,10 +35,9 @@ export default function Sidebar() {
   const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [pendingCount, setPendingCount] = useState(0);
+  const { data: pendingCount = 0 } = usePendingCount();
   const [myRestaurants, setMyRestaurants] = useState<MyRestaurant[]>([]);
   const [showAll, setShowAll] = useState(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const uniqueRestaurants = useMemo(() => {
     const seen = new Map<number, MyRestaurant>();
@@ -59,16 +61,6 @@ export default function Sidebar() {
       { name: 'Menu', href: '/menu', icon: UtensilsCrossed },
       { name: 'Promotions', href: '/promotions', icon: Tag },
     ];
-
-  useEffect(() => {
-    const fetch = () =>
-      dashboardApi.getStats()
-        .then(r => setPendingCount(r.data?.data?.today?.pending_orders ?? 0))
-        .catch(() => { });
-    fetch();
-    intervalRef.current = setInterval(fetch, 30_000);
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, []);
 
   const handleLogout = async () => { await logout(); navigate('/login'); };
 

@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\StaffController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\DeviceTokenController;
+use App\Http\Controllers\Api\AdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -86,6 +87,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Dashboard — limité à 120 requêtes/minute (protection contre scraping / boucles)
     Route::middleware('throttle:120,1')->prefix('dashboard')->group(function () {
         Route::get('/', [DashboardController::class, 'index']);
+        Route::get('/pending-count', [DashboardController::class, 'pendingCount']);
         Route::get('/recent-orders', [DashboardController::class, 'recentOrders']);
         Route::get('/orders-chart', [DashboardController::class, 'ordersChart']);
         Route::get('/revenue-chart', [DashboardController::class, 'revenueChart']);
@@ -139,4 +141,22 @@ Route::get('/health', function () {
         'version' => '1.0.0',
         'timestamp' => now()->toISOString()
     ]);
+});
+
+// ============================================================================
+// SUPER ADMIN ROUTES
+// ============================================================================
+Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
+    Route::get('/stats', [AdminController::class, 'stats']);
+
+    // Users
+    Route::get('/users', [AdminController::class, 'listUsers']);
+    Route::post('/users', [AdminController::class, 'createUser']);
+    Route::put('/users/{user}', [AdminController::class, 'updateUser']);
+    Route::delete('/users/{user}', [AdminController::class, 'deleteUser']);
+    Route::post('/users/{user}/toggle-admin', [AdminController::class, 'toggleAdmin']);
+
+    // Restaurants
+    Route::get('/restaurants', [AdminController::class, 'listRestaurants']);
+    Route::post('/restaurants/{restaurant}/toggle-active', [AdminController::class, 'toggleRestaurantActive']);
 });
