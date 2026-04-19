@@ -1,0 +1,34 @@
+# Fichiers de dev à exclure du build Docker
+.git
+.gitignore
+.env
+.env.*
+*.md
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Tests
+tests/
+phpunit.xml
+.phpunit.result.cache
+
+# Logs et cache locaux
+storage/logs/*.log
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+bootstrap/cache/*.php
+
+# Build artifacts
+public/hot
+public/storage
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
