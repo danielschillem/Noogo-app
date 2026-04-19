@@ -33,6 +33,9 @@ RUN mkdir -p storage/logs storage/framework/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
+# -- OPcache (PRODUCTION) --------------------------------------
+ENV PHP_OPCACHE_ENABLE=1
+
 # -- AUTORUN serversideup --------------------------------------
 # Nginx + PHP-FPM demarrent EN PREMIER via s6-overlay,
 # puis les autorun s executent en arriere-plan.
