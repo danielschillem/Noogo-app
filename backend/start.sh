@@ -17,6 +17,9 @@ fi
 echo "▶ Migrations..."
 php artisan migrate --force
 
+echo "▶ Seeding admin users..."
+php artisan db:seed --class=AdminUsersSeeder --force
+
 echo "▶ Caches Laravel..."
 php artisan config:cache
 php artisan route:cache
