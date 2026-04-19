@@ -12,6 +12,8 @@ import {
   LayoutGrid,
   List,
   Activity,
+  X,
+  Timer,
 } from 'lucide-react';
 import { ordersApi, restaurantsApi } from '../../services/api';
 import { usePusher } from '../../hooks/usePusher';
@@ -45,6 +47,127 @@ const STATUS_STYLES: Record<string, { color: string; bg: string; border: string 
   cancelled: { color: '#dc2626', bg: '#fef2f2', border: '#fecaca' },
 };
 
+function elapsedTime(dateStr: string): string {
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (diff < 60) return `${diff}s`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}min`;
+  return `${Math.floor(diff / 3600)}h${String(Math.floor((diff % 3600) / 60)).padStart(2, '0')}min`;
+}
+
+function OrderDetailPanel({ order, onClose, onUpdateStatus }: {
+  order: Order;
+  onClose: () => void;
+  onUpdateStatus: (id: number, s: OrderStatus) => void;
+}) {
+  const st = STATUS_STYLES[order.status] ?? STATUS_STYLES.completed;
+  const nextStatus = NEXT_STATUS[order.status];
+  return (
+    <>
+      <div className="fixed inset-0 z-40" style={{ background: 'rgba(15,23,42,0.3)' }} onClick={onClose} />
+      <div className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-md flex flex-col animate-slideIn"
+        style={{ background: 'white', boxShadow: '-4px 0 30px rgba(0,0,0,0.12)' }}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 flex-shrink-0" style={{ borderBottom: '1px solid #f1f5f9' }}>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm"
+              style={{ background: st.bg, color: st.color, border: `1px solid ${st.border}` }}>
+              #{order.id}
+            </div>
+            <div>
+              <p className="font-bold text-sm" style={{ color: '#0f172a' }}>Commande #{order.id}</p>
+              <p className="text-xs" style={{ color: '#94a3b8' }}>
+                {new Date(order.order_date).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+              </p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-xl transition-colors" style={{ color: '#94a3b8' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#f8fafc'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}>
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold"
+              style={{ background: st.bg, color: st.color, border: `1px solid ${st.border}` }}>
+              {order.status_text}
+            </span>
+            <span className="text-xs flex items-center gap-1" style={{ color: '#94a3b8' }}>
+              <Timer className="h-3.5 w-3.5" /> {elapsedTime(order.order_date)}
+            </span>
+          </div>
+          {/* Customer info */}
+          <div className="rounded-xl p-4 space-y-1.5" style={{ background: '#f8fafc', border: '1px solid #f1f5f9' }}>
+            <p className="text-[10px] font-bold tracking-wider mb-2" style={{ color: '#94a3b8' }}>CLIENT</p>
+            <p className="font-semibold text-sm" style={{ color: '#0f172a' }}>{order.customer_name || 'Client anonyme'}</p>
+            {order.customer_phone && <p className="text-xs" style={{ color: '#64748b' }}>📞 {order.customer_phone}</p>}
+            <p className="text-xs" style={{ color: '#64748b' }}>
+              {order.order_type_text}{order.table_number ? ` · Table ${order.table_number}` : ''}
+            </p>
+            <p className="text-xs" style={{ color: '#64748b' }}>💳 {order.payment_method}</p>
+          </div>
+          {/* Items */}
+          {order.items && order.items.length > 0 && (
+            <div>
+              <p className="text-[10px] font-bold tracking-wider mb-3" style={{ color: '#94a3b8' }}>ARTICLES ({order.items.length})</p>
+              <div className="space-y-2">
+                {order.items.map((item, i) => (
+                  <div key={i} className="flex items-center justify-between gap-3 py-2"
+                    style={{ borderBottom: i < order.items.length - 1 ? '1px solid #f8fafc' : 'none' }}>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                        style={{ background: '#fff7ed', color: '#f97316' }}>{item.quantity}</span>
+                      <span className="text-sm truncate" style={{ color: '#374151' }}>{item.dish?.nom ?? 'Plat'}</span>
+                    </div>
+                    <span className="text-sm font-semibold flex-shrink-0" style={{ color: '#0f172a' }}>
+                      {(item.unit_price * item.quantity).toLocaleString()} FCFA
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {/* Total */}
+          <div className="rounded-xl p-4 flex items-center justify-between"
+            style={{ background: 'linear-gradient(135deg,#fff7ed,#ffedd5)', border: '1px solid #fed7aa' }}>
+            <span className="font-semibold text-sm" style={{ color: '#9a3412' }}>Total</span>
+            <span className="font-bold text-lg" style={{ color: '#f97316' }}>{order.formatted_total}</span>
+          </div>
+          {order.notes && (
+            <div className="rounded-xl p-4" style={{ background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+              <p className="text-[10px] font-bold tracking-wider mb-1" style={{ color: '#15803d' }}>NOTE</p>
+              <p className="text-sm" style={{ color: '#166534' }}>{order.notes}</p>
+            </div>
+          )}
+        </div>
+        {/* Action footer */}
+        {(nextStatus || ['pending', 'confirmed'].includes(order.status)) && (
+          <div className="flex gap-3 p-4 flex-shrink-0" style={{ borderTop: '1px solid #f1f5f9' }}>
+            {nextStatus && (
+              <button onClick={() => { onUpdateStatus(order.id, nextStatus); onClose(); }}
+                className="flex-1 py-2.5 rounded-xl font-semibold text-sm text-white transition-opacity hover:opacity-90"
+                style={{ background: st.color }}>
+                {nextStatus === 'confirmed' ? '✓ Confirmer' :
+                  nextStatus === 'preparing' ? '🍳 Préparer' :
+                    nextStatus === 'ready' ? '✅ Prête' :
+                      nextStatus === 'delivered' ? '🛥️ Livrée' : 'Avancer'}
+              </button>
+            )}
+            {['pending', 'confirmed'].includes(order.status) && (
+              <button onClick={() => { onUpdateStatus(order.id, 'cancelled'); onClose(); }}
+                className="px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors"
+                style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}>
+                Annuler
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
 export default function OrdersPage() {
   const { restaurantId: paramRestaurantId } = useParams();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -63,6 +186,8 @@ export default function OrdersPage() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [pendingCounts, setPendingCounts] = useState<{ pending: number; confirmed: number; preparing: number; ready: number } | null>(null);
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  const selectedOrder = selectedOrderId ? (orders.find(o => o.id === selectedOrderId) ?? null) : null;
 
   useEffect(() => {
     if (!paramRestaurantId) {
@@ -258,7 +383,7 @@ export default function OrdersPage() {
 
       {/* â”€â”€ Mini stats â”€â”€ */}
       {pendingCounts && restaurantId && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {([
             { label: 'En attente', value: pendingCounts.pending, icon: AlertCircle, ...STATUS_STYLES.pending },
             { label: 'Confirmées', value: pendingCounts.confirmed, icon: CheckCircle, ...STATUS_STYLES.confirmed },
@@ -320,6 +445,7 @@ export default function OrdersPage() {
                         isDragging={draggingId === order.id}
                         onDragStart={() => onDragStart(order.id)}
                         onDragEnd={onDragEnd}
+                        onSelect={() => setSelectedOrderId(order.id)}
                         onAdvance={NEXT_STATUS[order.status]
                           ? () => handleUpdateStatus(order.id, NEXT_STATUS[order.status])
                           : undefined}
@@ -405,6 +531,13 @@ export default function OrdersPage() {
           )}
         </>
       )}
+      {selectedOrder && (
+        <OrderDetailPanel
+          order={selectedOrder}
+          onClose={() => setSelectedOrderId(null)}
+          onUpdateStatus={handleUpdateStatus}
+        />
+      )}
     </div>
   );
 }
@@ -418,12 +551,13 @@ interface KanbanCardProps {
   onDragEnd: () => void;
   onAdvance?: () => void;
   onCancel: () => void;
+  onSelect: () => void;
 }
 
-function KanbanCard({ order, col, isDragging, onDragStart, onDragEnd, onAdvance, onCancel }: KanbanCardProps) {
+function KanbanCard({ order, col, isDragging, onDragStart, onDragEnd, onAdvance, onCancel, onSelect }: KanbanCardProps) {
   return (
-    <div draggable onDragStart={onDragStart} onDragEnd={onDragEnd}
-      className="rounded-xl p-3 cursor-grab active:cursor-grabbing transition-all select-none"
+    <div draggable onDragStart={onDragStart} onDragEnd={onDragEnd} onClick={onSelect}
+      className="rounded-xl p-3 cursor-pointer transition-all select-none"
       style={{
         background: 'white',
         border: `1px solid ${col.border}`,
@@ -442,7 +576,7 @@ function KanbanCard({ order, col, isDragging, onDragStart, onDragEnd, onAdvance,
         {order.order_type_text}{order.table_number ? ` Â· Table ${order.table_number}` : ''}
       </p>
       <p className="text-xs mb-2" style={{ color: '#cbd5e1' }}>
-        {new Date(order.order_date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+        {new Date(order.order_date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} · ⏱ {elapsedTime(order.order_date)}
       </p>
       {order.items && order.items.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-2">
