@@ -1,103 +1,48 @@
 # ============================================================
-# render.yaml — Infrastructure Noogo sur Render.com
+# Render Blueprint — Noogo Backend
+# Docs : https://docs.render.com/blueprint-spec
+# Deploy : render.com > New > Blueprint > connect repo
 # ============================================================
-# Déposer à la RACINE du repo GitHub.
-# Render détecte ce fichier et crée les services automatiquement.
-# Doc : https://render.com/docs/blueprint-spec
-#
-# ⚠️  BASE DE DONNÉES : Render n'autorise qu'1 PostgreSQL free par compte.
-#     Options (choisir une) :
-#     A) Utiliser votre PostgreSQL Render existant → copiez la "Internal
-#        Database URL" depuis Render Dashboard et collez-la dans DB_URL
-#        (variable marquée sync:false ci-dessous).
-#     B) Créer une DB gratuite sur https://neon.tech ou https://supabase.com
-#        (5 GB gratuit, PostgreSQL managed) et coller l'URL dans DB_URL.
-# ============================================================
+
+databases:
+  - name: noogo-db
+    plan: free # starter pour production payante
+    databaseName: noogo
+    user: noogo
+    postgresMajorVersion: "16"
 
 services:
   - type: web
     name: noogo-backend
     runtime: docker
-    # ── Image pré-buildée sur Docker Hub ─────────────────────
-    # Render tire l'image depuis Docker Hub au lieu de builder depuis les sources.
-    # Le tag 'develop' est mis à jour à chaque push via GitHub Actions.
-    # Remplacer <DOCKERHUB_USERNAME> par votre username Docker Hub (ex: danielschillem)
-    image:
-      url: docker.io/schillem7/noogo-backend:develop
-    plan: free               # Passer à "starter" pour 0 cold-start
+    plan: free # starter pour production payante
     region: frankfurt
-    healthCheckPath: /up     # Laravel health endpoint
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    branch: develop
+    healthCheckPath: /healthcheck
     envVars:
-      # ── Application ──────────────────────────────────────
       - key: APP_NAME
         value: Noogo
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
-        value: false
-      - key: APP_KEY
-        sync: false           # ← Format requis: base64:xxx (32 octets)
-                              #   Générer via: php artisan key:generate --show
-                              #   OU laisser vide → start.sh génère au démarrage
-                              #   (mais clé change à chaque restart, sessions invalidées)
-
-      # ── URL — À mettre à jour après le 1er déploiement ──
+        value: "false"
       - key: APP_URL
         value: https://noogo-backend.onrender.com
-
-      # ── Base de données (à configurer manuellement) ───────
-      # Collez ici votre connection string PostgreSQL
-      # Format : postgresql://user:password@host:5432/dbname
+      - key: APP_KEY
+        generateValue: true
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_URL
-        sync: false           # ← À renseigner dans Render Dashboard
-
-      # ── Session / Cache ───────────────────────────────────
+        fromDatabase:
+          name: noogo-db
+          property: connectionString
+      - key: FRONTEND_URL
+        value: https://noogo-dashboard.netlify.app
+      - key: LOG_CHANNEL
+        value: stderr
       - key: SESSION_DRIVER
         value: cookie
       - key: CACHE_STORE
         value: file
-      - key: FILESYSTEM_DISK
-        value: r2            # ← passer à 'r2' une fois les credentials R2 renseignés
-
-      # ── Cloudflare R2 (stockage persistant des images) ───
-      # 1. Créez un bucket R2 sur dash.cloudflare.com → R2
-      # 2. Créez un token API R2 (Read & Write) → copiez Access Key ID + Secret
-      # 3. Activez l'accès public du bucket (ou configurez un domaine custom)
-      # 4. Renseignez ces valeurs dans Render Dashboard > Environment
-      - key: CLOUDFLARE_R2_ACCESS_KEY_ID
-        sync: false           # ← Access Key ID du token R2
-      - key: CLOUDFLARE_R2_SECRET_ACCESS_KEY
-        sync: false           # ← Secret Access Key du token R2
-      - key: CLOUDFLARE_R2_BUCKET
-        value: noogo-media    # ← nom de votre bucket R2
-      - key: CLOUDFLARE_R2_ENDPOINT
-        sync: false           # ← https://<account-id>.r2.cloudflarestorage.com
-      - key: CLOUDFLARE_R2_PUBLIC_URL
-        sync: false           # ← https://pub-<hash>.r2.dev  OU votre domaine custom
-
-      # ── Logs ─────────────────────────────────────────────
-      - key: LOG_CHANNEL
-        value: stderr
-      - key: LOG_LEVEL
-        value: error
-
-      # ── CORS / Sanctum ───────────────────────────────────
-      # Renseigner les vrais domaines Netlify et mobile après déploiement
-      - key: SANCTUM_STATEFUL_DOMAINS
-        value: noogo-dashboard.netlify.app
-      - key: FRONTEND_URL
-        value: https://noogo-dashboard.netlify.app
-
-      # ── Pusher (temps réel) — À renseigner manuellement ──
-      - key: BROADCAST_CONNECTION
-        value: pusher
-      - key: PUSHER_APP_ID
-        sync: false
-      - key: PUSHER_APP_KEY
-        sync: false
-      - key: PUSHER_APP_SECRET
-        sync: false
-      - key: PUSHER_APP_CLUSTER
-        value: eu

@@ -48,13 +48,13 @@ ENV AUTORUN_ENABLED=true \
     AUTORUN_LARAVEL_STORAGE_LINK=true
 
 # -- Port -----------------------------------------------------
-# Railway injecte PORT dynamiquement.
+# Render injecte PORT dynamiquement (defaut 10000).
 # L entrypoint.d mappe PORT -> NGINX_HTTP_PORT avant que s6 genere nginx.conf.
-ENV NGINX_HTTP_PORT=8080
+ENV NGINX_HTTP_PORT=10000
 
 # -- Entrypoint personnalise : APP_KEY + PORT -> NGINX_HTTP_PORT --
 COPY docker/entrypoint.d/00-noogo-setup.sh /etc/entrypoint.d/00-noogo-setup.sh
 COPY docker/entrypoint.d/99-noogo-seed.sh /etc/entrypoint.d/99-noogo-seed.sh
 RUN chmod +x /etc/entrypoint.d/00-noogo-setup.sh /etc/entrypoint.d/99-noogo-seed.sh
 
-EXPOSE 8080
+EXPOSE 10000
