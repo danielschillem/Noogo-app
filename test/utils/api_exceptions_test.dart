@@ -67,13 +67,13 @@ void main() {
 
   group('ApiException.toString', () {
     test('affiche code + message', () {
-      final e = ApiException('Erreur test', statusCode: 400);
+      const e = ApiException('Erreur test', statusCode: 400);
       expect(e.toString(), contains('400'));
       expect(e.toString(), contains('Erreur test'));
     });
 
     test('userMessage par défaut = message', () {
-      final e = ApiException('Erreur visible');
+      const e = ApiException('Erreur visible');
       expect(e.userMessage, 'Erreur visible');
     });
   });

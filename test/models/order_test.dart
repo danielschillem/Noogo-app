@@ -1,4 +1,4 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:noogo/models/order.dart';
 import 'package:noogo/models/dish.dart';
@@ -15,7 +15,7 @@ void main() {
     );
   });
 
-  Dish _makeDish({int id = 1, double price = 2000}) => Dish(
+  Dish makeDish({int id = 1, double price = 2000}) => Dish(
         id: id,
         name: 'Plat $id',
         description: '',
@@ -26,7 +26,7 @@ void main() {
         isAvailable: true,
       );
 
-  Order _makeOrder({
+  Order makeOrder({
     List<OrderItem>? items,
     OrderStatus status = OrderStatus.pending,
     OrderType type = OrderType.surPlace,
@@ -36,7 +36,7 @@ void main() {
         id: 1,
         items: items ??
             [
-              OrderItem(dish: _makeDish(), quantity: 2),
+              OrderItem(dish: makeDish(), quantity: 2),
             ],
         status: status,
         orderDate: DateTime(2026, 4, 12),
@@ -46,28 +46,28 @@ void main() {
 
   group('Order.totalAmount', () {
     test('calcule le total de plusieurs articles', () {
-      final order = _makeOrder(items: [
-        OrderItem(dish: _makeDish(price: 1000), quantity: 2),
-        OrderItem(dish: _makeDish(id: 2, price: 500), quantity: 3),
+      final order = makeOrder(items: [
+        OrderItem(dish: makeDish(price: 1000), quantity: 2),
+        OrderItem(dish: makeDish(id: 2, price: 500), quantity: 3),
       ]);
 
       expect(order.totalAmount, 3500.0);
     });
 
     test('retourne 0 pour un panier vide', () {
-      final order = _makeOrder(items: []);
+      final order = makeOrder(items: []);
       expect(order.totalAmount, 0.0);
     });
   });
 
   group('Order.isMobileMoneyPayment', () {
     test('retourne true pour Mobile Money', () {
-      final order = _makeOrder(paymentMethod: 'Mobile Money');
+      final order = makeOrder(paymentMethod: 'Mobile Money');
       expect(order.isMobileMoneyPayment, true);
     });
 
     test('retourne false pour cash', () {
-      final order = _makeOrder(paymentMethod: 'cash');
+      final order = makeOrder(paymentMethod: 'cash');
       expect(order.isMobileMoneyPayment, false);
     });
   });
@@ -84,26 +84,26 @@ void main() {
     };
 
     cases.forEach((status, expected) {
-      test('$status → "$expected"', () {
-        final order = _makeOrder(status: status);
+      test('$status â†’ "$expected"', () {
+        final order = makeOrder(status: status);
         expect(order.statusText, expected);
       });
     });
   });
 
   group('Order.orderTypeText', () {
-    test('surPlace → Sur place', () {
-      final order = _makeOrder(type: OrderType.surPlace);
+    test('surPlace â†’ Sur place', () {
+      final order = makeOrder(type: OrderType.surPlace);
       expect(order.orderTypeText, 'Sur place');
     });
 
     test('aEmporter → À emporter', () {
-      final order = _makeOrder(type: OrderType.aEmporter);
+      final order = makeOrder(type: OrderType.aEmporter);
       expect(order.orderTypeText, 'À emporter');
     });
 
-    test('livraison → Livraison', () {
-      final order = _makeOrder(type: OrderType.livraison);
+    test('livraison â†’ Livraison', () {
+      final order = makeOrder(type: OrderType.livraison);
       expect(order.orderTypeText, 'Livraison');
     });
   });
@@ -121,19 +121,19 @@ void main() {
     };
 
     aliases.forEach((input, expected) {
-      test('"$input" → $expected', () {
+      test('"$input" â†’ $expected', () {
         expect(Order.parseOrderType(input), expected);
       });
     });
 
-    test('valeur inconnue → surPlace par défaut', () {
+    test('valeur inconnue â†’ surPlace par dÃ©faut', () {
       expect(Order.parseOrderType('inconnu'), OrderType.surPlace);
       expect(Order.parseOrderType(null), OrderType.surPlace);
     });
   });
 
   group('Order.fromJson', () {
-    test('parse une commande complète', () {
+    test('parse une commande complÃ¨te', () {
       final json = {
         'id': 42,
         'status': 'confirmed',

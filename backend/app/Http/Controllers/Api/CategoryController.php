@@ -69,6 +69,8 @@ class CategoryController extends Controller
             $data['image'] = $request->file('image')->store('categories', $this->disk());
         }
 
+        $category = $restaurant->categories()->create($data);
+
         return response()->json([
             'success' => true,
             'message' => 'Catégorie créée avec succès',

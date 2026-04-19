@@ -51,9 +51,12 @@ class _CartScreenState extends State<CartScreen>
       final savedPhone = await ClientPrefsService.getPhone();
       final savedMmPhone = await ClientPrefsService.getMobileMoneyPhone();
       if (mounted) {
-        if (savedPhone != null) _phoneNumberController.text = savedPhone;
-        if (savedMmPhone != null)
+        if (savedPhone != null) {
+          _phoneNumberController.text = savedPhone;
+        }
+        if (savedMmPhone != null) {
           _mobileMoneyNumberController.text = savedMmPhone;
+        }
       }
     });
   }
@@ -1106,8 +1109,9 @@ class _CartScreenState extends State<CartScreen>
   // Étape 5.1: Demander le numéro Mobile Money
   Future<String?> _askMobileMoneyNumber(String provider) async {
     // Ne pas effacer si déjà prérempli depuis les préférences
-    if (_mobileMoneyNumberController.text.isEmpty)
+    if (_mobileMoneyNumberController.text.isEmpty) {
       _mobileMoneyNumberController.clear();
+    }
     return showDialog<String>(
       context: context,
       barrierDismissible: false,

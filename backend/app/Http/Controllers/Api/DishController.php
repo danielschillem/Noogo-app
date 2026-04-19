@@ -107,6 +107,8 @@ class DishController extends Controller
             $data['images'] = $images;
         }
 
+        $dish = $restaurant->dishes()->create($data);
+
         return response()->json([
             'success' => true,
             'message' => 'Plat créé avec succès',

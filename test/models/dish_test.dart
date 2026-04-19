@@ -1,11 +1,11 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:noogo/models/dish.dart';
 import 'package:noogo/models/order.dart';
 
 void main() {
   setUpAll(() async {
-    // Initialiser dotenv pour éviter NotInitializedError dans ApiConfig/AppLogger
+    // Initialiser dotenv pour Ã©viter NotInitializedError dans ApiConfig/AppLogger
     await dotenv.load(
       fileName: 'assets/env/.env',
       isOptional: true,
@@ -43,17 +43,17 @@ void main() {
       expect(dish.category, 'Plats chauds');
     });
 
-    test('utilise des valeurs par défaut pour les champs manquants', () {
+    test('utilise des valeurs par dÃ©faut pour les champs manquants', () {
       final json = {
         'id': 2,
-        'nom': 'Plat mystère',
+        'nom': 'Plat mystÃ¨re',
         'prix': '2000',
       };
 
       final dish = Dish.fromJson(json);
 
       expect(dish.id, 2);
-      expect(dish.name, 'Plat mystère');
+      expect(dish.name, 'Plat mystÃ¨re');
       expect(dish.price, 2000.0);
       expect(dish.description, '');
       expect(dish.isAvailable, true);
@@ -64,7 +64,7 @@ void main() {
     test('accepte le prix comme String', () {
       final json = {
         'id': 3,
-        'nom': 'Poulet braisé',
+        'nom': 'Poulet braisÃ©',
         'prix': '3500',
         'disponibilite': 1,
       };
@@ -73,19 +73,19 @@ void main() {
       expect(dish.price, 3500.0);
     });
 
-    test('gère les images null ou vides', () {
+    test('gÃ¨re les images null ou vides', () {
       final jsonNull = {'id': 4, 'nom': 'Test', 'prix': 500, 'images': null};
       final jsonEmpty = {'id': 5, 'nom': 'Test', 'prix': 500, 'images': []};
 
       final dishNull = Dish.fromJson(jsonNull);
       final dishEmpty = Dish.fromJson(jsonEmpty);
 
-      // Les deux doivent utiliser l'image par défaut sans planterx
+      // Les deux doivent utiliser l'image par dÃ©faut sans planterx
       expect(dishNull.imageUrl, isNotEmpty);
       expect(dishEmpty.imageUrl, isNotEmpty);
     });
 
-    test('accepte une URL d\'image http complète directement', () {
+    test('accepte une URL d\'image http complÃ¨te directement', () {
       final json = {
         'id': 6,
         'nom': 'Burger',
@@ -106,7 +106,7 @@ void main() {
   });
 
   group('OrderItem', () {
-    Dish _makeDish({int id = 1, double price = 1000}) => Dish(
+    Dish makeDish({int id = 1, double price = 1000}) => Dish(
           id: id,
           name: 'Plat test',
           description: '',
@@ -118,12 +118,12 @@ void main() {
         );
 
     test('calcule totalPrice correctement', () {
-      final item = OrderItem(dish: _makeDish(price: 1500), quantity: 3);
+      final item = OrderItem(dish: makeDish(price: 1500), quantity: 3);
       expect(item.totalPrice, 4500.0);
     });
 
-    test('totalPrice est 0 pour quantité 0', () {
-      final item = OrderItem(dish: _makeDish(price: 1000), quantity: 0);
+    test('totalPrice est 0 pour quantitÃ© 0', () {
+      final item = OrderItem(dish: makeDish(price: 1000), quantity: 0);
       expect(item.totalPrice, 0.0);
     });
   });

@@ -222,7 +222,7 @@ class _OrdersScreenState extends State<OrdersScreen>
       ),
     );
   }
-animé (pulse toutes les 15s)
+
   Widget _buildAutoRefreshIndicator() {
     return Tooltip(
       message: 'Mises à jour automatiques toutes les 15s',
@@ -262,8 +262,7 @@ animé (pulse toutes les 15s)
             ),
           );
         },
-      )
-      message: 'Mises à jour automatiques toutes les 30s',
+      ),
     );
   }
 

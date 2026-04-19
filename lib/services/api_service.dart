@@ -1,5 +1,5 @@
+import 'dart:async' show TimeoutException;
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:http/http.dart' as http;
 import '../models/restaurant.dart';
@@ -45,7 +45,7 @@ class ApiService {
         final headers = await _buildHeaders();
         final response = await http.get(uri, headers: headers).timeout(
               const Duration(seconds: 15),
-              onTimeout: () => throw const SocketException('Timeout GET'),
+              onTimeout: () => throw TimeoutException('Timeout GET'),
             );
 
         if (kDebugMode) debugPrint('📡 Réponse: ${response.statusCode}');
@@ -64,7 +64,18 @@ class ApiService {
           }
           throw ApiException.fromStatusCode(response.statusCode, response.body);
         }
-      } on SocketException catch (e) {
+      } on TimeoutException catch (e) {
+        attempt++;
+        if (kDebugMode) {
+          debugPrint(
+              '⚠️ Timeout GET (tentative $attempt/$maxRetries): $e');
+        }
+        if (attempt > maxRetries) {
+          throw const NetworkException(
+              'Impossible de se connecter au serveur.');
+        }
+        await Future.delayed(Duration(seconds: attempt * 2));
+      } on http.ClientException catch (e) {
         attempt++;
         if (kDebugMode) {
           debugPrint(
@@ -78,8 +89,22 @@ class ApiService {
       } on ApiException {
         rethrow;
       } catch (e) {
-        if (kDebugMode) debugPrint('Erreur GET: $e');
-        rethrow;
+        // Handles SocketException on mobile without importing dart:io
+        if (e.runtimeType.toString().contains('SocketException')) {
+          attempt++;
+          if (kDebugMode) {
+            debugPrint(
+                '⚠️ Réseau indisponible GET (tentative $attempt/$maxRetries): $e');
+          }
+          if (attempt > maxRetries) {
+            throw const NetworkException(
+                'Impossible de se connecter au serveur.');
+          }
+          await Future.delayed(Duration(seconds: attempt * 2));
+        } else {
+          if (kDebugMode) debugPrint('Erreur GET: $e');
+          rethrow;
+        }
       }
     }
   }
@@ -97,7 +122,7 @@ class ApiService {
             .post(uri, headers: headers, body: json.encode(data))
             .timeout(
               const Duration(seconds: 15),
-              onTimeout: () => throw const SocketException('Timeout POST'),
+              onTimeout: () => throw TimeoutException('Timeout POST'),
             );
 
         if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -114,7 +139,18 @@ class ApiService {
           }
           throw ApiException.fromStatusCode(response.statusCode, response.body);
         }
-      } on SocketException catch (e) {
+      } on TimeoutException catch (e) {
+        attempt++;
+        if (kDebugMode) {
+          debugPrint(
+              '⚠️ Timeout POST (tentative $attempt/$maxRetries): $e');
+        }
+        if (attempt > maxRetries) {
+          throw const NetworkException(
+              'Impossible de se connecter au serveur.');
+        }
+        await Future.delayed(Duration(seconds: attempt * 2));
+      } on http.ClientException catch (e) {
         attempt++;
         if (kDebugMode) {
           debugPrint(
@@ -128,8 +164,22 @@ class ApiService {
       } on ApiException {
         rethrow;
       } catch (e) {
-        if (kDebugMode) debugPrint('Erreur POST: $e');
-        rethrow;
+        // Handles SocketException on mobile without importing dart:io
+        if (e.runtimeType.toString().contains('SocketException')) {
+          attempt++;
+          if (kDebugMode) {
+            debugPrint(
+                '⚠️ Réseau indisponible POST (tentative $attempt/$maxRetries): $e');
+          }
+          if (attempt > maxRetries) {
+            throw const NetworkException(
+                'Impossible de se connecter au serveur.');
+          }
+          await Future.delayed(Duration(seconds: attempt * 2));
+        } else {
+          if (kDebugMode) debugPrint('Erreur POST: $e');
+          rethrow;
+        }
       }
     }
   }

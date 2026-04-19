@@ -5,11 +5,15 @@
 #   proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
 # ============================================================
 
+# ── Application principale ───────────────────────────────────
+-keep class com.quickdevit.noogo.** { *; }
+
 # ── Flutter ──────────────────────────────────────────────────
 # Le moteur Flutter gérant sa propre reflection, on conserve tout
 # le code natif Java/Kotlin wrappé par le framework.
 -keep class io.flutter.** { *; }
 -keep class io.flutter.plugins.** { *; }
+-keep class io.flutter.embedding.** { *; }
 -dontwarn io.flutter.**
 
 # ── Firebase / FCM ───────────────────────────────────────────
@@ -36,6 +40,9 @@
 # ── Geolocator ───────────────────────────────────────────────
 -keep class com.baseflow.geolocator.** { *; }
 -dontwarn com.baseflow.geolocator.**
+
+# ── SLF4J (referenced by some transitive deps, removed in SLF4J 2.x) ────────
+-dontwarn org.slf4j.impl.StaticLoggerBinder
 
 # ── OkHttp (http package) ────────────────────────────────────
 -dontwarn okhttp3.**
