@@ -18,8 +18,12 @@ services:
   - type: web
     name: noogo-backend
     runtime: docker
-    dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
+    # ── Image pré-buildée sur Docker Hub ─────────────────────
+    # Render tire l'image depuis Docker Hub au lieu de builder depuis les sources.
+    # Le tag 'develop' est mis à jour à chaque push via GitHub Actions.
+    # Remplacer <DOCKERHUB_USERNAME> par votre username Docker Hub (ex: danielschillem)
+    image:
+      url: docker.io/<DOCKERHUB_USERNAME>/noogo-backend:develop
     plan: free               # Passer à "starter" pour 0 cold-start
     region: frankfurt
     healthCheckPath: /up     # Laravel health endpoint

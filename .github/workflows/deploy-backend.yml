@@ -1,0 +1,85 @@
+# ============================================================
+# DEPLOY BACKEND — Noogo Laravel
+# Pipeline : push develop/main → build Docker → Docker Hub → Render
+#
+# Secrets GitHub requis (Settings > Secrets > Actions) :
+#   DOCKERHUB_USERNAME   → votre username Docker Hub (ex: danielschillem)
+#   DOCKERHUB_TOKEN      → Access Token Docker Hub (pas votre mot de passe)
+#                          Créer sur : hub.docker.com > Account Settings > Security
+#   RENDER_DEPLOY_HOOK   → URL webhook Render
+#                          Render Dashboard > noogo-backend > Settings > Deploy Hook
+# ============================================================
+name: Deploy Backend
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "backend/**"
+      - ".github/workflows/deploy-backend.yml"
+
+concurrency:
+  group: deploy-backend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-push:
+    name: Build & Push Docker image
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tags }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── Docker Buildx (multi-platform si besoin) ─────────
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ── Login Docker Hub ──────────────────────────────────
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # ── Tags automatiques ─────────────────────────────────
+      # develop → :develop + :develop-<sha>
+      # main    → :latest  + :main-<sha>
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/noogo-backend
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-,format=short
+
+      # ── Build + Push ──────────────────────────────────────
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-render:
+    name: Trigger Render Deploy
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    timeout-minutes: 5
+
+    steps:
+      - name: Trigger Render Deploy Hook
+        run: |
+          curl -s --fail -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}" \
+            -H "Content-Type: application/json" \
+            --data '{"clearCache": false}' \
+            | jq .
