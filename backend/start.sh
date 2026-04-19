@@ -29,5 +29,8 @@ echo "▶ Lien storage..."
 php artisan storage:link 2>/dev/null || true
 
 echo "▶ Démarrage PHP-FPM + Nginx (serversideup)..."
+# Railway injecte PORT dynamiquement — on le mappe au port Nginx
+export NGINX_HTTP_PORT=${PORT:-8080}
+echo "   → Nginx écoutera sur le port $NGINX_HTTP_PORT"
 # Lance le superviseur serversideup qui gère FPM + Nginx
 exec /init
