@@ -1,13 +1,15 @@
 # ============================================================
 # DEPLOY BACKEND — Noogo Laravel
-# Pipeline : push develop/main → build Docker → Docker Hub → Render
+# Pipeline : push develop/main → build Docker → Docker Hub → Railway
 #
 # Secrets GitHub requis (Settings > Secrets > Actions) :
-#   DOCKERHUB_USERNAME   → votre username Docker Hub (ex: danielschillem)
+#   DOCKERHUB_USERNAME   → votre username Docker Hub (ex: schillem7)
 #   DOCKERHUB_TOKEN      → Access Token Docker Hub (pas votre mot de passe)
 #                          Créer sur : hub.docker.com > Account Settings > Security
-#   RENDER_DEPLOY_HOOK   → URL webhook Render
-#                          Render Dashboard > noogo-backend > Settings > Deploy Hook
+#   RAILWAY_TOKEN        → Token Railway
+#                          railway.app/account/tokens
+#   RAILWAY_SERVICE_ID   → ID du service noogo-backend sur Railway
+#                          Railway Dashboard > noogo-backend > Settings > Service ID
 # ============================================================
 name: Deploy Backend
 
@@ -70,16 +72,18 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  deploy-render:
-    name: Trigger Render Deploy
+  deploy-railway:
+    name: Trigger Railway Deploy
     runs-on: ubuntu-latest
     needs: build-and-push
-    timeout-minutes: 5
+    timeout-minutes: 10
 
     steps:
-      - name: Trigger Render Deploy Hook
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Redeploy Railway service
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          curl -s --fail -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}" \
-            -H "Content-Type: application/json" \
-            --data '{"clearCache": false}' \
-            | jq .
+          railway redeploy --service ${{ secrets.RAILWAY_SERVICE_ID }} --yes
