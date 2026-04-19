@@ -4,7 +4,7 @@
 # ============================================================
 # Prérequis :
 #   1. android/key.properties renseigné (noogo-release.jks)
-#   2. assets/env/.env avec API_BASE_URL pointant sur Render
+#   2. assets/env/.env avec API_BASE_URL pointant sur Railway
 #   3. Flutter SDK installé
 # Usage : chmod +x build_release.sh && ./build_release.sh
 # ============================================================
@@ -21,12 +21,12 @@ if [ ! -f "android/key.properties" ]; then
 fi
 
 if [ ! -f "assets/env/.env" ]; then
-    error "assets/env/.env manquant ! Créez ce fichier avec API_BASE_URL=https://noogo-backend.onrender.com/api"
+    error "assets/env/.env manquant ! Créez ce fichier avec API_BASE_URL=https://noogo-backend-production.up.railway.app/api"
 fi
 
 API_URL=$(grep "API_BASE_URL" assets/env/.env | cut -d '=' -f2)
 if echo "$API_URL" | grep -q "localhost"; then
-    error "API_BASE_URL pointe encore sur localhost ! Mettez l'URL Render de production."
+    error "API_BASE_URL pointe encore sur localhost ! Mettez l'URL Railway de production."
 fi
 
 info "API URL : $API_URL"

@@ -11,7 +11,7 @@
 
 [build.environment]
   NODE_VERSION  = "20"
-  VITE_API_URL  = "https://noogo-backend.onrender.com/api"
+  VITE_API_URL  = "https://noogo-backend-production.up.railway.app/api"
 
 # ── SPA : toutes les routes → index.html (React Router) ─────
 [[redirects]]
