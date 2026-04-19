@@ -1,7 +1,0 @@
-#!/bin/sh
-# s6 oneshot : seed des comptes admin après les migrations AUTORUN
-# Dépend de 'laravel-automations' (défini dans dependencies.d/)
-echo "▶ Seeding admin users (noogo-seed)..."
-cd /var/www/html
-php artisan db:seed --class=AdminUsersSeeder --force
-echo "✅ Admin users seeded."

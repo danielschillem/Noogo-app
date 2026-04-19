@@ -1,14 +1,14 @@
 # ============================================================
-# Image serversideup/php — PHP 8.4 + FPM + Nginx
-# Optimisée pour Laravel en production
+# Image serversideup/php ï¿½ PHP 8.4 + FPM + Nginx
+# Optimisï¿½e pour Laravel en production
 # Docs : https://serversideup.net/open-source/docker-php/
 # ============================================================
 FROM serversideup/php:8.4-fpm-nginx
 
-# Passer en root pour installer les dépendances
+# Passer en root pour installer les dï¿½pendances
 USER root
 
-# -- Extensions supplémentaires --------------------------------
+# -- Extensions supplï¿½mentaires --------------------------------
 RUN install-php-extensions pdo_pgsql pdo_mysql fileinfo
 
 # -- Composer -------------------------------------------------
@@ -16,7 +16,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# -- Dépendances PHP ------------------------------------------
+# -- Dï¿½pendances PHP ------------------------------------------
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
@@ -51,15 +51,7 @@ ENV NGINX_HTTP_PORT=8080
 
 # -- Entrypoint personnalise : APP_KEY + PORT -> NGINX_HTTP_PORT --
 COPY docker/entrypoint.d/00-noogo-setup.sh /etc/entrypoint.d/00-noogo-setup.sh
-RUN chmod +x /etc/entrypoint.d/00-noogo-setup.sh
-
-# -- Seeder admin via s6 oneshot (apres AUTORUN migrations) ---
-COPY docker/s6/noogo-seed/type /etc/s6-overlay/s6-rc.d/noogo-seed/type
-COPY docker/s6/noogo-seed/up /etc/s6-overlay/s6-rc.d/noogo-seed/up
-RUN chmod +x /etc/s6-overlay/s6-rc.d/noogo-seed/up && \
-    mkdir -p /etc/s6-overlay/s6-rc.d/noogo-seed/dependencies.d && \
-    touch /etc/s6-overlay/s6-rc.d/noogo-seed/dependencies.d/laravel-automations && \
-    mkdir -p /etc/s6-overlay/user/contents.d && \
-    touch /etc/s6-overlay/user/contents.d/noogo-seed
+COPY docker/entrypoint.d/99-noogo-seed.sh /etc/entrypoint.d/99-noogo-seed.sh
+RUN chmod +x /etc/entrypoint.d/00-noogo-setup.sh /etc/entrypoint.d/99-noogo-seed.sh
 
 EXPOSE 8080
