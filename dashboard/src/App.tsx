@@ -16,6 +16,9 @@ import MenuPage from './pages/menu/MenuPage';
 import PromotionsPage from './pages/promotions/PromotionsPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import AdminPage from './pages/admin/AdminPage';
+import DriversPage from './pages/delivery/DriversPage';
+import DeliveriesPage from './pages/delivery/DeliveriesPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,6 +41,22 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   }
 
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+}
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!user?.is_admin) return <Navigate to="/" replace />;
+  return <>{children}</>;
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
@@ -97,6 +116,21 @@ function AppRoutes() {
         <Route path="restaurants/:restaurantId/orders" element={<OrdersPage />} />
         <Route path="menu" element={<MenuPage />} />
         <Route path="promotions" element={<PromotionsPage />} />
+        <Route path="drivers" element={
+          <AdminRoute>
+            <DriversPage />
+          </AdminRoute>
+        } />
+        <Route path="deliveries" element={
+          <AdminRoute>
+            <DeliveriesPage />
+          </AdminRoute>
+        } />
+        <Route path="admin" element={
+          <AdminRoute>
+            <AdminPage />
+          </AdminRoute>
+        } />
       </Route>
 
       {/* Redirect unknown routes */}

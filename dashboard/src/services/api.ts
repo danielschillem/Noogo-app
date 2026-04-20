@@ -195,4 +195,28 @@ export const adminApi = {
   toggleRestaurantActive: (id: number) => api.post(`/admin/restaurants/${id}/toggle-active`),
 };
 
+// Delivery API
+export const deliveryApi = {
+  // Deliveries (admin)
+  getAll: (params?: { status?: string; driver_id?: number; page?: number }) =>
+    api.get('/admin/deliveries', { params }),
+  getById: (id: number) => api.get(`/deliveries/${id}`),
+  requestDelivery: (orderId: number, data: {
+    client_lat?: number; client_lng?: number; client_address?: string; fee?: number; notes?: string;
+  }) => api.post(`/orders/${orderId}/request-delivery`, data),
+  assign: (deliveryId: number, driverIdValue: number) =>
+    api.post(`/deliveries/${deliveryId}/assign`, { delivery_driver_id: driverIdValue }),
+  updateStatus: (deliveryId: number, status: string, failureReason?: string) =>
+    api.patch(`/deliveries/${deliveryId}/status`, { status, failure_reason: failureReason }),
+
+  // Drivers (admin)
+  getDrivers: (params?: { status?: string; zone?: string; search?: string; page?: number }) =>
+    api.get('/admin/drivers', { params }),
+  createDriver: (data: { name: string; phone: string; zone?: string; user_id?: number }) =>
+    api.post('/admin/drivers', data),
+  updateDriver: (id: number, data: { name?: string; phone?: string; zone?: string; status?: string }) =>
+    api.put(`/admin/drivers/${id}`, data),
+  deleteDriver: (id: number) => api.delete(`/admin/drivers/${id}`),
+};
+
 export default api;

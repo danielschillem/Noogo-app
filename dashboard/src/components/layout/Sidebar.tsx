@@ -13,6 +13,8 @@ import {
   User,
   Users,
   ShieldCheck,
+  Truck,
+  Package,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
@@ -26,6 +28,8 @@ const ADMIN_NAV = [
   { name: 'Commandes', href: '/orders', icon: ShoppingBag },
   { name: 'Menu', href: '/menu', icon: UtensilsCrossed },
   { name: 'Promotions', href: '/promotions', icon: Tag },
+  { name: 'Livreurs', href: '/drivers', icon: Truck },
+  { name: 'Livraisons', href: '/deliveries', icon: Package },
   { name: 'Administration', href: '/admin', icon: ShieldCheck },
 ];
 
