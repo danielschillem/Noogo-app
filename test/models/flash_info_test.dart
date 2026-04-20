@@ -152,4 +152,158 @@ void main() {
       expect(json['discount_value'], '500');
     });
   });
+
+  group('FlashInfo.isValid', () {
+    test('isValid true si expiryDate null', () {
+      final fi = FlashInfo(id: 1, name: 'X', description: '', imageUrl: '');
+      expect(fi.isValid, isTrue);
+    });
+
+    test('isValid true si expiryDate dans le futur', () {
+      final fi = FlashInfo(
+        id: 2,
+        name: 'X',
+        description: '',
+        imageUrl: '',
+        expiryDate: DateTime.now().add(const Duration(days: 30)),
+      );
+      expect(fi.isValid, isTrue);
+    });
+
+    test('isValid false si expiryDate dans le passé', () {
+      final fi = FlashInfo(
+        id: 3,
+        name: 'X',
+        description: '',
+        imageUrl: '',
+        expiryDate: DateTime.now().subtract(const Duration(days: 1)),
+      );
+      expect(fi.isValid, isFalse);
+    });
+  });
+
+  group('FlashInfo.formattedExpiryDate', () {
+    test('retourne "Sans limite de temps" si pas de date', () {
+      final fi = FlashInfo(id: 1, name: 'X', description: '', imageUrl: '');
+      expect(fi.formattedExpiryDate, 'Sans limite de temps');
+    });
+
+    test('retourne "Expire aujourd\'hui" si même jour', () {
+      final fi = FlashInfo(
+        id: 2,
+        name: 'X',
+        description: '',
+        imageUrl: '',
+        expiryDate: DateTime.now().add(const Duration(hours: 2)),
+      );
+      expect(fi.formattedExpiryDate, contains('aujourd'));
+    });
+
+    test('retourne "Expire dans X jours" si < 7 jours', () {
+      final fi = FlashInfo(
+        id: 3,
+        name: 'X',
+        description: '',
+        imageUrl: '',
+        expiryDate: DateTime.now().add(const Duration(days: 3)),
+      );
+      expect(fi.formattedExpiryDate, contains('3'));
+    });
+
+    test('retourne date formatée si >= 7 jours', () {
+      final fi = FlashInfo(
+        id: 4,
+        name: 'X',
+        description: '',
+        imageUrl: '',
+        expiryDate: DateTime(2030, 12, 31),
+      );
+      expect(fi.formattedExpiryDate, contains('2030'));
+    });
+  });
+
+  group('FlashInfo.formattedDiscount', () {
+    test('retourne description si pas de discountValue', () {
+      final fi = FlashInfo(
+          id: 1, name: 'X', description: 'Promo spéciale', imageUrl: '');
+      expect(fi.formattedDiscount, 'Promo spéciale');
+    });
+
+    test('retourne "-%%" si type pourcentage', () {
+      final fi = FlashInfo(
+        id: 2,
+        name: 'X',
+        description: 'Desc',
+        imageUrl: '',
+        discountType: 'percentage',
+        discountValue: '15',
+      );
+      expect(fi.formattedDiscount, '-15%');
+    });
+
+    test('retourne "-X FCFA" si type fixe', () {
+      final fi = FlashInfo(
+        id: 3,
+        name: 'X',
+        description: 'Desc',
+        imageUrl: '',
+        discountType: 'fixed',
+        discountValue: '500',
+      );
+      expect(fi.formattedDiscount, '-500 FCFA');
+    });
+
+    test('retourne description si discountValue vide', () {
+      final fi = FlashInfo(
+        id: 4,
+        name: 'X',
+        description: 'Desc alt',
+        imageUrl: '',
+        discountValue: '',
+      );
+      expect(fi.formattedDiscount, 'Desc alt');
+    });
+  });
+
+  group('FlashInfo.discountBadge', () {
+    test('badge "-X%" pour type pourcentage', () {
+      final fi = FlashInfo(
+        id: 1,
+        name: 'X',
+        description: 'Desc',
+        imageUrl: '',
+        discountType: 'pourcentage',
+        discountValue: '20',
+      );
+      expect(fi.discountBadge, '-20%');
+    });
+
+    test('badge "-X FCFA" pour type fixe', () {
+      final fi = FlashInfo(
+        id: 2,
+        name: 'X',
+        description: 'Desc',
+        imageUrl: '',
+        discountType: 'fixe',
+        discountValue: '300',
+      );
+      expect(fi.discountBadge, '-300 FCFA');
+    });
+
+    test('badge utilise description courte si pas de discount', () {
+      final fi = FlashInfo(
+        id: 3,
+        name: 'X',
+        description: 'Court',
+        imageUrl: '',
+      );
+      expect(fi.discountBadge, 'Court');
+    });
+
+    test('title getter retourne le nom', () {
+      final fi =
+          FlashInfo(id: 4, name: 'Mon Titre', description: '', imageUrl: '');
+      expect(fi.title, 'Mon Titre');
+    });
+  });
 }

@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\Delivery;
 use App\Models\Restaurant;
+use App\Policies\DeliveryPolicy;
 use App\Policies\RestaurantPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -26,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::policy(Restaurant::class, RestaurantPolicy::class);
+        Gate::policy(Delivery::class, DeliveryPolicy::class);
 
         $this->configureRateLimiting();
     }

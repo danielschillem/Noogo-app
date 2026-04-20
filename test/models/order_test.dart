@@ -171,4 +171,70 @@ void main() {
       expect(order.totalAmount, 6000.0);
     });
   });
+
+  group('Order.toJson', () {
+    test('toJson contient les clés attendues', () {
+      final order = makeOrder();
+      final json = order.toJson();
+      expect(json.containsKey('id'), isTrue);
+      expect(json.containsKey('status'), isTrue);
+      expect(json.containsKey('order_type'), isTrue);
+      expect(json.containsKey('payment_method'), isTrue);
+      expect(json.containsKey('items'), isTrue);
+    });
+
+    test('toJson order_type surPlace → "sur_place"', () {
+      final json = makeOrder(type: OrderType.surPlace).toJson();
+      expect(json['order_type'], 'sur_place');
+    });
+
+    test('toJson order_type aEmporter → "a_emporter"', () {
+      final json = makeOrder(type: OrderType.aEmporter).toJson();
+      expect(json['order_type'], 'a_emporter');
+    });
+
+    test('toJson order_type livraison → "livraison"', () {
+      final json = makeOrder(type: OrderType.livraison).toJson();
+      expect(json['order_type'], 'livraison');
+    });
+
+    test('totalPrice alias retourne même valeur que totalAmount', () {
+      final order = makeOrder(items: [
+        OrderItem(dish: makeDish(price: 2000), quantity: 3),
+      ]);
+      expect(order.totalPrice, order.totalAmount);
+      expect(order.totalPrice, 6000.0);
+    });
+  });
+
+  group('OrderItem.toJson / fromJson', () {
+    test('toJson contient dish et quantity', () {
+      final item = OrderItem(dish: makeDish(), quantity: 5);
+      final json = item.toJson();
+      expect(json['quantity'], 5);
+      expect(json.containsKey('dish'), isTrue);
+    });
+
+    test('fromJson parse correctement', () {
+      final json = {
+        'quantity': 2,
+        'dish': {
+          'id': 7,
+          'nom': 'Poulet',
+          'prix': 3000,
+          'description': '',
+          'images': null,
+          'disponibilite': true,
+          'is_plat_du_jour': false,
+          'temps_preparation': 0,
+          'category_id': 1,
+          'categorie': 'Grillades',
+        },
+      };
+      final item = OrderItem.fromJson(json);
+      expect(item.quantity, 2);
+      expect(item.dish.name, 'Poulet');
+      expect(item.totalPrice, 6000.0);
+    });
+  });
 }

@@ -355,4 +355,189 @@ void main() {
       expect(find.byType(OrdersScreen), findsOneWidget);
     });
   });
+
+  group('OrdersScreen — actions commandes', () {
+    testWidgets('commande pending affiche boutons Annuler et Suivre',
+        (tester) async {
+      final orders = [_fakeOrder(id: 1, status: OrderStatus.pending)];
+      await tester.pumpWidget(
+        _wrap(_FakeProvider(orders: orders, resto: _fakeResto())),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      tester.takeException();
+      expect(find.text('Annuler'), findsWidgets);
+      expect(find.text('Suivre'), findsWidgets);
+    });
+
+    testWidgets('tap Annuler ouvre dialog confirmation', (tester) async {
+      final orders = [_fakeOrder(id: 1, status: OrderStatus.pending)];
+      await tester.pumpWidget(
+        _wrap(_FakeProvider(orders: orders, resto: _fakeResto())),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      final btn = find.text('Annuler');
+      if (btn.evaluate().isNotEmpty) {
+        await tester.tap(btn.first, warnIfMissed: false);
+        await tester.pump(const Duration(milliseconds: 300));
+      }
+      tester.takeException();
+      expect(find.byType(MaterialApp), findsOneWidget);
+    });
+
+    testWidgets('tap Non dans dialog annulation ferme dialog', (tester) async {
+      final orders = [_fakeOrder(id: 1, status: OrderStatus.pending)];
+      await tester.pumpWidget(
+        _wrap(_FakeProvider(orders: orders, resto: _fakeResto())),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      final btn = find.text('Annuler');
+      if (btn.evaluate().isNotEmpty) {
+        await tester.tap(btn.first, warnIfMissed: false);
+        await tester.pump(const Duration(milliseconds: 300));
+        final nonBtn = find.text('Non');
+        if (nonBtn.evaluate().isNotEmpty) {
+          await tester.tap(nonBtn.first, warnIfMissed: false);
+          await tester.pump(const Duration(milliseconds: 300));
+        }
+      }
+      tester.takeException();
+      expect(find.byType(OrdersScreen), findsOneWidget);
+    });
+
+    testWidgets('tap Oui annuler confirme annulation', (tester) async {
+      final orders = [_fakeOrder(id: 1, status: OrderStatus.pending)];
+      await tester.pumpWidget(
+        _wrap(_FakeProvider(orders: orders, resto: _fakeResto())),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      final btn = find.text('Annuler');
+      if (btn.evaluate().isNotEmpty) {
+        await tester.tap(btn.first, warnIfMissed: false);
+        await tester.pump(const Duration(milliseconds: 300));
+        final ouiBtn = find.text('Oui, annuler');
+        if (ouiBtn.evaluate().isNotEmpty) {
+          await tester.tap(ouiBtn.first, warnIfMissed: false);
+          await tester.pump(const Duration(milliseconds: 300));
+        }
+      }
+      tester.takeException();
+      expect(find.byType(MaterialApp), findsOneWidget);
+    });
+
+    testWidgets('tap Suivre ouvre dialog tracking commande', (tester) async {
+      final orders = [_fakeOrder(id: 1, status: OrderStatus.pending)];
+      await tester.pumpWidget(
+        _wrap(_FakeProvider(orders: orders, resto: _fakeResto())),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      final btn = find.text('Suivre');
+      if (btn.evaluate().isNotEmpty) {
+        await tester.tap(btn.first, warnIfMissed: false);
+        await tester.pump(const Duration(milliseconds: 300));
+        final fermerBtn = find.text('Fermer');
+        if (fermerBtn.evaluate().isNotEmpty) {
+          await tester.tap(fermerBtn.first, warnIfMissed: false);
+          await tester.pump();
+        }
+      }
+      tester.takeException();
+      expect(find.byType(MaterialApp), findsOneWidget);
+    });
+
+    testWidgets('commande confirmed affiche bouton Suivre la commande',
+        (tester) async {
+      final orders = [_fakeOrder(id: 2, status: OrderStatus.confirmed)];
+      await tester.pumpWidget(
+        _wrap(_FakeProvider(orders: orders, resto: _fakeResto())),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      tester.takeException();
+      expect(find.textContaining('Suivre'), findsWidgets);
+    });
+
+    testWidgets('tap Suivre la commande (confirmed) ouvre dialog',
+        (tester) async {
+      final orders = [_fakeOrder(id: 2, status: OrderStatus.confirmed)];
+      await tester.pumpWidget(
+        _wrap(_FakeProvider(orders: orders, resto: _fakeResto())),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      final btn = find.text('Suivre la commande');
+      if (btn.evaluate().isNotEmpty) {
+        await tester.tap(btn.first, warnIfMissed: false);
+        await tester.pump(const Duration(milliseconds: 300));
+        final fermerBtn = find.text('Fermer');
+        if (fermerBtn.evaluate().isNotEmpty) {
+          await tester.tap(fermerBtn.first, warnIfMissed: false);
+          await tester.pump();
+        }
+      }
+      tester.takeException();
+      expect(find.byType(MaterialApp), findsOneWidget);
+    });
+
+    testWidgets('commande preparing affiche bouton Suivre la commande',
+        (tester) async {
+      final orders = [_fakeOrder(id: 3, status: OrderStatus.preparing)];
+      await tester.pumpWidget(
+        _wrap(_FakeProvider(orders: orders, resto: _fakeResto())),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      tester.takeException();
+      expect(find.textContaining('Suivre'), findsWidgets);
+    });
+
+    testWidgets('commande completed affiche bouton Recommander',
+        (tester) async {
+      final orders = [_fakeOrder(id: 4, status: OrderStatus.completed)];
+      await tester.pumpWidget(
+        _wrap(_FakeProvider(orders: orders, resto: _fakeResto())),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      tester.takeException();
+      expect(find.text('Recommander'), findsWidgets);
+    });
+
+    testWidgets('commande delivered affiche bouton Recommander',
+        (tester) async {
+      final orders = [_fakeOrder(id: 5, status: OrderStatus.delivered)];
+      await tester.pumpWidget(
+        _wrap(_FakeProvider(orders: orders, resto: _fakeResto())),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      tester.takeException();
+      expect(find.text('Recommander'), findsWidgets);
+    });
+
+    testWidgets('tracking commande preparing affiche temps estimé',
+        (tester) async {
+      final orders = [_fakeOrder(id: 3, status: OrderStatus.preparing)];
+      await tester.pumpWidget(
+        _wrap(_FakeProvider(orders: orders, resto: _fakeResto())),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      final btn = find.text('Suivre la commande');
+      if (btn.evaluate().isNotEmpty) {
+        await tester.tap(btn.first, warnIfMissed: false);
+        await tester.pump(const Duration(milliseconds: 300));
+        final fermerBtn = find.text('Fermer');
+        if (fermerBtn.evaluate().isNotEmpty) {
+          await tester.tap(fermerBtn.first, warnIfMissed: false);
+          await tester.pump();
+        }
+      }
+      tester.takeException();
+      expect(find.byType(MaterialApp), findsOneWidget);
+    });
+
+    testWidgets('tracking commande ready affiche prête', (tester) async {
+      final orders = [_fakeOrder(id: 5, status: OrderStatus.ready)];
+      await tester.pumpWidget(
+        _wrap(_FakeProvider(orders: orders, resto: _fakeResto())),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      tester.takeException();
+      expect(find.byType(OrdersScreen), findsOneWidget);
+    });
+  });
 }

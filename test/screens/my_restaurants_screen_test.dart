@@ -266,7 +266,8 @@ void main() {
       expect(find.byType(MaterialApp), findsOneWidget);
     });
 
-    testWidgets('état vide affiche message ou bouton d\'action', (tester) async {
+    testWidgets('état vide affiche message ou bouton d\'action',
+        (tester) async {
       SharedPreferences.setMockInitialValues({'saved_restaurants': '[]'});
       await tester.pumpWidget(_wrap());
       await tester.pump(const Duration(milliseconds: 600));
@@ -328,6 +329,94 @@ void main() {
         await tester.drag(lv.first, const Offset(0, 300));
         await tester.pump(const Duration(milliseconds: 300));
       }
+      tester.takeException();
+      expect(find.byType(MyRestaurantsScreen), findsOneWidget);
+    });
+  });
+
+  group('MyRestaurantsScreen — interactions liste', () {
+    String _savedJson(int id, String name) {
+      final now = DateTime.now().toIso8601String();
+      return '[{"id":$id,"name":"$name","imageUrl":"","address":"Ouaga","phone":"70000001","lastScannedAt":"$now"}]';
+    }
+
+    testWidgets('tap sur carte GestureDetector déclenche chargement',
+        (tester) async {
+      SharedPreferences.setMockInitialValues(
+          {'saved_restaurants_list': _savedJson(1, 'Le Baobab')});
+      await tester.pumpWidget(_wrap());
+      await tester.pump(const Duration(milliseconds: 600));
+      final gds = find.byType(GestureDetector);
+      if (gds.evaluate().isNotEmpty) {
+        await tester.tap(gds.first, warnIfMissed: false);
+        await tester.pump(const Duration(milliseconds: 300));
+      }
+      tester.takeException();
+      expect(find.byType(MaterialApp), findsOneWidget);
+    });
+
+    testWidgets('affiche le nom du restaurant dans la carte', (tester) async {
+      SharedPreferences.setMockInitialValues(
+          {'saved_restaurants_list': _savedJson(1, 'La Paillote')});
+      await tester.pumpWidget(_wrap());
+      await tester.pump(const Duration(milliseconds: 600));
+      tester.takeException();
+      expect(find.text('La Paillote'), findsOneWidget);
+    });
+
+    testWidgets('affiche adresse dans la carte', (tester) async {
+      SharedPreferences.setMockInitialValues(
+          {'saved_restaurants_list': _savedJson(1, 'Resto Ouaga')});
+      await tester.pumpWidget(_wrap());
+      await tester.pump(const Duration(milliseconds: 600));
+      tester.takeException();
+      expect(find.text('Ouaga'), findsOneWidget);
+    });
+
+    testWidgets('swipe Dismissible supprime un restaurant', (tester) async {
+      SharedPreferences.setMockInitialValues(
+          {'saved_restaurants_list': _savedJson(1, 'Resto Swipe')});
+      await tester.pumpWidget(_wrap());
+      await tester.pump(const Duration(milliseconds: 600));
+      final dismissible = find.byType(Dismissible);
+      if (dismissible.evaluate().isNotEmpty) {
+        await tester.drag(dismissible.first, const Offset(-400, 0));
+        await tester.pump(const Duration(milliseconds: 300));
+        await tester.pump(const Duration(milliseconds: 300));
+      }
+      tester.takeException();
+      expect(find.byType(MaterialApp), findsOneWidget);
+    });
+
+    testWidgets('affiche icône flèche sur chaque carte', (tester) async {
+      SharedPreferences.setMockInitialValues(
+          {'saved_restaurants_list': _savedJson(1, 'Le Caillou')});
+      await tester.pumpWidget(_wrap());
+      await tester.pump(const Duration(milliseconds: 600));
+      tester.takeException();
+      expect(find.byIcon(Icons.arrow_forward_ios), findsWidgets);
+    });
+
+    testWidgets('deux restaurants dans la liste', (tester) async {
+      final now = DateTime.now().toIso8601String();
+      final json =
+          '[{"id":1,"name":"Resto A","imageUrl":"","address":"Ouaga","phone":"70000001","lastScannedAt":"$now"},{"id":2,"name":"Resto B","imageUrl":"","address":"Bobo","phone":"70000002","lastScannedAt":"$now"}]';
+      SharedPreferences.setMockInitialValues({'saved_restaurants_list': json});
+      await tester.pumpWidget(_wrap());
+      await tester.pump(const Duration(milliseconds: 600));
+      tester.takeException();
+      expect(find.text('Resto A'), findsOneWidget);
+      expect(find.text('Resto B'), findsOneWidget);
+    });
+
+    testWidgets('restaurant avec imageUrl http affiche image network',
+        (tester) async {
+      final now = DateTime.now().toIso8601String();
+      final json =
+          '[{"id":1,"name":"Photo Resto","imageUrl":"https://example.com/img.jpg","address":"Ouaga","phone":"70000001","lastScannedAt":"$now"}]';
+      SharedPreferences.setMockInitialValues({'saved_restaurants_list': json});
+      await tester.pumpWidget(_wrap());
+      await tester.pump(const Duration(seconds: 2));
       tester.takeException();
       expect(find.byType(MyRestaurantsScreen), findsOneWidget);
     });

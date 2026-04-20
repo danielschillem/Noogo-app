@@ -663,10 +663,10 @@ ENVIRONMENT=development
 
 | ID | Tâche | Priorité | Effort |
 |----|-------|----------|--------|
-| DEL-K01 | Page `/restaurants/:id/kitchen` — vue temps réel commandes (Pusher) | 🟠 Haute | M |
-| DEL-K02 | Filtre par statut `pending → preparing → ready` avec actions rapides | 🟠 Haute | S |
-| DEL-K03 | Accès conditionnel selon permission `kitchen_display` dans le rôle staff | 🟡 Moyenne | S |
-| DEL-K04 | Alerte sonore nouvelle commande (Web Audio API) | 🟡 Moyenne | S |
+| DEL-K01 | Page `/restaurants/:id/kitchen` — vue temps réel commandes (Pusher) | ✅ Terminé | M |
+| DEL-K02 | Filtre par statut `pending → preparing → ready` avec actions rapides | ✅ Terminé | S |
+| DEL-K03 | Accès conditionnel selon permission `kitchen_display` dans le rôle staff | ✅ Terminé | S |
+| DEL-K04 | Alerte sonore nouvelle commande (Web Audio API) | ✅ Terminé | S |
 
 ### 8D — App Livreur (Flutter — nouveau flavour)
 
@@ -685,15 +685,15 @@ ENVIRONMENT=development
 
 | ID | Tâche | Priorité | Effort |
 |----|-------|----------|--------|
-| DEL-T01 | Écran `TrackingScreen` — carte avec position livreur + statut livraison | 🔴 Critique | L |
-| DEL-T02 | Abonnement Pusher channel `delivery.{orderId}` — réception position GPS livreur | 🔴 Critique | M |
-| DEL-T03 | Affichage carte temps réel (package `flutter_map` ou `google_maps_flutter`) | 🔴 Critique | M |
-| DEL-T04 | Marker livreur animé (smooth move entre positions successives) | 🟠 Haute | M |
-| DEL-T05 | Partage localisation précise client → backend (Pusher → livreur) | 🟠 Haute | M |
-| DEL-T06 | Barre de progression statut : Confirmée → En préparation → Récupérée → En route → Livrée | 🟠 Haute | S |
-| DEL-T07 | ETA estimé (temps restant basé sur distance GPS livreur ↔ client) | 🟡 Moyenne | M |
-| DEL-T08 | Notification push client au changement de statut (`on_way`, `delivered`) | 🟡 Moyenne | S |
-| DEL-T09 | Accès au tracking depuis `OrdersScreen` (bouton sur commandes `on_way`) | 🟠 Haute | S |
+| DEL-T01 | Écran `TrackingScreen` — carte avec position livreur + statut livraison | ✅ Terminé | L |
+| DEL-T02 | Abonnement Pusher channel `delivery.{orderId}` — réception position GPS livreur | ✅ Terminé | M |
+| DEL-T03 | Affichage carte temps réel (package `flutter_map` ou `google_maps_flutter`) | ✅ Terminé | M |
+| DEL-T04 | Marker livreur animé (smooth move entre positions successives) | ✅ Terminé | M |
+| DEL-T05 | Partage localisation précise client → backend (Pusher → livreur) | ✅ Terminé | M |
+| DEL-T06 | Barre de progression statut : Confirmée → En préparation → Récupérée → En route → Livrée | ✅ Terminé | S |
+| DEL-T07 | ETA estimé (temps restant basé sur distance GPS livreur ↔ client) | ✅ Terminé | M |
+| DEL-T08 | Notification push client au changement de statut (`on_way`, `delivered`) | ✅ Terminé | S |
+| DEL-T09 | Accès au tracking depuis `OrdersScreen` (bouton sur commandes `on_way`) | ✅ Terminé | S |
 
 ---
 

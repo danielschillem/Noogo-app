@@ -17,6 +17,7 @@ import PromotionsPage from './pages/promotions/PromotionsPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import AdminPage from './pages/admin/AdminPage';
+import KitchenPage from './pages/restaurants/KitchenPage';
 import DriversPage from './pages/delivery/DriversPage';
 import DeliveriesPage from './pages/delivery/DeliveriesPage';
 
@@ -112,6 +113,7 @@ function AppRoutes() {
         <Route path="restaurants/:id" element={<RestaurantDetailPage />} />
         <Route path="restaurants/:id/edit" element={<RestaurantFormPage />} />
         <Route path="restaurants/:id/staff" element={<StaffPage />} />
+        <Route path="restaurants/:id/kitchen" element={<KitchenPage />} />
         <Route path="orders" element={<OrdersPage />} />
         <Route path="restaurants/:restaurantId/orders" element={<OrdersPage />} />
         <Route path="menu" element={<MenuPage />} />

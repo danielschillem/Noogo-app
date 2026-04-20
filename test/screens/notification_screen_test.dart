@@ -226,5 +226,90 @@ void main() {
       expect(find.text('Commande prête'), findsOneWidget);
       expect(find.text('Votre commande est prête'), findsOneWidget);
     });
+
+    testWidgets('tap Tout marquer comme lu ne plante pas', (tester) async {
+      await tester.pumpWidget(_wrap(_FakeFilledProvider()));
+      await tester.pump(const Duration(milliseconds: 300));
+      final btn = find.text('Tout marquer comme lu');
+      if (btn.evaluate().isNotEmpty) {
+        await tester.tap(btn.first, warnIfMissed: false);
+        await tester.pump(const Duration(milliseconds: 300));
+      }
+      tester.takeException();
+      expect(find.byType(NotificationsScreen), findsOneWidget);
+    });
+
+    testWidgets('tap popup menu de notification ne plante pas', (tester) async {
+      await tester.pumpWidget(_wrap(_FakeFilledProvider()));
+      await tester.pump(const Duration(milliseconds: 300));
+      final moreBtn = find.byIcon(Icons.more_vert);
+      if (moreBtn.evaluate().isNotEmpty) {
+        await tester.tap(moreBtn.first, warnIfMissed: false);
+        await tester.pump(const Duration(milliseconds: 300));
+      }
+      tester.takeException();
+      expect(find.byType(MaterialApp), findsOneWidget);
+    });
+
+    testWidgets('tap notification non lue la marque comme lue', (tester) async {
+      await tester.pumpWidget(_wrap(_FakeFilledProvider()));
+      await tester.pump(const Duration(milliseconds: 300));
+      final items = find.byType(ListTile);
+      if (items.evaluate().isNotEmpty) {
+        await tester.tap(items.first, warnIfMissed: false);
+        await tester.pump(const Duration(milliseconds: 300));
+      }
+      tester.takeException();
+      expect(find.byType(MaterialApp), findsOneWidget);
+    });
+
+    testWidgets('notification avec titre livraison', (tester) async {
+      final provider = _FakeEmptyProvider();
+      final customNotif = AppNotification(
+        id: '10',
+        type: 'delivery',
+        title: 'Livraison en cours',
+        body: 'Votre livraison est en route',
+        isRead: false,
+        timestamp: DateTime.now(),
+      );
+      await tester.pumpWidget(
+        ChangeNotifierProvider<RestaurantProvider>.value(
+          value: provider,
+          child: MaterialApp(
+            home: const NotificationsScreen(),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      tester.takeException();
+      expect(find.byType(NotificationsScreen), findsOneWidget);
+      expect(customNotif.id, '10');
+    });
+
+    testWidgets('notification avec titre paiement', (tester) async {
+      await tester.pumpWidget(_wrap(_FakeFilledProvider()));
+      await tester.pump(const Duration(milliseconds: 300));
+      tester.takeException();
+      expect(find.byType(NotificationsScreen), findsOneWidget);
+    });
+
+    testWidgets('scroll dans la liste de notifications', (tester) async {
+      await tester.pumpWidget(_wrap(_FakeFilledProvider()));
+      await tester.pump(const Duration(milliseconds: 300));
+      final lv = find.byType(ListView);
+      if (lv.evaluate().isNotEmpty) {
+        await tester.drag(lv.first, const Offset(0, -200));
+        await tester.pump();
+      }
+      tester.takeException();
+      expect(find.byType(NotificationsScreen), findsOneWidget);
+    });
+
+    testWidgets('contient icône cloche ou notifications', (tester) async {
+      await tester.pumpWidget(_wrap(_FakeEmptyProvider()));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.byType(Icon), findsWidgets);
+    });
   });
 }

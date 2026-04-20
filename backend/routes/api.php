@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\StaffController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\DeliveryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -131,6 +132,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/staff/{staff}', [StaffController::class, 'update']);
         Route::delete('/staff/{staff}', [StaffController::class, 'destroy']);
     });
+    // Livraison — demande depuis une commande (gérant)
+    Route::post('/orders/{order}/request-delivery', [DeliveryController::class, 'requestDelivery']);
+
+    // Livraisons — accès protégé général
+    Route::prefix('deliveries')->group(function () {
+        Route::get('/my-history', [DeliveryController::class, 'myHistory']);
+        Route::get('/{delivery}', [DeliveryController::class, 'show']);
+        Route::post('/{delivery}/assign', [DeliveryController::class, 'assign']);
+        Route::patch('/{delivery}/status', [DeliveryController::class, 'updateStatus']);
+        Route::post('/{delivery}/driver-location', [DeliveryController::class, 'updateDriverLocation'])
+            ->middleware('throttle:60,1');  // Max 60 GPS updates per minute per user
+    });
 });
 
 // Health check
@@ -159,4 +172,11 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     // Restaurants
     Route::get('/restaurants', [AdminController::class, 'listRestaurants']);
     Route::post('/restaurants/{restaurant}/toggle-active', [AdminController::class, 'toggleRestaurantActive']);
+
+    // Livreurs (CRUD admin)
+    Route::get('/deliveries', [DeliveryController::class, 'index']);
+    Route::get('/drivers', [DeliveryController::class, 'listDrivers']);
+    Route::post('/drivers', [DeliveryController::class, 'storeDriver']);
+    Route::put('/drivers/{driver}', [DeliveryController::class, 'updateDriver']);
+    Route::delete('/drivers/{driver}', [DeliveryController::class, 'destroyDriver']);
 });

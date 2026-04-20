@@ -47,3 +47,6 @@ build/debug-info/
 *.json
 !android/app/google-services.json
 !**/google-services.json
+
+# Local Netlify folder
+.netlify

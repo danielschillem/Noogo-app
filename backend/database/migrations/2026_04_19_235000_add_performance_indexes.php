@@ -12,25 +12,29 @@ return new class extends Migration {
             Schema::table('orders', function (Blueprint $table) {
                 $table->index(['restaurant_id', 'order_date']);
             });
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         try {
             Schema::table('orders', function (Blueprint $table) {
                 $table->index(['restaurant_id', 'status']);
             });
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         try {
             Schema::table('orders', function (Blueprint $table) {
                 $table->index('order_date');
             });
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         try {
             Schema::table('dishes', function (Blueprint $table) {
                 $table->index(['restaurant_id', 'disponibilite']);
             });
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
     }
 
     public function down(): void
@@ -39,24 +43,28 @@ return new class extends Migration {
             Schema::table('orders', function (Blueprint $table) {
                 $table->dropIndex(['restaurant_id', 'order_date']);
             });
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         try {
             Schema::table('orders', function (Blueprint $table) {
                 $table->dropIndex(['restaurant_id', 'status']);
             });
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         try {
             Schema::table('orders', function (Blueprint $table) {
                 $table->dropIndex(['order_date']);
             });
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         try {
             Schema::table('dishes', function (Blueprint $table) {
                 $table->dropIndex(['restaurant_id', 'disponibilite']);
             });
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
     }
 };

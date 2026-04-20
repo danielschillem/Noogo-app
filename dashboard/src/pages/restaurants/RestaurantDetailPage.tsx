@@ -17,6 +17,7 @@ import {
     Printer,
     Image,
     Users,
+    ChefHat,
 } from 'lucide-react';
 import { restaurantsApi } from '../../services/api';
 import type { Restaurant } from '../../types';
@@ -276,6 +277,19 @@ export default function RestaurantDetailPage() {
                         <div>
                             <p className="text-sm font-medium text-gray-900">Personnel</p>
                             <p className="text-xs text-gray-500">Gérants, caissiers, serveurs</p>
+                        </div>
+                    </Link>
+
+                    <Link
+                        to={`/restaurants/${restaurant.id}/kitchen`}
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-amber-50 transition-colors group"
+                    >
+                        <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center group-hover:bg-amber-200 transition-colors">
+                            <ChefHat className="h-5 w-5 text-amber-600" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-gray-900">KDS Cuisine</p>
+                            <p className="text-xs text-gray-500">Vue temps réel — écran cuisine</p>
                         </div>
                     </Link>
 

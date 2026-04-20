@@ -1,7 +1,7 @@
 ﻿import { useEffect, useState } from 'react';
 import {
     Plus, Pencil, Trash2, ToggleLeft, ToggleRight, Star, UtensilsCrossed, X,
-    Search, LayoutGrid, List, ChevronDown, Filter,
+    Search, LayoutGrid, List, ChevronDown, Filter, Layers,
 } from 'lucide-react';
 import { categoriesApi, dishesApi, restaurantsApi } from '../../services/api';
 import type { Category, Dish, Restaurant } from '../../types';
@@ -252,7 +252,7 @@ export default function MenuPage() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [dishes, setDishes] = useState<Dish[]>([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [viewMode, setViewMode] = useState<'grid' | 'list' | 'sections'>('grid');
     const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
     const [search, setSearch] = useState('');
     const [showUnavailable, setShowUnavailable] = useState(true);
@@ -384,11 +384,15 @@ export default function MenuPage() {
 
                 {/* View toggle */}
                 <div className="flex rounded-xl overflow-hidden" style={{ border: '1px solid #e2e8f0' }}>
-                    <button onClick={() => setViewMode('grid')} className="p-2 transition-colors"
+                    <button onClick={() => setViewMode('grid')} className="p-2 transition-colors" title="Grille"
                         style={{ background: viewMode === 'grid' ? '#f97316' : 'white', color: viewMode === 'grid' ? 'white' : '#94a3b8' }}>
                         <LayoutGrid size={16} />
                     </button>
-                    <button onClick={() => setViewMode('list')} className="p-2 transition-colors"
+                    <button onClick={() => setViewMode('sections')} className="p-2 transition-colors" title="Sections par catégorie"
+                        style={{ background: viewMode === 'sections' ? '#f97316' : 'white', color: viewMode === 'sections' ? 'white' : '#94a3b8' }}>
+                        <Layers size={16} />
+                    </button>
+                    <button onClick={() => setViewMode('list')} className="p-2 transition-colors" title="Liste"
                         style={{ background: viewMode === 'list' ? '#f97316' : 'white', color: viewMode === 'list' ? 'white' : '#94a3b8' }}>
                         <List size={16} />
                     </button>
@@ -447,6 +451,72 @@ export default function MenuPage() {
                             onTogglePdj={() => handleTogglePlatDuJour(dish)}
                         />
                     ))}
+                </div>
+            ) : viewMode === 'sections' ? (
+                /* ─ Sections by category ─ */
+                <div className="space-y-8">
+                    {categories.map(cat => {
+                        const catDishes = filteredDishes.filter(d => d.category_id === cat.id);
+                        return (
+                            <div key={cat.id}>
+                                <div className="flex items-center gap-3 mb-4">
+                                    {cat.image_url && (
+                                        <img src={buildImageUrl(cat.image_url)} alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
+                                    )}
+                                    <div>
+                                        <h2 className="font-bold text-base" style={{ color: '#0f172a' }}>{cat.nom}</h2>
+                                        <p className="text-xs" style={{ color: '#94a3b8' }}>{catDishes.length} plat{catDishes.length !== 1 ? 's' : ''}</p>
+                                    </div>
+                                    <div className="flex-1 h-px" style={{ background: '#f1f5f9' }} />
+                                    <button onClick={() => setCategoryModal({ open: true, category: cat })}
+                                        className="p-1.5 rounded-lg flex-shrink-0 transition-colors" style={{ color: '#94a3b8' }}
+                                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#eff6ff'; (e.currentTarget as HTMLButtonElement).style.color = '#2563eb'; }}
+                                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#94a3b8'; }}>
+                                        <Pencil size={12} />
+                                    </button>
+                                    <button onClick={() => setDishModal({ open: true, dish: null, categoryId: cat.id })}
+                                        className="flex items-center gap-1 px-2 py-1 rounded-lg flex-shrink-0 text-xs font-medium transition-colors"
+                                        style={{ background: '#fff7ed', color: '#f97316', border: '1px solid #fed7aa' }}
+                                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#f97316'; (e.currentTarget as HTMLButtonElement).style.color = 'white'; }}
+                                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = '#fff7ed'; (e.currentTarget as HTMLButtonElement).style.color = '#f97316'; }}>
+                                        <Plus size={12} /> Plat
+                                    </button>
+                                </div>
+                                {catDishes.length === 0 ? (
+                                    <div className="py-6 rounded-xl text-center text-sm" style={{ background: '#f8fafc', color: '#94a3b8' }}>Aucun plat dans cette catégorie</div>
+                                ) : (
+                                    <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))' }}>
+                                        {catDishes.map(dish => (
+                                            <DishCard key={dish.id} dish={dish}
+                                                onEdit={() => setDishModal({ open: true, dish, categoryId: dish.category_id })}
+                                                onDelete={() => handleDeleteDish(dish)}
+                                                onToggleAvail={() => handleToggleDishAvailability(dish)}
+                                                onTogglePdj={() => handleTogglePlatDuJour(dish)}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                    {filteredDishes.filter(d => !categories.some(c => c.id === d.category_id)).length > 0 && (
+                        <div>
+                            <div className="flex items-center gap-3 mb-4">
+                                <h2 className="font-bold text-base" style={{ color: '#64748b' }}>Sans catégorie</h2>
+                                <div className="flex-1 h-px" style={{ background: '#f1f5f9' }} />
+                            </div>
+                            <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))' }}>
+                                {filteredDishes.filter(d => !categories.some(c => c.id === d.category_id)).map(dish => (
+                                    <DishCard key={dish.id} dish={dish}
+                                        onEdit={() => setDishModal({ open: true, dish, categoryId: dish.category_id })}
+                                        onDelete={() => handleDeleteDish(dish)}
+                                        onToggleAvail={() => handleToggleDishAvailability(dish)}
+                                        onTogglePdj={() => handleTogglePlatDuJour(dish)}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             ) : (
                 /* ─ List view ─ */

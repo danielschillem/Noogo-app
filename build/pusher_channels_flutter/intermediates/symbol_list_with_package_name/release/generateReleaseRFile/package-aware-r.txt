@@ -1,1 +1,0 @@
-com.pusher.channels_flutter

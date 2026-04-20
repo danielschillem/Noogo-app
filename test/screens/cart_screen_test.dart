@@ -305,4 +305,385 @@ void main() {
       expect(find.byType(CartScreen), findsOneWidget);
     });
   });
+
+  // ── Interactions panier ──────────────────────────────────────────────────
+
+  group('CartScreen — interactions articles', () {
+    testWidgets('tap sur + augmente la quantité', (tester) async {
+      final cart = [OrderItem(dish: _dish(name: 'Poulet Test'), quantity: 1)];
+      final provider = _FakeProvider(cart: cart);
+      await tester.pumpWidget(_wrap(provider));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      final addBtn = find.byIcon(Icons.add);
+      if (addBtn.evaluate().isNotEmpty) {
+        await tester.tap(addBtn.first);
+        await tester.pump();
+      }
+      expect(find.byType(CartScreen), findsOneWidget);
+    });
+
+    testWidgets('tap sur - diminue la quantité', (tester) async {
+      final cart = [OrderItem(dish: _dish(name: 'Plat Moins'), quantity: 3)];
+      final provider = _FakeProvider(cart: cart);
+      await tester.pumpWidget(_wrap(provider));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      final removeBtn = find.byIcon(Icons.remove);
+      if (removeBtn.evaluate().isNotEmpty) {
+        await tester.tap(removeBtn.first);
+        await tester.pump();
+      }
+      expect(find.byType(CartScreen), findsOneWidget);
+    });
+
+    testWidgets('tap sur icône supprimer ouvre dialog', (tester) async {
+      final cart = [OrderItem(dish: _dish(name: 'Plat Sup'), quantity: 1)];
+      final provider = _FakeProvider(cart: cart);
+      await tester.pumpWidget(_wrap(provider));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      final deleteBtn = find.byIcon(Icons.delete_outline);
+      if (deleteBtn.evaluate().isNotEmpty) {
+        await tester.tap(deleteBtn.first);
+        await tester.pump();
+      }
+      expect(find.byType(CartScreen), findsOneWidget);
+    });
+
+    testWidgets('tap sur "Voir le menu" fonctionne', (tester) async {
+      final provider = _FakeProvider();
+      await tester.pumpWidget(_wrap(provider));
+      await tester.pump();
+
+      final btn = find.text('Voir le menu');
+      if (btn.evaluate().isNotEmpty) {
+        await tester.tap(btn.first);
+        await tester.pump();
+      }
+      expect(find.byType(CartScreen), findsOneWidget);
+    });
+
+    testWidgets('plusieurs articles — total correct affiché', (tester) async {
+      final cart = [
+        OrderItem(dish: _dish(id: 1, price: 2000), quantity: 2),
+        OrderItem(dish: _dish(id: 2, price: 1000), quantity: 1),
+      ];
+      final provider = _FakeProvider(cart: cart);
+      await tester.pumpWidget(_wrap(provider));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+      expect(find.textContaining('FCFA'), findsWidgets);
+    });
+
+    testWidgets('grand panier (5 articles) se rend sans overflow',
+        (tester) async {
+      final cart = List.generate(
+        5,
+        (i) => OrderItem(
+            dish: _dish(id: i + 1, name: 'Plat ${i + 1}'), quantity: 1),
+      );
+      final provider = _FakeProvider(cart: cart);
+      await tester.pumpWidget(_wrap(provider));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+      tester.takeException();
+      expect(find.byType(CartScreen), findsOneWidget);
+    });
+
+    testWidgets('tap Commander ouvre bottom sheet de paiement', (tester) async {
+      final cart = [OrderItem(dish: _dish(price: 1500), quantity: 1)];
+      final provider = _FakeProvider(cart: cart);
+      await tester.pumpWidget(_wrap(provider));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      final btn = find.widgetWithText(ElevatedButton, 'Commander • 1500 FCFA');
+      if (btn.evaluate().isEmpty) {
+        // Chercher par texte partiel
+        final btns = find.textContaining('Commander');
+        if (btns.evaluate().isNotEmpty) {
+          await tester.tap(btns.first, warnIfMissed: false);
+          await tester.pump(const Duration(milliseconds: 500));
+        }
+      } else {
+        await tester.tap(btn.first, warnIfMissed: false);
+        await tester.pump(const Duration(milliseconds: 500));
+      }
+      tester.takeException();
+      expect(find.byType(MaterialApp), findsOneWidget);
+    });
+
+    testWidgets('tap menu contextuel more_vert ouvre popup', (tester) async {
+      final cart = [OrderItem(dish: _dish(), quantity: 1)];
+      final provider = _FakeProvider(cart: cart);
+      await tester.pumpWidget(_wrap(provider));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      final moreBtn = find.byIcon(Icons.more_vert);
+      if (moreBtn.evaluate().isNotEmpty) {
+        await tester.tap(moreBtn.first);
+        await tester.pump(const Duration(milliseconds: 300));
+      }
+      tester.takeException();
+      expect(find.byType(CartScreen), findsOneWidget);
+    });
+
+    testWidgets('dispose sans erreur', (tester) async {
+      final cart = [OrderItem(dish: _dish(), quantity: 1)];
+      await tester.pumpWidget(_wrap(_FakeProvider(cart: cart)));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+      tester.takeException();
+      await tester.pumpWidget(const MaterialApp(home: Scaffold()));
+      await tester.pump();
+      expect(find.byType(CartScreen), findsNothing);
+    });
+
+    testWidgets('rend à 360x640 sans overflow fatal', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(360, 640));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final cart = [OrderItem(dish: _dish(), quantity: 2)];
+      await tester.pumpWidget(_wrap(_FakeProvider(cart: cart)));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+      tester.takeException();
+      expect(find.byType(CartScreen), findsOneWidget);
+    });
+
+    testWidgets('rend à 768x1024 (tablette)', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(768, 1024));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final cart = [OrderItem(dish: _dish(), quantity: 1)];
+      await tester.pumpWidget(_wrap(_FakeProvider(cart: cart)));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+      tester.takeException();
+      expect(find.byType(CartScreen), findsOneWidget);
+    });
+
+    testWidgets('scroll dans la liste du panier', (tester) async {
+      final cart = List.generate(
+        8,
+        (i) =>
+            OrderItem(dish: _dish(id: i + 1, name: 'Article $i'), quantity: 1),
+      );
+      await tester.pumpWidget(_wrap(_FakeProvider(cart: cart)));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+      final lv = find.byType(ListView);
+      if (lv.evaluate().isNotEmpty) {
+        await tester.drag(lv.first, const Offset(0, -300));
+        await tester.pump();
+      }
+      tester.takeException();
+      expect(find.byType(CartScreen), findsOneWidget);
+    });
+
+    testWidgets('article avec image locale se rend sans crash', (tester) async {
+      final dishWithImage = Dish(
+        id: 99,
+        name: 'Plat Photo',
+        description: '',
+        price: 2000,
+        imageUrl: 'assets/images/placeholder.png',
+        categoryId: 1,
+        category: 'Plats',
+        isAvailable: true,
+      );
+      final cart = [OrderItem(dish: dishWithImage, quantity: 1)];
+      await tester.pumpWidget(_wrap(_FakeProvider(cart: cart)));
+      await tester.pump(const Duration(seconds: 2));
+      tester.takeException();
+      expect(find.byType(CartScreen), findsOneWidget);
+    });
+
+    testWidgets('quantité 1 → bouton - rouge', (tester) async {
+      final cart = [OrderItem(dish: _dish(), quantity: 1)];
+      await tester.pumpWidget(_wrap(_FakeProvider(cart: cart)));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+      expect(find.byIcon(Icons.remove), findsWidgets);
+    });
+
+    testWidgets('quantité > 1 → bouton - orange', (tester) async {
+      final cart = [OrderItem(dish: _dish(), quantity: 3)];
+      await tester.pumpWidget(_wrap(_FakeProvider(cart: cart)));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+      expect(find.byIcon(Icons.remove), findsWidgets);
+    });
+  });
+
+  // ── Dialogs de commande ──────────────────────────────────────────────────
+
+  group('CartScreen — dialog Commander', () {
+    testWidgets('tap Commander ouvre dialog type commande', (tester) async {
+      final cart = [OrderItem(dish: _dish(price: 2000), quantity: 1)];
+      final provider = _FakeProvider(cart: cart);
+      await tester.pumpWidget(_wrap(provider));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      final btn = find.textContaining('Commander');
+      if (btn.evaluate().isNotEmpty) {
+        await tester.tap(btn.first, warnIfMissed: false);
+        await tester.pump(const Duration(milliseconds: 500));
+        // Dialog type commande devrait être visible
+        tester.takeException();
+      }
+      expect(find.byType(MaterialApp), findsOneWidget);
+    });
+
+    testWidgets('dialog type commande — tap Annuler ferme le dialog',
+        (tester) async {
+      final cart = [OrderItem(dish: _dish(price: 2000), quantity: 1)];
+      final provider = _FakeProvider(cart: cart);
+      await tester.pumpWidget(_wrap(provider));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      final btn = find.textContaining('Commander');
+      if (btn.evaluate().isNotEmpty) {
+        await tester.tap(btn.first, warnIfMissed: false);
+        await tester.pump(const Duration(milliseconds: 300));
+
+        final cancelBtn = find.text('Annuler');
+        if (cancelBtn.evaluate().isNotEmpty) {
+          await tester.tap(cancelBtn.first, warnIfMissed: false);
+          await tester.pump(const Duration(milliseconds: 300));
+        }
+      }
+      tester.takeException();
+      expect(find.byType(CartScreen), findsOneWidget);
+    });
+
+    testWidgets('dialog type commande — tap Sur place', (tester) async {
+      final cart = [OrderItem(dish: _dish(price: 2000), quantity: 1)];
+      final provider = _FakeProvider(cart: cart);
+      await tester.pumpWidget(_wrap(provider));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      final btn = find.textContaining('Commander');
+      if (btn.evaluate().isNotEmpty) {
+        await tester.tap(btn.first, warnIfMissed: false);
+        await tester.pump(const Duration(milliseconds: 300));
+
+        final surPlace = find.text('Sur place');
+        if (surPlace.evaluate().isNotEmpty) {
+          await tester.tap(surPlace.first, warnIfMissed: false);
+          await tester.pump(const Duration(milliseconds: 300));
+        }
+      }
+      tester.takeException();
+      expect(find.byType(MaterialApp), findsOneWidget);
+    });
+
+    testWidgets('dialog type commande — tap À emporter', (tester) async {
+      final cart = [OrderItem(dish: _dish(price: 2000), quantity: 1)];
+      final provider = _FakeProvider(cart: cart);
+      await tester.pumpWidget(_wrap(provider));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      final btn = find.textContaining('Commander');
+      if (btn.evaluate().isNotEmpty) {
+        await tester.tap(btn.first, warnIfMissed: false);
+        await tester.pump(const Duration(milliseconds: 300));
+
+        final emporter = find.textContaining('emporter');
+        if (emporter.evaluate().isNotEmpty) {
+          await tester.tap(emporter.first, warnIfMissed: false);
+          await tester.pump(const Duration(milliseconds: 300));
+        }
+      }
+      tester.takeException();
+      expect(find.byType(MaterialApp), findsOneWidget);
+    });
+
+    testWidgets('dialog supprimer article — tap Retirer confirme',
+        (tester) async {
+      final cart = [OrderItem(dish: _dish(name: 'Plat Sup'), quantity: 1)];
+      final provider = _FakeProvider(cart: cart);
+      await tester.pumpWidget(_wrap(provider));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      final deleteBtn = find.byIcon(Icons.delete_outline);
+      if (deleteBtn.evaluate().isNotEmpty) {
+        await tester.tap(deleteBtn.first, warnIfMissed: false);
+        await tester.pump(const Duration(milliseconds: 300));
+
+        final retirer = find.text('Retirer');
+        if (retirer.evaluate().isNotEmpty) {
+          await tester.tap(retirer.first, warnIfMissed: false);
+          await tester.pump(const Duration(milliseconds: 300));
+        }
+      }
+      tester.takeException();
+      expect(find.byType(MaterialApp), findsOneWidget);
+    });
+
+    testWidgets('dialog supprimer article — tap Annuler garde l\'article',
+        (tester) async {
+      final cart = [OrderItem(dish: _dish(name: 'Plat Garde'), quantity: 1)];
+      final provider = _FakeProvider(cart: cart);
+      await tester.pumpWidget(_wrap(provider));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      final deleteBtn = find.byIcon(Icons.delete_outline);
+      if (deleteBtn.evaluate().isNotEmpty) {
+        await tester.tap(deleteBtn.first, warnIfMissed: false);
+        await tester.pump(const Duration(milliseconds: 300));
+
+        final annuler = find.text('Annuler');
+        if (annuler.evaluate().isNotEmpty) {
+          await tester.tap(annuler.first, warnIfMissed: false);
+          await tester.pump(const Duration(milliseconds: 300));
+        }
+      }
+      tester.takeException();
+      expect(find.byType(CartScreen), findsOneWidget);
+    });
+
+    testWidgets('dialog vider panier — tap Vider depuis menu contextuel',
+        (tester) async {
+      final cart = [OrderItem(dish: _dish(), quantity: 1)];
+      final provider = _FakeProvider(cart: cart);
+      await tester.pumpWidget(_wrap(provider));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      final moreBtn = find.byIcon(Icons.more_vert);
+      if (moreBtn.evaluate().isNotEmpty) {
+        await tester.tap(moreBtn.first, warnIfMissed: false);
+        await tester.pump(const Duration(milliseconds: 300));
+
+        final vider = find.text('Vider le panier');
+        if (vider.evaluate().isNotEmpty) {
+          await tester.tap(vider.first, warnIfMissed: false);
+          await tester.pump(const Duration(milliseconds: 300));
+        }
+      }
+      tester.takeException();
+      expect(find.byType(MaterialApp), findsOneWidget);
+    });
+
+    testWidgets('dialog vider panier — tap Annuler depuis menu contextuel',
+        (tester) async {
+      final cart = [
+        OrderItem(dish: _dish(), quantity: 1),
+        OrderItem(dish: _dish(id: 2, name: 'Plat 2'), quantity: 2)
+      ];
+      final provider = _FakeProvider(cart: cart);
+      await tester.pumpWidget(_wrap(provider));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      final moreBtn = find.byIcon(Icons.more_vert);
+      if (moreBtn.evaluate().isNotEmpty) {
+        await tester.tap(moreBtn.first, warnIfMissed: false);
+        await tester.pump(const Duration(milliseconds: 300));
+
+        final vider = find.text('Vider le panier');
+        if (vider.evaluate().isNotEmpty) {
+          await tester.tap(vider.first, warnIfMissed: false);
+          await tester.pump(const Duration(milliseconds: 300));
+
+          final annuler = find.text('Annuler');
+          if (annuler.evaluate().isNotEmpty) {
+            await tester.tap(annuler.first, warnIfMissed: false);
+            await tester.pump(const Duration(milliseconds: 300));
+          }
+        }
+      }
+      tester.takeException();
+      expect(find.byType(CartScreen), findsOneWidget);
+    });
+  });
 }

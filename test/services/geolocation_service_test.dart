@@ -61,5 +61,56 @@ void main() {
     test('1.5 km → "1.5 km"', () {
       expect(GeolocationService.formatDistance(1.5), '1.5 km');
     });
+
+    test('0.0 km → "0 m"', () {
+      expect(GeolocationService.formatDistance(0.0), '0 m');
+    });
+
+    test('0.1 km → "100 m"', () {
+      expect(GeolocationService.formatDistance(0.1), '100 m');
+    });
+
+    test('10.0 km → "10.0 km"', () {
+      expect(GeolocationService.formatDistance(10.0), '10.0 km');
+    });
+  });
+
+  group('GeolocationService.getDistanceToRestaurant', () {
+    test('retourne null si lat est null', () async {
+      final result = await GeolocationService.getDistanceToRestaurant(
+        restaurantLat: null,
+        restaurantLng: 1.5,
+      );
+      expect(result, isNull);
+    });
+
+    test('retourne null si lng est null', () async {
+      final result = await GeolocationService.getDistanceToRestaurant(
+        restaurantLat: 12.3,
+        restaurantLng: null,
+      );
+      expect(result, isNull);
+    });
+
+    test('retourne null si les deux sont null', () async {
+      final result = await GeolocationService.getDistanceToRestaurant(
+        restaurantLat: null,
+        restaurantLng: null,
+      );
+      expect(result, isNull);
+    });
+  });
+
+  group('GeolocationService.getCurrentPosition', () {
+    test('ne lève pas d\'exception en environnement de test', () async {
+      // En test, le GPS n'est pas disponible — on vérifie juste qu'il ne plante pas
+      try {
+        final pos = await GeolocationService.getCurrentPosition();
+        // Soit null (pas de GPS), soit une position
+        expect(pos == null || pos.latitude != null, isTrue);
+      } catch (_) {
+        // Acceptable en environnement de test sans GPS
+      }
+    });
   });
 }

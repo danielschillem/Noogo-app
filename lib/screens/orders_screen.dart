@@ -10,6 +10,7 @@ import '../utils/app_colors.dart';
 import '../utils/app_text_styles.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/rating_dialog.dart';
+import 'tracking_screen.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -469,6 +470,12 @@ class _OrdersScreenState extends State<OrdersScreen>
                       child: const Text('Suivre la commande'),
                     ),
                   ),
+                  // DEL-T09 : mini-carte tracking pour livraisons en route
+                  if (order.orderType == OrderType.livraison)
+                    TrackingMiniCard(
+                      order: order,
+                      onTap: () => _trackOrder(order),
+                    ),
                 ] else if (order.status == OrderStatus.delivered ||
                     order.status == OrderStatus.completed) ...[
                   const SizedBox(height: 16),
@@ -663,6 +670,18 @@ class _OrdersScreenState extends State<OrdersScreen>
   }
 
   void _trackOrder(Order order) {
+    // DEL-T09 : livraison en cours → ouvrir TrackingScreen
+    if (order.orderType == OrderType.livraison) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => TrackingScreen(order: order),
+        ),
+      );
+      return;
+    }
+
+    // Autres types : dialog simple
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

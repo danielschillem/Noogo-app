@@ -115,4 +115,97 @@ void main() {
       expect(e.statusCode, 404);
     });
   });
+
+  group('ValidationException', () {
+    test('statusCode = 422', () {
+      const e = ValidationException('Données invalides.');
+      expect(e.statusCode, 422);
+    });
+
+    test('toString contient ValidationException', () {
+      const e = ValidationException('Email invalide.');
+      expect(e.toString(), contains('ValidationException'));
+    });
+  });
+
+  group('RateLimitException', () {
+    test('statusCode = 429', () {
+      const e = RateLimitException('Trop de requêtes.');
+      expect(e.statusCode, 429);
+    });
+
+    test('toString contient RateLimitException', () {
+      const e = RateLimitException('Ralenti.');
+      expect(e.toString(), contains('RateLimitException'));
+    });
+  });
+
+  group('ServerException', () {
+    test('statusCode est conservé', () {
+      const e = ServerException('Erreur interne.', statusCode: 503);
+      expect(e.statusCode, 503);
+    });
+
+    test('toString contient ServerException et code', () {
+      const e = ServerException('Crash.', statusCode: 500);
+      expect(e.toString(), contains('ServerException'));
+      expect(e.toString(), contains('500'));
+    });
+  });
+
+  group('ParseException', () {
+    test('statusCode est null', () {
+      const e = ParseException('JSON invalide');
+      expect(e.statusCode, isNull);
+    });
+
+    test('userMessage est convivial', () {
+      const e = ParseException('Unexpected token');
+      expect(e.userMessage, contains('invalide'));
+    });
+
+    test('toString contient ParseException', () {
+      const e = ParseException('Bad format');
+      expect(e.toString(), contains('ParseException'));
+    });
+  });
+
+  group('AuthException.toString', () {
+    test('toString contient AuthException', () {
+      const e = AuthException('Token expiré.');
+      expect(e.toString(), contains('AuthException'));
+    });
+  });
+
+  group('ForbiddenException.toString', () {
+    test('toString contient ForbiddenException', () {
+      const e = ForbiddenException('Accès interdit.');
+      expect(e.toString(), contains('ForbiddenException'));
+    });
+  });
+
+  group('NotFoundException.toString', () {
+    test('toString contient NotFoundException', () {
+      const e = NotFoundException('Non trouvé.');
+      expect(e.toString(), contains('NotFoundException'));
+    });
+  });
+
+  group('ApiException._extractMessage edge cases', () {
+    test('corps vide → ApiException générique', () {
+      final e = ApiException.fromStatusCode(400, '');
+      expect(e, isA<ApiException>());
+    });
+
+    test('corps null → ApiException générique', () {
+      final e = ApiException.fromStatusCode(400, null);
+      expect(e, isA<ApiException>());
+    });
+
+    test('corps JSON sans message → ApiException générique', () {
+      final e =
+          ApiException.fromStatusCode(400, '{"errors":{"field":["err"]}}');
+      expect(e, isA<ApiException>());
+    });
+  });
 }

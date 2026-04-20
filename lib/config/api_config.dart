@@ -10,17 +10,16 @@ class ApiConfig {
   /// Base URL de l'API
   static String get baseUrl =>
       dotenv.env['API_BASE_URL'] ??
-      'https://noogo-backend-production.up.railway.app/api';
+      'https://noogo-backend-zn2v.onrender.com/api';
 
   /// Base URL pour les images
   static String get imageBaseUrl =>
-      dotenv.env['IMAGE_BASE_URL'] ??
-      'https://noogo-backend-production.up.railway.app';
+      dotenv.env['IMAGE_BASE_URL'] ?? 'https://noogo-backend-zn2v.onrender.com';
 
   /// Base URL pour les QR codes
   static String get qrBaseUrl =>
       dotenv.env['QR_BASE_URL'] ??
-      'https://noogo-backend-production.up.railway.app/api';
+      'https://noogo-backend-zn2v.onrender.com/api';
 
   // ============================================
   // 🔌 CONFIGURATION PUSHER

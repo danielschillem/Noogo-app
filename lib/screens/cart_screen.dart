@@ -220,7 +220,7 @@ class _CartScreenState extends State<CartScreen>
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          const Text('Mon Panier', style: AppTextStyles.heading1),
+          const Flexible(child: Text('Mon Panier', style: AppTextStyles.heading1, overflow: TextOverflow.ellipsis)),
           const Spacer(),
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
@@ -478,12 +478,16 @@ class _CartScreenState extends State<CartScreen>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Frais de livraison', style: AppTextStyles.bodyMedium),
-            Text(
-              'A partir de 1000 f',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.success,
-                fontWeight: FontWeight.w600,
+            const Flexible(child: Text('Frais de livraison', style: AppTextStyles.bodyMedium)),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                'A partir de 1000 f',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.success,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.end,
               ),
             ),
           ],

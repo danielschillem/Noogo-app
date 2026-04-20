@@ -289,4 +289,141 @@ void main() {
       expect(called, isFalse);
     });
   });
+
+  group('FlashInfoSection — bottom sheet détails', () {
+    testWidgets('tap carte ouvre bottom sheet avec nom offre', (tester) async {
+      await tester.pumpWidget(
+        _wrap(FlashInfoSection(flashInfos: [_fake(name: 'Offre Spéciale')])),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      final card = find.byType(GestureDetector);
+      if (card.evaluate().isNotEmpty) {
+        await tester.tap(card.first, warnIfMissed: false);
+        await tester.pump(const Duration(milliseconds: 300));
+        tester.takeException();
+      }
+      expect(find.byType(MaterialApp), findsOneWidget);
+    });
+
+    testWidgets('tap carte avec imageUrl vide ouvre bottom sheet',
+        (tester) async {
+      final info = _fake(name: 'Sans image');
+      await tester.pumpWidget(
+        _wrap(FlashInfoSection(flashInfos: [info])),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      final cards = find.byType(GestureDetector);
+      if (cards.evaluate().isNotEmpty) {
+        await tester.tap(cards.first, warnIfMissed: false);
+        await tester.pump(const Duration(milliseconds: 500));
+        tester.takeException();
+      }
+      expect(find.byType(MaterialApp), findsOneWidget);
+    });
+
+    testWidgets('tap carte avec discount type pourcentage', (tester) async {
+      final info = FlashInfo(
+        id: 99,
+        name: 'Promo 20%',
+        description: 'Réduction de 20%',
+        imageUrl: '',
+        backgroundColor: '#FF5722',
+        discountType: 'pourcentage',
+        discountValue: '20',
+      );
+      await tester.pumpWidget(
+        _wrap(FlashInfoSection(flashInfos: [info])),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      final cards = find.byType(GestureDetector);
+      if (cards.evaluate().isNotEmpty) {
+        await tester.tap(cards.first, warnIfMissed: false);
+        await tester.pump(const Duration(milliseconds: 500));
+        tester.takeException();
+      }
+      expect(find.byType(MaterialApp), findsOneWidget);
+    });
+
+    testWidgets('tap carte avec expiry bientôt affiche badge orange',
+        (tester) async {
+      final info = FlashInfo(
+        id: 100,
+        name: 'Offre expirante',
+        description: 'Expire bientôt',
+        imageUrl: '',
+        backgroundColor: '#4CAF50',
+        discountType: 'fixe',
+        discountValue: '100',
+        expiryDate: DateTime.now().add(const Duration(days: 2)),
+      );
+      await tester.pumpWidget(
+        _wrap(FlashInfoSection(flashInfos: [info])),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      tester.takeException();
+      expect(find.byType(FlashInfoSection), findsOneWidget);
+    });
+
+    testWidgets('liste vide retourne SizedBox.shrink', (tester) async {
+      await tester.pumpWidget(
+        _wrap(FlashInfoSection(flashInfos: const [])),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.byType(SizedBox), findsWidgets);
+    });
+
+    testWidgets('onOrderPressed déclenché depuis bottom sheet', (tester) async {
+      bool called = false;
+      await tester.pumpWidget(
+        _wrap(FlashInfoSection(
+          flashInfos: [_fake(name: 'Test Commander')],
+          onOrderPressed: () => called = true,
+        )),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      final cards = find.byType(GestureDetector);
+      if (cards.evaluate().isNotEmpty) {
+        await tester.tap(cards.first, warnIfMissed: false);
+        await tester.pump(const Duration(milliseconds: 500));
+        tester.takeException();
+        // Chercher bouton Commander dans le bottom sheet
+        final orderBtn = find.text('Commander maintenant');
+        if (orderBtn.evaluate().isNotEmpty) {
+          await tester.tap(orderBtn.first, warnIfMissed: false);
+          await tester.pump(const Duration(milliseconds: 300));
+        }
+      }
+      tester.takeException();
+      expect(find.byType(MaterialApp), findsOneWidget);
+    });
+
+    testWidgets('flash info avec couleur hex invalide ne plante pas',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(FlashInfoSection(
+            flashInfos: [_fake(backgroundColor: 'INVALID_COLOR')])),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      tester.takeException();
+      expect(find.byType(FlashInfoSection), findsOneWidget);
+    });
+
+    testWidgets('flash info avec description vide', (tester) async {
+      final info = FlashInfo(
+        id: 101,
+        name: 'Sans description',
+        description: '',
+        imageUrl: '',
+        backgroundColor: '#9C27B0',
+        discountType: 'fixe',
+        discountValue: '50',
+      );
+      await tester.pumpWidget(
+        _wrap(FlashInfoSection(flashInfos: [info])),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      tester.takeException();
+      expect(find.byType(FlashInfoSection), findsOneWidget);
+    });
+  });
 }

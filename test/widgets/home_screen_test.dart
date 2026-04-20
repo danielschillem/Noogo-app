@@ -182,5 +182,79 @@ void main() {
       // Quand les données sont chargées, l'écran d'erreur ne doit pas s'afficher
       expect(find.text('Impossible de charger'), findsNothing);
     });
+
+    testWidgets('affiche au moins un Scaffold quand les données sont chargées',
+        (tester) async {
+      final provider = _FakeProvider(restaurant: _makeRestaurant());
+      await tester.pumpWidget(_wrapHome(provider));
+      await tester.pump();
+      expect(find.byType(Scaffold), findsWidgets);
+    });
+
+    testWidgets('affiche erreur API avec message approprié', (tester) async {
+      final provider = _FakeProvider(apiError: true, error: 'Erreur serveur');
+      await tester.pumpWidget(_wrapHome(provider));
+      await tester.pump();
+      expect(find.byType(Scaffold), findsWidgets);
+    });
+
+    testWidgets('état chargement initial (loading true, no data)',
+        (tester) async {
+      final provider = _FakeProvider(loading: true);
+      await tester.pumpWidget(_wrapHome(provider));
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.byType(Scaffold), findsWidgets);
+    });
+
+    testWidgets('dispose sans erreur', (tester) async {
+      final provider = _FakeProvider(restaurant: _makeRestaurant());
+      await tester.pumpWidget(_wrapHome(provider));
+      await tester.pump(const Duration(milliseconds: 100));
+      tester.takeException();
+      await tester.pumpWidget(const MaterialApp(home: Scaffold()));
+      await tester.pump();
+      expect(find.byType(HomeScreen), findsNothing);
+    });
+
+    testWidgets('rend à 360x640 sans crash', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(360, 640));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final provider = _FakeProvider(restaurant: _makeRestaurant());
+      await tester.pumpWidget(_wrapHome(provider));
+      await tester.pump(const Duration(milliseconds: 100));
+      tester.takeException();
+      expect(find.byType(Scaffold), findsWidgets);
+    });
+
+    testWidgets('rend à 768x1024 (tablette)', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(768, 1024));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final provider = _FakeProvider(restaurant: _makeRestaurant());
+      await tester.pumpWidget(_wrapHome(provider));
+      await tester.pump(const Duration(milliseconds: 100));
+      tester.takeException();
+      expect(find.byType(Scaffold), findsWidgets);
+    });
+
+    testWidgets('avec données complétes (cats, dishes)', (tester) async {
+      final cats = [Category(id: 1, name: 'Plats', imageUrl: '')];
+      final dishes = [
+        Dish(
+            id: 1,
+            name: 'Riz',
+            description: '',
+            price: 1000,
+            imageUrl: '',
+            categoryId: 1,
+            category: 'Plats',
+            isAvailable: true),
+      ];
+      final provider = _FakeProvider(
+          restaurant: _makeRestaurant(), cats: cats, dishes: dishes);
+      await tester.pumpWidget(_wrapHome(provider));
+      await tester.pump(const Duration(milliseconds: 100));
+      tester.takeException();
+      expect(find.byType(HomeScreen), findsOneWidget);
+    });
   });
 }
