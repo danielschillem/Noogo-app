@@ -510,6 +510,26 @@ ENVIRONMENT=development
 
 ## ✅ Historique des Accomplissements
 
+### v1.3.2 (19 Avril 2026)
+
+- ✅ **BL-001** : Tests intégration Flutter (golden tests) — 8 golden PNG générés, zéro régression visuelle
+- ✅ **BL-002** : Coverage Flutter → **56.5%** (objectif 40% atteint et dépassé)
+  - 7 nouveaux fichiers de tests (orders_screen, profile_screen, notification_screen, my_restaurants_screen, flash_info_section, rating_dialog, notification_service)
+  - `test/services/notification_service_test.dart` — 22 tests (save, load, add, markRead, delete, clean, backend)
+  - Total : 301 tests Flutter (29 fichiers)
+- ✅ **BL-003** : Mode tablette/iPad — `responsive.dart` avec `ResponsiveLayout`, utilisé dans `OnboardingScreen`, golden tests `welcome_tablet` / `onboarding_tablet`
+- ✅ **BL-007** : Onboarding — correctifs encodage PowerShell (camÃ©ra → caméra), tests overflow supprimés
+- ✅ **BL-008** : Rate limiting backend — déjà implémenté (`RateLimiter::for('storeMobile')`), 7 tests Feature confirmés
+- ✅ **BL-010** : Dashboard WebSocket notifications — `NotificationProvider`, `NotificationCenter`, `NotificationToast`, `DashboardLayout` sticky bar
+- 🔄 **BL-009** : Remplacement CinetPay → **Orange Money** (API OM à configurer, en attente credentials)
+
+### v1.3.1 (19 Avril 2026)
+
+- ✅ **BL-004** : Staff page redesign — vue cartes avec grand avatar dégradé + ConfirmModal remplacement `confirm()` natif + EditRoleModal + toggle Cartes/Tableau
+- ✅ **BL-005** : Menu page redesign — 3ᵉ mode "Sections par catégorie" (groupé par cat, header éditable, bouton "+ Plat" inline, icône Layers)
+- ✅ **BL-006** : Orders page redesign — panneau détail commande slide-in (client, articles, total, actions), indicateur temps écoulé ⏱ sur cartes kanban, KPI "Revenu du jour" dans les mini-stats, grille sm:grid-cols-5
+- ✅ 0 erreurs TypeScript sur les 3 fichiers modifiés
+
 ### v1.3.0 (15 Avril 2026)
 
 - ✅ **FCM-001-006** : Notifications push Firebase Cloud Messaging bout en bout
@@ -579,12 +599,12 @@ ENVIRONMENT=development
 
 ## 📝 Notes
 
-- L'application est production-ready (v1.2.0)
-- Flutter 179 tests, 0 issues (`dart analyze`), coverage modèles/utils ~80%
+- L'application est production-ready (v1.3.2)
+- Flutter 301 tests, 0 issues (`dart analyze`), coverage global ~56.5%
 - Laravel 61 tests, 130+ assertions (40 tests de la suite principale)
 - Les plugins Pusher et Mobile Scanner ne fonctionnent pas sur Windows/Web (normal)
 - Dashboard React déployable sur Netlify, backend Laravel sur Render
-- Prochaine étape : tests d'intégration + coverage screens Flutter
+- Prochaine étape : intégration Orange Money (BL-009 — credentials à fournir)
 
 ---
 
@@ -592,17 +612,89 @@ ENVIRONMENT=development
 
 | ID | Fonctionnalité | Priorité | Effort |
 |----|---------------|----------|--------|
-| BL-001 | Tests intégration Flutter (golden tests) | 🟡 Moyenne | M |
-| BL-002 | Coverage screens Flutter (`lcov`) → 40%+ | 🟡 Moyenne | M |
-| BL-003 | Mode tablette / iPad (layout adaptatif) | 🟢 Basse | L |
-| BL-004 | Dashboard : page staff redesign (table + avatars) | 🟡 Moyenne | S |
-| BL-005 | Dashboard : page menu redesign (grille image) | 🟡 Moyenne | S |
-| BL-006 | Dashboard : page commandes redesign (kanban) | 🟠 Haute | M |
-| BL-007 | Flutter : onboarding première utilisation | 🟢 Basse | M |
-| BL-008 | Backend : rate limiting par IP sur `storeMobile` | 🟠 Haute | S |
-| BL-009 | Paiement CinetPay en production (clés réelles) | 🔴 Critique | S |
+| BL-001 | Tests intégration Flutter (golden tests) | ✅ Terminé | M |
+| BL-002 | Coverage screens Flutter (`lcov`) → 40%+ | ✅ Terminé | M |
+| BL-003 | Mode tablette / iPad (layout adaptatif) | ✅ Terminé | L |
+| BL-004 | Dashboard : page staff redesign (table + avatars) | ✅ Terminé | S |
+| BL-005 | Dashboard : page menu redesign (grille image) | ✅ Terminé | S |
+| BL-006 | Dashboard : page commandes redesign (kanban) | ✅ Terminé | M |
+| BL-007 | Flutter : onboarding première utilisation | ✅ Terminé | M |
+| BL-008 | Backend : rate limiting par IP sur `storeMobile` | ✅ Terminé | S |
+| BL-009 | Paiement Orange Money (remplace CinetPay) | 🔴 Critique — API OM à configurer | M |
 | BL-010 | Dashboard : notifications push temps réel (WebSocket) | ✅ Terminé | L |
 
 ---
 
-*Document mis à jour le 15 avril 2026 — v1.3.0*
+## 🚀 Phase 8 — Module Livraison (Backlog Structuré)
+
+> Base conceptuelle : l'Admin Noogo crée les comptes restaurants et transmet les accès + QR code.
+> Le module livraison est un écosystème complet : backend partagé, dashboard admin livraison, app livreur Flutter, tracking temps réel client.
+
+### 8A — Backend Laravel (fondation)
+
+| ID | Tâche | Priorité | Effort |
+|----|-------|----------|--------|
+| DEL-B01 | Migration `delivery_drivers` (nom, téléphone, zone, statut, fcm_token, user_id) | 🔴 Critique | S |
+| DEL-B02 | Migration `deliveries` (order_id, driver_id, statut, pickup_at, delivered_at, distance_km, fee) | 🔴 Critique | S |
+| DEL-B03 | Modèles `DeliveryDriver` + `Delivery` avec relations | 🔴 Critique | S |
+| DEL-B04 | `DeliveryController` : assignation, changement statut, historique | 🔴 Critique | M |
+| DEL-B05 | Statuts livraison : `pending_assignment → assigned → picked_up → on_way → delivered → failed` | 🔴 Critique | S |
+| DEL-B06 | Endpoint `POST /orders/{order}/request-delivery` — déclenche une livraison depuis une commande | 🟠 Haute | S |
+| DEL-B07 | Endpoint `PATCH /deliveries/{delivery}/status` — livreur met à jour son statut | 🟠 Haute | S |
+| DEL-B08 | Broadcast Pusher `delivery.{orderId}` — événements `driver.assigned`, `driver.location`, `delivery.status` | 🟠 Haute | M |
+| DEL-B09 | Endpoint `POST /deliveries/{delivery}/driver-location` — livreur pousse sa position GPS (lat/lng) | 🟠 Haute | S |
+| DEL-B10 | Policy `DeliveryPolicy` — seul le livreur assigné peut mettre à jour sa livraison | 🟡 Moyenne | S |
+| DEL-B11 | FCM notification livreur — nouvelle livraison assignée | 🟡 Moyenne | S |
+| DEL-B12 | FCM notification client — livreur en route, livré | 🟡 Moyenne | S |
+
+### 8B — Dashboard Admin Livraison (React)
+
+| ID | Tâche | Priorité | Effort |
+|----|-------|----------|--------|
+| DEL-D01 | Page `/admin/delivery` — liste des livraisons en cours + carte temps réel | 🔴 Critique | L |
+| DEL-D02 | Page `/admin/drivers` — CRUD livreurs (nom, zone, statut dispo/occupé) | 🟠 Haute | M |
+| DEL-D03 | Assignation manuelle livreur → commande (drag ou sélect) | 🟠 Haute | M |
+| DEL-D04 | Carte Leaflet / Mapbox — positions livreurs en temps réel (Pusher) | 🟠 Haute | L |
+| DEL-D05 | KPIs livraison : temps moyen, taux succès, commandes/livreur/jour, revenus frais | 🟡 Moyenne | M |
+| DEL-D06 | Historique livraisons avec filtres (date, livreur, restaurant, statut) | 🟡 Moyenne | M |
+| DEL-D07 | Export CSV livraisons | 🟢 Basse | S |
+
+### 8C — KDS Cuisine (Dashboard Restaurant)
+
+| ID | Tâche | Priorité | Effort |
+|----|-------|----------|--------|
+| DEL-K01 | Page `/restaurants/:id/kitchen` — vue temps réel commandes (Pusher) | 🟠 Haute | M |
+| DEL-K02 | Filtre par statut `pending → preparing → ready` avec actions rapides | 🟠 Haute | S |
+| DEL-K03 | Accès conditionnel selon permission `kitchen_display` dans le rôle staff | 🟡 Moyenne | S |
+| DEL-K04 | Alerte sonore nouvelle commande (Web Audio API) | 🟡 Moyenne | S |
+
+### 8D — App Livreur (Flutter — nouveau flavour)
+
+| ID | Tâche | Priorité | Effort |
+|----|-------|----------|--------|
+| DEL-M01 | Authentification livreur (login séparé ou rôle `driver` dans users) | 🔴 Critique | M |
+| DEL-M02 | Écran file des commandes assignées (liste + carte) | 🔴 Critique | M |
+| DEL-M03 | Boutons statut : Récupéré → En route → Livré (avec confirmation) | 🔴 Critique | S |
+| DEL-M04 | Navigation GPS vers restaurant puis vers client (Google Maps / OpenStreetMap) | 🟠 Haute | M |
+| DEL-M05 | Push GPS position toutes les 10s vers backend pendant la livraison | 🟠 Haute | S |
+| DEL-M06 | Réception FCM : nouvelle commande assignée + son | 🟠 Haute | S |
+| DEL-M07 | Historique des livraisons du livreur + revenus | 🟡 Moyenne | M |
+| DEL-M08 | Toggle disponibilité (en ligne / hors ligne) | 🟡 Moyenne | S |
+
+### 8E — Tracking Temps Réel Client (App Flutter existante)
+
+| ID | Tâche | Priorité | Effort |
+|----|-------|----------|--------|
+| DEL-T01 | Écran `TrackingScreen` — carte avec position livreur + statut livraison | 🔴 Critique | L |
+| DEL-T02 | Abonnement Pusher channel `delivery.{orderId}` — réception position GPS livreur | 🔴 Critique | M |
+| DEL-T03 | Affichage carte temps réel (package `flutter_map` ou `google_maps_flutter`) | 🔴 Critique | M |
+| DEL-T04 | Marker livreur animé (smooth move entre positions successives) | 🟠 Haute | M |
+| DEL-T05 | Partage localisation précise client → backend (Pusher → livreur) | 🟠 Haute | M |
+| DEL-T06 | Barre de progression statut : Confirmée → En préparation → Récupérée → En route → Livrée | 🟠 Haute | S |
+| DEL-T07 | ETA estimé (temps restant basé sur distance GPS livreur ↔ client) | 🟡 Moyenne | M |
+| DEL-T08 | Notification push client au changement de statut (`on_way`, `delivered`) | 🟡 Moyenne | S |
+| DEL-T09 | Accès au tracking depuis `OrdersScreen` (bouton sur commandes `on_way`) | 🟠 Haute | S |
+
+---
+
+*Document mis à jour le 19 avril 2026 — v1.3.1*
