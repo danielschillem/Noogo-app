@@ -37,10 +37,11 @@ RUN mkdir -p storage/logs storage/framework/cache \
 ENV PHP_OPCACHE_ENABLE=1
 
 # -- AUTORUN serversideup --------------------------------------
-# Nginx + PHP-FPM demarrent EN PREMIER via s6-overlay,
-# puis les autorun s executent en arriere-plan.
+# Storage link + optimizations run in entrypoint (no DB needed).
+# Migrations are handled by our s6 oneshot service (noogo-db-init)
+# which runs AFTER Nginx is up, avoiding Render port-detection timeout.
 ENV AUTORUN_ENABLED=true \
-    AUTORUN_LARAVEL_MIGRATION=true \
+    AUTORUN_LARAVEL_MIGRATION=false \
     AUTORUN_LARAVEL_CONFIG_CACHE=true \
     AUTORUN_LARAVEL_ROUTE_CACHE=true \
     AUTORUN_LARAVEL_VIEW_CACHE=true \
@@ -53,7 +54,14 @@ ENV NGINX_HTTP_PORT=10000
 
 # -- Entrypoint personnalise : APP_KEY + .env + PORT -> NGINX_HTTP_PORT --
 COPY docker/entrypoint.d/00-noogo-setup.sh /etc/entrypoint.d/00-noogo-setup.sh
-COPY docker/entrypoint.d/99-noogo-seed.sh /etc/entrypoint.d/99-noogo-seed.sh
-RUN chmod +x /etc/entrypoint.d/00-noogo-setup.sh /etc/entrypoint.d/99-noogo-seed.sh
+RUN chmod +x /etc/entrypoint.d/00-noogo-setup.sh
+
+# -- s6 oneshot : migrations + seed APRÈS Nginx (évite timeout Render) --
+COPY docker/s6/noogo-db-init/type /etc/s6-overlay/s6-rc.d/noogo-db-init/type
+COPY docker/s6/noogo-db-init/up /etc/s6-overlay/s6-rc.d/noogo-db-init/up
+COPY docker/s6/noogo-db-init/dependencies.d/nginx /etc/s6-overlay/s6-rc.d/noogo-db-init/dependencies.d/nginx
+COPY docker/s6/scripts/noogo-db-init /etc/s6-overlay/scripts/noogo-db-init
+RUN touch /etc/s6-overlay/s6-rc.d/user/contents.d/noogo-db-init \
+    && chmod +x /etc/s6-overlay/scripts/noogo-db-init
 
 EXPOSE 10000
