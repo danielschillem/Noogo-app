@@ -2,8 +2,8 @@
 
 > Feuille de route du développement de l'application Noogo
 
-**Version actuelle :** 1.3.0  
-**Dernière mise à jour :** 15 avril 2026  
+**Version actuelle :** 1.4.1  
+**Dernière mise à jour :** 20 avril 2026  
 **Développeur :** QUICK DEV-IT  
 **Licence :** Propriétaire  
 **Copyright :** © 2026 QUICK DEV-IT. Tous droits réservés.  
@@ -16,15 +16,16 @@
 | Métrique | Valeur | Statut |
 | -------- | ------ | ------ |
 | Écrans | 15 | ✅ |
-| Services | 12 | ✅ |
+| Services | 18 | ✅ |
 | Modèles | 9 | ✅ |
-| Widgets | 8 | ✅ |
-| Tests Flutter | 179 (16 fichiers) | ✅ |
+| Widgets | 11 | ✅ |
+| Tests Flutter | 1050+ | ✅ |
 | Tests Laravel | 131 tests · 424 assertions | ✅ |
 | Couverture modèles/utils | ~80% | 🟢 |
-| Couverture globale (lcov) | ~17% | 🟡 |
-| Documentation | 90% | 🟢 |
-| Santé globale | 9.3/10 | 🟢 |
+| Couverture globale (lcov) | ~56%+ | 🟢 |
+| Documentation | 95% | 🟢 |
+| Santé globale | 9.5/10 | 🟢 |
+| i18n (FR/EN) | 160+ clés | ✅ |
 
 ---
 

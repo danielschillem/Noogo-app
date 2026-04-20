@@ -308,4 +308,48 @@ class AuthService {
       return {'success': false, 'message': 'Erreur réseau: $e'};
     }
   }
+
+  // ✅ Changer le mot de passe (utilisateur connecté)
+  static Future<Map<String, dynamic>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        return {'success': false, 'message': 'Non authentifié'};
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/change-password'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'current_password': currentPassword,
+          'password': newPassword,
+          'password_confirmation': confirmPassword,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Mot de passe modifié',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': _parseErrorMessage(data) ?? 'Erreur de modification',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Erreur réseau: $e'};
+    }
+  }
 }

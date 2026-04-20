@@ -40,4 +40,41 @@ else
     echo "ℹ️  PORT non défini — NGINX_HTTP_PORT reste à ${NGINX_HTTP_PORT:-10000}"
 fi
 
+# ── Attendre la base de données (free-tier cold start) ──────
+if [ -n "$DB_URL" ]; then
+    echo "⏳ Attente de la base de données (max 120s)..."
+    RETRY=0
+    MAX_RETRIES=120
+    # Render DB_URL = postgres://user:pass@host:port/dbname
+    # PDO n'accepte pas ce format → on parse avec PHP pour construire un DSN pgsql valide
+    DB_CHECK_CMD='
+        $u = parse_url(getenv("DB_URL"));
+        if (!$u || !isset($u["host"])) exit(1);
+        $dsn = "pgsql:host=" . $u["host"]
+             . ";port=" . ($u["port"] ?? 5432)
+             . ";dbname=" . ltrim($u["path"] ?? "/postgres", "/");
+        $ssl = getenv("DB_SSLMODE") ?: "require";
+        $dsn .= ";sslmode=" . $ssl;
+        try {
+            new PDO($dsn, $u["user"] ?? "", $u["pass"] ?? "", [PDO::ATTR_TIMEOUT => 5]);
+        } catch (Exception $e) {
+            exit(1);
+        }
+    '
+    until php -r "$DB_CHECK_CMD" 2>/dev/null; do
+        RETRY=$((RETRY + 1))
+        if [ $RETRY -ge $MAX_RETRIES ]; then
+            echo "❌ Base de données injoignable après ${MAX_RETRIES}s"
+            break
+        fi
+        if [ $((RETRY % 10)) -eq 0 ]; then
+            echo "⏳ Toujours en attente de la DB... ${RETRY}s/${MAX_RETRIES}s"
+        fi
+        sleep 1
+    done
+    if [ $RETRY -lt $MAX_RETRIES ]; then
+        echo "✅ Base de données prête après ${RETRY}s"
+    fi
+fi
+
 exit 0

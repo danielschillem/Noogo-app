@@ -717,10 +717,12 @@ class _OrdersScreenState extends State<OrdersScreen>
   }
 
   void _showRatingDialog(Order order) {
+    final restaurantId = context.read<RestaurantProvider>().restaurant?.id;
     showDialog(
       context: context,
       builder: (context) => RatingDialog(
         order: order,
+        restaurantId: restaurantId,
         onRated: () {
           setState(() => _ratedOrderIds.add(order.id));
           if (mounted) {

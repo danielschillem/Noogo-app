@@ -38,6 +38,8 @@ services:
         fromDatabase:
           name: noogo-db
           property: connectionString
+      - key: DB_SSLMODE
+        value: require
       - key: FRONTEND_URL
         value: https://noogo-dashboard.netlify.app
       - key: LOG_CHANNEL

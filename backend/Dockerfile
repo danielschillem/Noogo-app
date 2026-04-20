@@ -53,6 +53,7 @@ ENV NGINX_HTTP_PORT=10000
 
 # -- Entrypoint personnalise : APP_KEY + .env + PORT -> NGINX_HTTP_PORT --
 COPY docker/entrypoint.d/00-noogo-setup.sh /etc/entrypoint.d/00-noogo-setup.sh
-RUN chmod +x /etc/entrypoint.d/00-noogo-setup.sh
+COPY docker/entrypoint.d/99-noogo-seed.sh /etc/entrypoint.d/99-noogo-seed.sh
+RUN chmod +x /etc/entrypoint.d/00-noogo-setup.sh /etc/entrypoint.d/99-noogo-seed.sh
 
 EXPOSE 10000

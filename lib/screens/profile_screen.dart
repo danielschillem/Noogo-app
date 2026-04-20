@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 import '../services/restaurant_provider.dart';
 import '../services/auth_service.dart';
@@ -300,6 +301,11 @@ class _ProfileScreenState extends State<ProfileScreen>
         'icon': Icons.person_outline,
         'title': 'Mes informations personnelles',
         'action': _showPersonalInfo
+      },
+      {
+        'icon': Icons.lock_outline,
+        'title': 'Changer le mot de passe',
+        'action': _showChangePassword
       },
       {
         'icon': Icons.location_on_outlined,
@@ -649,19 +655,32 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  void _showChangePassword() {
+    if (_currentUser == null) {
+      _showAuthScreen();
+      return;
+    }
+    showDialog(
+      context: context,
+      builder: (dialogContext) => _ChangePasswordDialog(
+        onSuccess: () {
+          if (_isAlive && mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Mot de passe modifié avec succès'),
+                backgroundColor: AppColors.success,
+              ),
+            );
+          }
+        },
+      ),
+    );
+  }
+
   void _showDeliveryAddresses() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Adresses de livraison'),
-        content:
-            const Text('Fonctionnalité à venir dans la prochaine version.'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Fermer')),
-        ],
-      ),
+      builder: (context) => _DeliveryAddressesDialog(),
     );
   }
 
@@ -699,16 +718,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   void _showNotificationSettings() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Notifications'),
-        content: const Text(
-            'Paramètres de notification à venir dans une prochaine mise à jour.'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Fermer')),
-        ],
-      ),
+      builder: (context) => _NotificationSettingsDialog(),
     );
   }
 
@@ -937,5 +947,343 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
           : null,
       createdAt: widget.user.createdAt,
     ));
+  }
+}
+
+// ─── Dialog changement de mot de passe ────────────────────────────────────────
+
+class _ChangePasswordDialog extends StatefulWidget {
+  final VoidCallback onSuccess;
+  const _ChangePasswordDialog({required this.onSuccess});
+
+  @override
+  State<_ChangePasswordDialog> createState() => _ChangePasswordDialogState();
+}
+
+class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _currentController = TextEditingController();
+  final _newController = TextEditingController();
+  final _confirmController = TextEditingController();
+  bool _isLoading = false;
+  bool _obscureCurrent = true;
+  bool _obscureNew = true;
+
+  @override
+  void dispose() {
+    _currentController.dispose();
+    _newController.dispose();
+    _confirmController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isLoading = true);
+
+    final result = await AuthService.changePassword(
+      currentPassword: _currentController.text,
+      newPassword: _newController.text,
+      confirmPassword: _confirmController.text,
+    );
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (result['success'] == true) {
+      Navigator.pop(context);
+      widget.onSuccess();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Erreur'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Changer le mot de passe'),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: _currentController,
+              obscureText: _obscureCurrent,
+              decoration: InputDecoration(
+                labelText: 'Mot de passe actuel',
+                prefixIcon: const Icon(Icons.lock_outline),
+                suffixIcon: IconButton(
+                  icon: Icon(_obscureCurrent
+                      ? Icons.visibility_off
+                      : Icons.visibility),
+                  onPressed: () =>
+                      setState(() => _obscureCurrent = !_obscureCurrent),
+                ),
+              ),
+              validator: (v) =>
+                  (v?.isEmpty ?? true) ? 'Mot de passe requis' : null,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _newController,
+              obscureText: _obscureNew,
+              decoration: InputDecoration(
+                labelText: 'Nouveau mot de passe',
+                prefixIcon: const Icon(Icons.lock),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                      _obscureNew ? Icons.visibility_off : Icons.visibility),
+                  onPressed: () => setState(() => _obscureNew = !_obscureNew),
+                ),
+              ),
+              validator: (v) {
+                if (v == null || v.length < 6) return 'Minimum 6 caractères';
+                return null;
+              },
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _confirmController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Confirmer le mot de passe',
+                prefixIcon: Icon(Icons.lock_clock),
+              ),
+              validator: (v) {
+                if (v != _newController.text) {
+                  return 'Les mots de passe ne correspondent pas';
+                }
+                return null;
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isLoading ? null : () => Navigator.pop(context),
+          child: const Text('Annuler'),
+        ),
+        ElevatedButton(
+          onPressed: _isLoading ? null : _submit,
+          child: _isLoading
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2))
+              : const Text('Modifier'),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Dialog adresses de livraison ─────────────────────────────────────────────
+
+class _DeliveryAddressesDialog extends StatefulWidget {
+  @override
+  State<_DeliveryAddressesDialog> createState() =>
+      _DeliveryAddressesDialogState();
+}
+
+class _DeliveryAddressesDialogState extends State<_DeliveryAddressesDialog> {
+  List<String> _addresses = [];
+  final _newAddressController = TextEditingController();
+
+  static const String _prefsKey = 'delivery_addresses';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAddresses();
+  }
+
+  @override
+  void dispose() {
+    _newAddressController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadAddresses() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getStringList(_prefsKey) ?? [];
+    if (mounted) setState(() => _addresses = raw);
+  }
+
+  Future<void> _saveAddresses() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_prefsKey, _addresses);
+  }
+
+  void _addAddress() {
+    final addr = _newAddressController.text.trim();
+    if (addr.length < 5) return;
+    setState(() => _addresses.add(addr));
+    _newAddressController.clear();
+    _saveAddresses();
+  }
+
+  void _removeAddress(int index) {
+    setState(() => _addresses.removeAt(index));
+    _saveAddresses();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Adresses de livraison'),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_addresses.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Text(
+                  'Aucune adresse enregistrée',
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
+              )
+            else
+              ...List.generate(_addresses.length, (i) {
+                return ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading:
+                      const Icon(Icons.location_on, color: AppColors.primary),
+                  title:
+                      Text(_addresses[i], style: const TextStyle(fontSize: 13)),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete_outline,
+                        color: AppColors.error, size: 20),
+                    onPressed: () => _removeAddress(i),
+                  ),
+                );
+              }),
+            const Divider(),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _newAddressController,
+                    decoration: const InputDecoration(
+                      hintText: 'Nouvelle adresse...',
+                      isDense: true,
+                      border: OutlineInputBorder(),
+                    ),
+                    textCapitalization: TextCapitalization.sentences,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: _addAddress,
+                  icon: const Icon(Icons.add_circle, color: AppColors.primary),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Fermer'),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Dialog paramètres de notifications ───────────────────────────────────────
+
+class _NotificationSettingsDialog extends StatefulWidget {
+  @override
+  State<_NotificationSettingsDialog> createState() =>
+      _NotificationSettingsDialogState();
+}
+
+class _NotificationSettingsDialogState
+    extends State<_NotificationSettingsDialog> {
+  bool _orderUpdates = true;
+  bool _promotions = true;
+  bool _deliveryAlerts = true;
+
+  static const String _prefsKey = 'notification_settings';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _orderUpdates = prefs.getBool('${_prefsKey}_orders') ?? true;
+        _promotions = prefs.getBool('${_prefsKey}_promos') ?? true;
+        _deliveryAlerts = prefs.getBool('${_prefsKey}_delivery') ?? true;
+      });
+    }
+  }
+
+  Future<void> _saveSetting(String key, bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('${_prefsKey}_$key', value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Paramètres de notifications'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SwitchListTile(
+            title: const Text('Mises à jour commandes'),
+            subtitle: const Text('Statut de vos commandes en temps réel'),
+            value: _orderUpdates,
+            activeColor: AppColors.primary,
+            onChanged: (v) {
+              setState(() => _orderUpdates = v);
+              _saveSetting('orders', v);
+            },
+          ),
+          SwitchListTile(
+            title: const Text('Promotions'),
+            subtitle: const Text('Offres et réductions'),
+            value: _promotions,
+            activeColor: AppColors.primary,
+            onChanged: (v) {
+              setState(() => _promotions = v);
+              _saveSetting('promos', v);
+            },
+          ),
+          SwitchListTile(
+            title: const Text('Alertes livraison'),
+            subtitle: const Text('Position du livreur et arrivée'),
+            value: _deliveryAlerts,
+            activeColor: AppColors.primary,
+            onChanged: (v) {
+              setState(() => _deliveryAlerts = v);
+              _saveSetting('delivery', v);
+            },
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Fermer'),
+        ),
+      ],
+    );
   }
 }

@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\DeliveryController;
+use App\Http\Controllers\Api\RatingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -78,6 +79,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/refresh', [AuthController::class, 'refresh']);
         Route::put('/user/update', [AuthController::class, 'updateUser']);
+        Route::post('/change-password', [AuthController::class, 'changePassword']);
         // Retourne les restaurants accessibles (proprio + staff) — pour la vue propriétaire
         Route::get('/my-restaurants', [StaffController::class, 'myRestaurants']);
         // Token FCM : enregistrement au login, suppression au logout
@@ -125,6 +127,10 @@ Route::middleware('auth:sanctum')->group(function () {
         // Flash Infos / Offres
         Route::apiResource('flash-infos', FlashInfoController::class);
         Route::post('/flash-infos/{flashInfo}/toggle-active', [FlashInfoController::class, 'toggleActive']);
+
+        // Ratings / Avis
+        Route::get('/ratings', [RatingController::class, 'index']);
+        Route::post('/orders/{order}/rate', [RatingController::class, 'store']);
 
         // Personnel du restaurant (owner + super admin uniquement)
         Route::get('/staff', [StaffController::class, 'index']);

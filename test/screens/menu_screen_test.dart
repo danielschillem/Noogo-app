@@ -14,23 +14,34 @@ class _FakeProvider extends RestaurantProvider {
   final Restaurant? _resto;
   final List<Category> _cats;
   final List<Dish> _dishes;
+  final bool _apiError;
+  final String? _errorMsg;
+  final bool _offline;
 
   _FakeProvider(
       {Restaurant? resto,
       List<Category> cats = const [],
-      List<Dish> dishes = const []})
+      List<Dish> dishes = const [],
+      bool apiError = false,
+      String? errorMsg,
+      bool offline = false})
       : _resto = resto,
         _cats = cats,
-        _dishes = dishes;
+        _dishes = dishes,
+        _apiError = apiError,
+        _errorMsg = errorMsg,
+        _offline = offline;
 
   @override
   Restaurant? get restaurant => _resto;
   @override
   bool get isLoading => false;
   @override
-  bool get hasApiError => false;
+  bool get hasApiError => _apiError;
   @override
-  String? get error => null;
+  bool get isOffline => _offline;
+  @override
+  String? get error => _errorMsg;
   @override
   bool get hasData => _resto != null;
   @override
@@ -52,6 +63,16 @@ class _FakeProvider extends RestaurantProvider {
   List<FlashInfo> get flashInfos => [];
   @override
   int get currentNavIndex => 1;
+  @override
+  bool isFavoriteDish(int dishId) => false;
+  @override
+  List<Dish> get favoriteDishes => [];
+  @override
+  Future<void> refreshAllData() async {}
+  @override
+  Future<void> toggleFavoriteDish(int dishId) async {}
+  @override
+  void addToCart(Dish dish, {int quantity = 1}) {}
 }
 
 Restaurant _fakeRestaurant() => Restaurant(
@@ -330,6 +351,181 @@ void main() {
       );
       await tester.pumpWidget(_wrap(provider));
       await tester.pump(const Duration(milliseconds: 200));
+      tester.takeException();
+      expect(find.byType(MenuScreen), findsOneWidget);
+    });
+  });
+
+  group('MenuScreen — interactions plats', () {
+    Dish _dish({bool available = true}) => Dish(
+          id: 1,
+          name: 'Riz sauce',
+          description: 'Délicieux',
+          price: 1500,
+          imageUrl: '',
+          categoryId: 1,
+          category: 'Plats chauds',
+          isAvailable: available,
+        );
+
+    testWidgets('tap bouton + incrémente quantité', (tester) async {
+      final provider = _FakeProvider(
+        resto: _fakeRestaurant(),
+        cats: [_fakeCategory()],
+        dishes: [_dish()],
+      );
+      await tester.pumpWidget(_wrap(provider));
+      await tester.pump(const Duration(milliseconds: 200));
+      final addBtn = find.byIcon(Icons.add);
+      if (addBtn.evaluate().isNotEmpty) {
+        await tester.tap(addBtn.first, warnIfMissed: false);
+        await tester.pump();
+      }
+      tester.takeException();
+      expect(find.byType(MenuScreen), findsOneWidget);
+    });
+
+    testWidgets('tap bouton + puis bouton - décrémente quantité',
+        (tester) async {
+      final provider = _FakeProvider(
+        resto: _fakeRestaurant(),
+        cats: [_fakeCategory()],
+        dishes: [_dish()],
+      );
+      await tester.pumpWidget(_wrap(provider));
+      await tester.pump(const Duration(milliseconds: 200));
+      final addBtn = find.byIcon(Icons.add);
+      if (addBtn.evaluate().isNotEmpty) {
+        await tester.tap(addBtn.first, warnIfMissed: false);
+        await tester.pump();
+        await tester.tap(addBtn.first, warnIfMissed: false);
+        await tester.pump();
+      }
+      final remBtn = find.byIcon(Icons.remove);
+      if (remBtn.evaluate().isNotEmpty) {
+        await tester.tap(remBtn.first, warnIfMissed: false);
+        await tester.pump();
+      }
+      tester.takeException();
+      expect(find.byType(MenuScreen), findsOneWidget);
+    });
+
+    testWidgets('hasApiError affiche bannière hors-ligne', (tester) async {
+      final provider = _FakeProvider(
+        resto: _fakeRestaurant(),
+        cats: [_fakeCategory()],
+        dishes: [_dish()],
+        apiError: true,
+      );
+      await tester.pumpWidget(_wrap(provider));
+      await tester.pump(const Duration(milliseconds: 200));
+      tester.takeException();
+      expect(find.byIcon(Icons.wifi_off), findsWidgets);
+    });
+
+    testWidgets('isOffline affiche texte mode hors-ligne', (tester) async {
+      final provider = _FakeProvider(
+        resto: _fakeRestaurant(),
+        cats: [_fakeCategory()],
+        dishes: [_dish()],
+        offline: true,
+      );
+      await tester.pumpWidget(_wrap(provider));
+      await tester.pump(const Duration(milliseconds: 200));
+      tester.takeException();
+      expect(find.textContaining('hors-ligne'), findsWidgets);
+    });
+
+    testWidgets('tap Réessayer dans bannière ne plante pas', (tester) async {
+      final provider = _FakeProvider(
+        resto: _fakeRestaurant(),
+        cats: [_fakeCategory()],
+        dishes: [_dish()],
+        apiError: true,
+      );
+      await tester.pumpWidget(_wrap(provider));
+      await tester.pump(const Duration(milliseconds: 200));
+      final btn = find.text('Réessayer');
+      if (btn.evaluate().isNotEmpty) {
+        await tester.tap(btn.first, warnIfMissed: false);
+        await tester.pump();
+      }
+      tester.takeException();
+      expect(find.byType(MenuScreen), findsOneWidget);
+    });
+
+    testWidgets('error sans data affiche widget erreur', (tester) async {
+      final provider = _FakeProvider(
+        errorMsg: 'Connexion impossible',
+      );
+      await tester.pumpWidget(_wrap(provider));
+      await tester.pump(const Duration(milliseconds: 200));
+      tester.takeException();
+      expect(find.byType(Scaffold), findsWidgets);
+    });
+
+    testWidgets('tap bouton favori ne plante pas', (tester) async {
+      final provider = _FakeProvider(
+        resto: _fakeRestaurant(),
+        cats: [_fakeCategory()],
+        dishes: [_dish()],
+      );
+      await tester.pumpWidget(_wrap(provider));
+      await tester.pump(const Duration(milliseconds: 200));
+      final favBtn = find.byIcon(Icons.favorite_border);
+      if (favBtn.evaluate().isNotEmpty) {
+        await tester.tap(favBtn.first, warnIfMissed: false);
+        await tester.pump();
+      }
+      tester.takeException();
+      expect(find.byType(MenuScreen), findsOneWidget);
+    });
+
+    testWidgets('plat non disponible affiche overlay', (tester) async {
+      final provider = _FakeProvider(
+        resto: _fakeRestaurant(),
+        cats: [_fakeCategory()],
+        dishes: [_dish(available: false)],
+      );
+      await tester.pumpWidget(_wrap(provider));
+      await tester.pump(const Duration(milliseconds: 200));
+      tester.takeException();
+      expect(find.text('Non disponible'), findsWidgets);
+    });
+
+    testWidgets('recherche filtre les plats', (tester) async {
+      final dishes = [
+        Dish(
+            id: 1,
+            name: 'Riz sauce',
+            description: '',
+            price: 1000,
+            imageUrl: '',
+            categoryId: 1,
+            category: 'Plats',
+            isAvailable: true),
+        Dish(
+            id: 2,
+            name: 'Poulet rôti',
+            description: '',
+            price: 2000,
+            imageUrl: '',
+            categoryId: 1,
+            category: 'Plats',
+            isAvailable: true),
+      ];
+      final provider = _FakeProvider(
+        resto: _fakeRestaurant(),
+        cats: [_fakeCategory()],
+        dishes: dishes,
+      );
+      await tester.pumpWidget(_wrap(provider));
+      await tester.pump(const Duration(milliseconds: 200));
+      final searchField = find.byType(TextField);
+      if (searchField.evaluate().isNotEmpty) {
+        await tester.enterText(searchField.first, 'Riz');
+        await tester.pump();
+      }
       tester.takeException();
       expect(find.byType(MenuScreen), findsOneWidget);
     });

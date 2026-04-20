@@ -7,6 +7,28 @@ Versioning selon [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.4.1] — 20 avril 2026
+
+### Fonctionnalités ajoutées
+- **Livraison** : Option "Livraison" dans le flux de commande (CartScreen) avec saisie d'adresse de livraison
+- **Système de notation backend** : Migration `ratings`, modèle `Rating`, `RatingController` (POST + GET), routes API
+- **RatingService → API** : Les notes sont désormais envoyées au backend en plus du stockage local
+- **Changement de mot de passe** : Endpoint `POST /auth/change-password` + dialog dans ProfileScreen
+- **Adresses de livraison** : Dialog fonctionnel (CRUD local SharedPreferences) remplace le stub "à venir"
+- **Paramètres de notifications** : Dialog avec toggles (commandes, promos, livraison) remplace le stub
+
+### i18n
+- **160+ clés** FR/EN dans les fichiers ARB (vs 63 avant)
+- Clés ajoutées : livraison, changement MDP, profil, commandes, navigation, erreurs, confirmations
+
+### Nettoyage
+- Suppression de 5 dépendances inutilisées : `badges`, `flutter_spinkit`, `carousel_slider`, `animations`, `qr_flutter`
+
+### Tests
+- **1050 tests** — tous passent, 0 erreurs `dart analyze`
+
+---
+
 ## [1.4.0] — 19 avril 2026
 
 ### Tests ajoutés (BL-001 / BL-002 / BL-003)

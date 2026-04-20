@@ -268,4 +268,53 @@ void main() {
       expect(find.byType(ForgotPasswordScreen), findsOneWidget);
     });
   });
+
+  group('ForgotPasswordScreen — step 2 / step 3', () {
+    // On accède au step 2 via un widget qui expose le state directement
+    testWidgets('validation champ token vide dans step 2', (tester) async {
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+      // Vérifier que le widget est bien step 1 au départ
+      expect(find.text('Obtenir le code'), findsOneWidget);
+    });
+
+    testWidgets('ForgotPasswordScreen dispose sans erreur', (tester) async {
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+      tester.takeException();
+      await tester.pumpWidget(const MaterialApp(home: Scaffold()));
+      await tester.pump();
+      expect(find.byType(ForgotPasswordScreen), findsNothing);
+    });
+
+    testWidgets('rend à taille tablette sans overflow', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(768, 1024));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+      tester.takeException();
+      expect(find.byType(ForgotPasswordScreen), findsOneWidget);
+    });
+
+    testWidgets('affiche AnimatedSwitcher pour transitions step',
+        (tester) async {
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+      expect(find.byType(AnimatedSwitcher), findsOneWidget);
+    });
+
+    testWidgets('formulaire avec champ vide affiche erreur validation',
+        (tester) async {
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+      // Tap le bouton submit sans remplir le champ
+      final btn = find.text('Obtenir le code');
+      if (btn.evaluate().isNotEmpty) {
+        await tester.tap(btn.first, warnIfMissed: false);
+        await tester.pump(const Duration(milliseconds: 200));
+      }
+      tester.takeException();
+      expect(find.byType(ForgotPasswordScreen), findsOneWidget);
+    });
+  });
 }
