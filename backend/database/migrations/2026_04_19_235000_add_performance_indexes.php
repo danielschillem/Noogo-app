@@ -7,27 +7,56 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::table('orders', function (Blueprint $table) {
-            $table->index(['restaurant_id', 'order_date']);
-            $table->index(['restaurant_id', 'status']);
-            $table->index('order_date');
-        });
+        // Wrapped in try/catch: idempotent if indexes already exist
+        try {
+            Schema::table('orders', function (Blueprint $table) {
+                $table->index(['restaurant_id', 'order_date']);
+            });
+        } catch (\Exception $e) {}
 
-        Schema::table('dishes', function (Blueprint $table) {
-            $table->index(['restaurant_id', 'disponibilite']);
-        });
+        try {
+            Schema::table('orders', function (Blueprint $table) {
+                $table->index(['restaurant_id', 'status']);
+            });
+        } catch (\Exception $e) {}
+
+        try {
+            Schema::table('orders', function (Blueprint $table) {
+                $table->index('order_date');
+            });
+        } catch (\Exception $e) {}
+
+        try {
+            Schema::table('dishes', function (Blueprint $table) {
+                $table->index(['restaurant_id', 'disponibilite']);
+            });
+        } catch (\Exception $e) {}
     }
 
     public function down(): void
     {
-        Schema::table('orders', function (Blueprint $table) {
-            $table->dropIndex(['restaurant_id', 'order_date']);
-            $table->dropIndex(['restaurant_id', 'status']);
-            $table->dropIndex(['order_date']);
-        });
+        try {
+            Schema::table('orders', function (Blueprint $table) {
+                $table->dropIndex(['restaurant_id', 'order_date']);
+            });
+        } catch (\Exception $e) {}
 
-        Schema::table('dishes', function (Blueprint $table) {
-            $table->dropIndex(['restaurant_id', 'disponibilite']);
-        });
+        try {
+            Schema::table('orders', function (Blueprint $table) {
+                $table->dropIndex(['restaurant_id', 'status']);
+            });
+        } catch (\Exception $e) {}
+
+        try {
+            Schema::table('orders', function (Blueprint $table) {
+                $table->dropIndex(['order_date']);
+            });
+        } catch (\Exception $e) {}
+
+        try {
+            Schema::table('dishes', function (Blueprint $table) {
+                $table->dropIndex(['restaurant_id', 'disponibilite']);
+            });
+        } catch (\Exception $e) {}
     }
 };
