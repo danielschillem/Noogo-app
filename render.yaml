@@ -41,7 +41,7 @@ services:
       - key: DB_SSLMODE
         value: require
       - key: FRONTEND_URL
-        value: https://noogo.netlify.app
+        value: https://noogo-app.netlify.app
       - key: LOG_CHANNEL
         value: stderr
       - key: SESSION_DRIVER
