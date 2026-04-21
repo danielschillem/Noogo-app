@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 class QRHelper {
   /// URLs acceptées comme sources de QR codes valides
   static const List<String> _validBaseUrls = [
+    'https://noogo-app.netlify.app',
     'https://noogo.netlify.app',
     'https://noogo-dashboard.netlify.app',
     'https://dashboard-noogo.quickdev-it.com',
