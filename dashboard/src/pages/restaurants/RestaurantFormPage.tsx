@@ -507,7 +507,13 @@ export default function RestaurantFormPage() {
                                             }));
                                             setIsLocating(false);
                                         },
-                                        () => setIsLocating(false),
+                                        (err) => {
+                                            setIsLocating(false);
+                                            const msg = err.code === 1
+                                                ? 'Permission de localisation refusée. Autorisez-la dans les paramètres du navigateur.'
+                                                : 'Impossible de récupérer la position GPS.';
+                                            alert(msg);
+                                        },
                                         { enableHighAccuracy: true, timeout: 10000 }
                                     );
                                 }}
