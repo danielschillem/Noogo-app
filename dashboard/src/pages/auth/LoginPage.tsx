@@ -18,7 +18,18 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await login(email, password);
-      navigate('/');
+      // Redirection selon le rôle
+      // Note : useAuth().user est mis à jour après login, on lit directement la réponse
+      // via une nouvelle requête /auth/me → en pratique on redirige vers '/'
+      // et DashboardPage ou AdminPage s'affiche selon is_admin.
+      // Pour les super_admin on redirige directement vers /admin.
+      const stored = localStorage.getItem('user');
+      const u = stored ? JSON.parse(stored) : null;
+      if (u?.role === 'super_admin' || (u?.is_admin && u?.role === 'super_admin')) {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } }; code?: string };
       if (e.code === 'ECONNABORTED' || !e.response) {

@@ -19,10 +19,10 @@ import type { Order, OrderStatus, Restaurant } from '../../types';
 
 /* ── Status config ── */
 const KDS_STATUSES: { status: string; label: string; color: string; bg: string; border: string; next?: OrderStatus }[] = [
-  { status: 'pending',   label: 'En attente',      color: '#ca8a04', bg: '#fefce8', border: '#fde68a', next: 'confirmed' },
-  { status: 'confirmed', label: 'Confirmées',       color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe', next: 'preparing' },
-  { status: 'preparing', label: 'En préparation',   color: '#7c3aed', bg: '#faf5ff', border: '#ddd6fe', next: 'ready' },
-  { status: 'ready',     label: 'Prêtes à servir',  color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0', next: 'delivered' },
+  { status: 'pending', label: 'En attente', color: '#ca8a04', bg: '#fefce8', border: '#fde68a', next: 'confirmed' },
+  { status: 'confirmed', label: 'Confirmées', color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe', next: 'preparing' },
+  { status: 'preparing', label: 'En préparation', color: '#7c3aed', bg: '#faf5ff', border: '#ddd6fe', next: 'ready' },
+  { status: 'ready', label: 'Prêtes à servir', color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0', next: 'delivered' },
 ];
 
 const KITCHEN_STATUSES = KDS_STATUSES.map(s => s.status);
@@ -116,10 +116,10 @@ function OrderTicket({
             className="w-full py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-90 active:scale-95"
             style={{ background: cfg.color, color: 'white' }}
           >
-            {cfg.next === 'confirmed'  && '✓ Confirmer'}
-            {cfg.next === 'preparing'  && '👨‍🍳 En préparation'}
-            {cfg.next === 'ready'      && '✅ Prêt à servir'}
-            {cfg.next === 'delivered'  && '🚀 Servi / Livré'}
+            {cfg.next === 'confirmed' && '✓ Confirmer'}
+            {cfg.next === 'preparing' && '👨‍🍳 En préparation'}
+            {cfg.next === 'ready' && '✅ Prêt à servir'}
+            {cfg.next === 'delivered' && '🚀 Servi / Livré'}
           </button>
         </div>
       )}
@@ -176,7 +176,10 @@ function KdsColumn({
 
 /* ── Main KitchenPage ── */
 export default function KitchenPage() {
-  const { id: restaurantId } = useParams<{ id: string }>();
+  // Accepte le param nommé "id" (route /restaurants/:id/kitchen)
+  // ou "restaurantId" (route /r/:restaurantId/kitchen pour le staff verrouillé)
+  const { id, restaurantId: paramRestaurantId } = useParams<{ id?: string; restaurantId?: string }>();
+  const restaurantId = id ?? paramRestaurantId;
   const rid = Number(restaurantId);
 
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
@@ -343,7 +346,7 @@ export default function KitchenPage() {
 
         {/* Center: total badge */}
         <div className="flex items-center gap-3">
-          {['pending','confirmed','preparing','ready'].map(s => {
+          {['pending', 'confirmed', 'preparing', 'ready'].map(s => {
             const cfg = KDS_STATUSES.find(k => k.status === s)!;
             const count = grouped[s]?.length ?? 0;
             return (

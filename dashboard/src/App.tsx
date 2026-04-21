@@ -3,8 +3,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import DashboardLayout from './components/layout/DashboardLayout';
+import RestaurantLayout from './components/layout/RestaurantLayout';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import RestaurantLoginPage from './pages/auth/RestaurantLoginPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import RestaurantsPage from './pages/restaurants/RestaurantsPage';
 import RestaurantFormPage from './pages/restaurants/RestaurantFormPage';
@@ -32,7 +34,7 @@ const queryClient = new QueryClient({
 });
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, lockedRestaurantId } = useAuth();
 
   if (isLoading) {
     return (
@@ -42,7 +44,10 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  // Utilisateur verrouillé sur un restaurant → il ne peut pas accéder au dashboard global
+  if (lockedRestaurantId) return <Navigate to={`/r/${lockedRestaurantId}/orders`} replace />;
+  return <>{children}</>;
 }
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
@@ -62,7 +67,7 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, lockedRestaurantId } = useAuth();
 
   if (isLoading) {
     return (
@@ -72,7 +77,13 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return !isAuthenticated ? <>{children}</> : <Navigate to="/" replace />;
+  if (isAuthenticated) {
+    // Si l'utilisateur est verrouillé sur un restaurant → le renvoyer à son espace
+    if (lockedRestaurantId) return <Navigate to={`/r/${lockedRestaurantId}/orders`} replace />;
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
 }
 
 function AppRoutes() {
@@ -139,6 +150,18 @@ function AppRoutes() {
 
       {/* Redirect unknown routes */}
       <Route path="*" element={<Navigate to="/" replace />} />
+
+      {/* Routes restaurant isolées (/r/:restaurantId/*) */}
+      {/* Login spécifique à un restaurant — public */}
+      <Route path="/r/:restaurantId/login" element={<RestaurantLoginPage />} />
+
+      {/* Espace staff verrouillé — le RestaurantLayout gère l'isolation */}
+      <Route path="/r/:restaurantId" element={<RestaurantLayout />}>
+        <Route index element={<Navigate to="orders" replace />} />
+        <Route path="orders" element={<OrdersPage />} />
+        <Route path="kitchen" element={<KitchenPage />} />
+        <Route path="menu" element={<MenuPage />} />
+      </Route>
     </Routes>
   );
 }

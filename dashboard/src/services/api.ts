@@ -30,7 +30,7 @@ api.interceptors.response.use(
   (error) => {
     const is401 = error.response?.status === 401;
     const isAuthEndpoint = error.config?.url?.includes('/auth/');
-    const alreadyOnLogin = window.location.pathname === '/login';
+    const alreadyOnLogin = window.location.pathname === '/login' || window.location.pathname.endsWith('/login');
 
     // Redirige vers /login uniquement si :
     //  - c'est un 401 sur un endpoint non-auth (ex: /dashboard, /restaurants…)
@@ -40,7 +40,14 @@ api.interceptors.response.use(
       _redirectingToLogin = true;
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      // Si l'utilisateur était sur une page restaurant verrouillée, on le redirige vers ce login
+      const lockedId = localStorage.getItem('locked_restaurant_id');
+      localStorage.removeItem('locked_restaurant_id');
+      if (lockedId) {
+        window.location.href = `/r/${lockedId}/login`;
+      } else {
+        window.location.href = '/login';
+      }
     } else if (is401 && isAuthEndpoint) {
       // Pour /auth/me, /auth/refresh etc. : juste nettoyer le storage
       // AuthContext gère la redirection proprement
