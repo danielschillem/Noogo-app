@@ -24,13 +24,28 @@ api.interceptors.request.use(
 );
 
 // Interceptor pour gérer les erreurs
+let _redirectingToLogin = false;
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const is401 = error.response?.status === 401;
+    const isAuthEndpoint = error.config?.url?.includes('/auth/');
+    const alreadyOnLogin = window.location.pathname === '/login';
+
+    // Redirige vers /login uniquement si :
+    //  - c'est un 401 sur un endpoint non-auth (ex: /dashboard, /restaurants…)
+    //  - on n'est pas déjà sur /login (évite la boucle refresh)
+    //  - pas déjà en cours de redirection
+    if (is401 && !isAuthEndpoint && !alreadyOnLogin && !_redirectingToLogin) {
+      _redirectingToLogin = true;
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user');
       window.location.href = '/login';
+    } else if (is401 && isAuthEndpoint) {
+      // Pour /auth/me, /auth/refresh etc. : juste nettoyer le storage
+      // AuthContext gère la redirection proprement
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user');
     }
     return Promise.reject(error);
   }
