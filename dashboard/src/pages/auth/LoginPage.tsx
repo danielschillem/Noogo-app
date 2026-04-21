@@ -20,8 +20,12 @@ export default function LoginPage() {
       await login(email, password);
       navigate('/');
     } catch (err: unknown) {
-      const e = err as { response?: { data?: { message?: string } } };
-      setError(e.response?.data?.message || 'Identifiants invalides');
+      const e = err as { response?: { data?: { message?: string } }; code?: string };
+      if (e.code === 'ECONNABORTED' || !e.response) {
+        setError('Le serveur met du temps à répondre. Réessayez dans quelques secondes.');
+      } else {
+        setError(e.response?.data?.message || 'Identifiants invalides');
+      }
     } finally {
       setIsLoading(false);
     }
