@@ -1,9 +1,11 @@
 ﻿import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import {
     Plus, Pencil, Trash2, ToggleLeft, ToggleRight, Star, UtensilsCrossed, X,
     Search, LayoutGrid, List, ChevronDown, Filter, Layers,
 } from 'lucide-react';
 import { categoriesApi, dishesApi, restaurantsApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import type { Category, Dish, Restaurant } from '../../types';
 
 function buildImageUrl(path?: string | null): string {
@@ -247,8 +249,14 @@ function DishCard({ dish, onEdit, onDelete, onToggleAvail, onTogglePdj }: {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function MenuPage() {
+    // Route /r/:restaurantId/menu (staff verrouillé) ou /menu (admin/owner)
+    const { restaurantId: paramRestaurantId } = useParams<{ restaurantId?: string }>();
+    const { lockedRestaurantId } = useAuth();
+    // Priorité : param URL > contexte verrouillé
+    const forcedRestaurantId = paramRestaurantId ? Number(paramRestaurantId) : lockedRestaurantId;
+
     const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-    const [selectedRestaurantId, setSelectedRestaurantId] = useState<number | null>(null);
+    const [selectedRestaurantId, setSelectedRestaurantId] = useState<number | null>(forcedRestaurantId ?? null);
     const [categories, setCategories] = useState<Category[]>([]);
     const [dishes, setDishes] = useState<Dish[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -260,12 +268,17 @@ export default function MenuPage() {
     const [dishModal, setDishModal] = useState<{ open: boolean; dish: Dish | null; categoryId?: number }>({ open: false, dish: null });
 
     useEffect(() => {
+        // Si un restaurant est déjà forcé (staff verrouillé), pas besoin de charger la liste
+        if (forcedRestaurantId) {
+            setSelectedRestaurantId(forcedRestaurantId);
+            return;
+        }
         restaurantsApi.getAll().then(r => {
             const list: Restaurant[] = r.data.data.data || r.data.data;
             setRestaurants(list);
             if (list.length > 0) setSelectedRestaurantId(list[0].id);
         }).catch(console.error);
-    }, []);
+    }, [forcedRestaurantId]);
 
     useEffect(() => {
         if (!selectedRestaurantId) return;

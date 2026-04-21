@@ -1,11 +1,14 @@
 // Types pour l'application Noogo Dashboard
 
+export type UserRole = 'super_admin' | 'admin' | null;
+
 export interface User {
   id: number;
   name: string;
   email: string;
   phone?: string;
   is_admin: boolean;
+  role?: UserRole;
   created_at: string;
 }
 
@@ -111,6 +114,7 @@ export interface OrderItem {
   unit_price: number;
   total_price: number;
   special_instructions?: string;
+  notes?: string;
   dish?: Dish;
 }
 

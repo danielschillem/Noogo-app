@@ -12,7 +12,7 @@ import { useAuth } from '../../context/AuthContext';
 import type { Rating, Restaurant } from '../../types';
 
 export default function RatingsPage() {
-    const { user } = useAuth();
+    useAuth();
     const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
     const [selectedRestaurantId, setSelectedRestaurantId] = useState<string>('');
     const [ratings, setRatings] = useState<Rating[]>([]);

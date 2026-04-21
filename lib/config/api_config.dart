@@ -29,7 +29,7 @@ class ApiConfig {
   static String get pusherKey => dotenv.env['PUSHER_APP_KEY'] ?? '';
 
   /// Cluster Pusher
-  static String get pusherCluster => dotenv.env['PUSHER_CLUSTER'] ?? 'eu';
+  static String get pusherCluster => dotenv.env['PUSHER_CLUSTER'] ?? 'mt1';
 
   /// App ID Pusher
   static String get pusherAppId => dotenv.env['PUSHER_APP_ID'] ?? '';

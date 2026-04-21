@@ -36,13 +36,14 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="noogo" android:host="restaurant" />
             </intent-filter>
-            <!-- Deep link HTTPS : https://noogo.netlify.app/restaurant/42 -->
+            <!-- Deep link HTTPS : https://noogo-app.netlify.app/restaurant/42 -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="noogo.netlify.app" android:pathPrefix="/restaurant" />
+                <data android:scheme="https" android:host="noogo-app.netlify.app" android:pathPrefix="/restaurant" />
             </intent-filter>
+
         </activity>
 
         <!-- FCM : service de réception des messages en arrière-plan -->

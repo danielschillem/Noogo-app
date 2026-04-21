@@ -52,7 +52,7 @@ class DeepLinkService {
           : null;
     }
 
-    // https://noogo.netlify.app/restaurant/42  ou  /restaurant/42/menu
+    // https://noogo-app.netlify.app/restaurant/42  ou  /restaurant/42/menu
     else if (uri.pathSegments.contains('restaurant')) {
       final idx = uri.pathSegments.indexOf('restaurant');
       if (idx + 1 < uri.pathSegments.length) {

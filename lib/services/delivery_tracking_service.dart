@@ -92,6 +92,18 @@ class DeliveryTrackingService {
 
     try {
       _pusher = PusherChannelsFlutter.getInstance();
+      // C3 : init + connect obligatoires avant subscribe
+      await _pusher!.init(
+        apiKey: ApiConfig.pusherKey,
+        cluster: ApiConfig.pusherCluster,
+        onConnectionStateChange: (current, previous) {
+          AppLogger.info('Pusher: $previous → $current');
+        },
+        onError: (message, code, error) {
+          AppLogger.error('Pusher error [$code]: $message', error: error);
+        },
+      );
+      await _pusher!.connect();
       await _pusher!.subscribe(
         channelName: channelName,
         onEvent: _handleEvent,
@@ -108,6 +120,7 @@ class DeliveryTrackingService {
     if (_currentChannelName != null && _pusher != null) {
       try {
         await _pusher!.unsubscribe(channelName: _currentChannelName!);
+        await _pusher!.disconnect();
       } catch (_) {}
       _currentChannelName = null;
     }

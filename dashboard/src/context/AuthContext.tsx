@@ -1,9 +1,11 @@
 ﻿import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import type { AuthState } from '../types';
-import { authApi } from '../services/api';
+import { authApi, myRestaurantsApi } from '../services/api';
 
 interface AuthContextType extends AuthState {
+  lockedRestaurantId: number | null;
   login: (email: string, password: string) => Promise<void>;
+  loginForRestaurant: (email: string, password: string, restaurantId: number) => Promise<void>;
   logout: () => Promise<void>;
   register: (data: { name: string; email: string; password: string; password_confirmation: string }) => Promise<void>;
   updateProfile: (data: { name?: string; email?: string }) => Promise<void>;
@@ -17,6 +19,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     token: localStorage.getItem('auth_token'),
     isAuthenticated: false,
     isLoading: true,
+  });
+  const [lockedRestaurantId, setLockedRestaurantId] = useState<number | null>(() => {
+    const stored = localStorage.getItem('locked_restaurant_id');
+    return stored ? Number(stored) : null;
   });
 
   useEffect(() => {
@@ -58,6 +64,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     localStorage.setItem('auth_token', token);
     localStorage.setItem('user', JSON.stringify(user));
+    // Login global : aucun restaurant verrouillé
+    localStorage.removeItem('locked_restaurant_id');
+    setLockedRestaurantId(null);
 
     setState({
       user,
@@ -65,6 +74,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: true,
       isLoading: false,
     });
+  };
+
+  // Login depuis la page d'un restaurant (/r/:id/login)
+  // Vérifie que l'utilisateur a bien accès à ce restaurant.
+  // Lance une erreur si l'accès est refusé (ex: staff d'un autre resto).
+  const loginForRestaurant = async (email: string, password: string, restaurantId: number) => {
+    const response = await authApi.login(email, password);
+    const { user, token } = response.data.data;
+
+    // Les super admins et admins globaux n'ont pas besoin de vérification
+    if (user.is_admin) {
+      localStorage.setItem('auth_token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.removeItem('locked_restaurant_id');
+      setLockedRestaurantId(null);
+      setState({ user, token, isAuthenticated: true, isLoading: false });
+      return;
+    }
+
+    // Pour les non-admins : vérifier qu'ils ont accès à ce restaurant
+    // On doit d'abord stocker le token pour que l'API /auth/my-restaurants fonctionne
+    localStorage.setItem('auth_token', token);
+    try {
+      const myRestosResp = await myRestaurantsApi.get();
+      const myRestos: { id: number }[] = myRestosResp.data.data ?? [];
+      const hasAccess = myRestos.some(r => r.id === restaurantId);
+
+      if (!hasAccess) {
+        // Pas accès à ce restaurant → déconnexion immédiate
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user');
+        throw new Error('Vous n\'avez pas accès à ce restaurant.');
+      }
+
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('locked_restaurant_id', String(restaurantId));
+      setLockedRestaurantId(restaurantId);
+      setState({ user, token, isAuthenticated: true, isLoading: false });
+    } catch (err: unknown) {
+      // Nettoyage si erreur API
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user');
+      throw err;
+    }
   };
 
   const logout = async () => {
@@ -76,6 +129,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
+    localStorage.removeItem('locked_restaurant_id');
+    setLockedRestaurantId(null);
 
     setState({
       user: null,
@@ -108,7 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ ...state, login, logout, register, updateProfile }}>
+    <AuthContext.Provider value={{ ...state, lockedRestaurantId, login, loginForRestaurant, logout, register, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

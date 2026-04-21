@@ -35,7 +35,7 @@ const ADMIN_NAV = [
   { name: 'Administration', href: '/admin', icon: ShieldCheck },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ restaurantId }: { restaurantId?: number }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -60,14 +60,24 @@ export default function Sidebar() {
       myRestaurantsApi.get().then(r => setMyRestaurants(r.data.data ?? [])).catch(() => { });
   }, [user]);
 
-  const navigation = user?.is_admin
-    ? ADMIN_NAV
-    : [
-      { name: 'Commandes', href: '/orders', icon: ShoppingBag },
-      { name: 'Menu', href: '/menu', icon: UtensilsCrossed },
-      { name: 'Promotions', href: '/promotions', icon: Tag },
-      { name: 'Avis clients', href: '/ratings', icon: Star },
-    ];
+  // Mode verrouillé : navigation limitée à ce restaurant
+  const isLocked = !!restaurantId;
+  const lockedNav = restaurantId ? [
+    { name: 'Commandes', href: `/r/${restaurantId}/orders`, icon: ShoppingBag },
+    { name: 'Cuisine', href: `/r/${restaurantId}/kitchen`, icon: UtensilsCrossed },
+    { name: 'Menu', href: `/r/${restaurantId}/menu`, icon: Tag },
+  ] : [];
+
+  const navigation = isLocked
+    ? lockedNav
+    : user?.is_admin
+      ? ADMIN_NAV
+      : [
+        { name: 'Commandes', href: '/orders', icon: ShoppingBag },
+        { name: 'Menu', href: '/menu', icon: UtensilsCrossed },
+        { name: 'Promotions', href: '/promotions', icon: Tag },
+        { name: 'Avis clients', href: '/ratings', icon: Star },
+      ];
 
   const handleLogout = async () => { await logout(); navigate('/login'); };
 
@@ -89,7 +99,7 @@ export default function Sidebar() {
         <div>
           <p className="text-white font-bold text-base leading-tight">Noogo</p>
           <p className="text-xs leading-tight" style={{ color: '#64748b' }}>
-            {user?.is_admin ? 'Super Admin' : 'Tableau de bord'}
+            {user?.is_admin ? 'Super Admin' : isLocked ? 'Espace restaurant' : 'Tableau de bord'}
           </p>
         </div>
       </div>
@@ -97,8 +107,8 @@ export default function Sidebar() {
       {/* â”€â”€ Nav â”€â”€ */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto sidebar-scroll">
 
-        {/* Mes restaurants (non-admin) */}
-        {!user?.is_admin && uniqueRestaurants.length > 0 && (
+        {/* Mes restaurants (non-admin, non-verrouillé) */}
+        {!user?.is_admin && !isLocked && uniqueRestaurants.length > 0 && (
           <div className="mb-3">
             <div className="flex items-center justify-between px-3 mb-1.5">
               <span className="text-[10px] font-semibold uppercase tracking-widest"
