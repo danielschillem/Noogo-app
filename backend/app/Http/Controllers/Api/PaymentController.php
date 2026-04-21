@@ -52,6 +52,23 @@ class PaymentController extends Controller
                     'data' => $this->formatPayment($existing),
                 ]);
             }
+
+            // ── C2 : Vérification que le montant = total de la commande ────────
+            $order = \App\Models\Order::find($request->order_id);
+            if ($order && $order->total_amount !== null) {
+                $expected = (int) round((float) $order->total_amount);
+                if ($request->amount !== $expected) {
+                    Log::warning('[Payment] Montant invalide', [
+                        'order_id' => $request->order_id,
+                        'expected' => $expected,
+                        'received' => $request->amount,
+                    ]);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Le montant ne correspond pas au total de la commande.',
+                    ], 422);
+                }
+            }
         }
 
         $payment = Payment::create([
@@ -206,6 +223,25 @@ class PaymentController extends Controller
     public function webhook(Request $request): JsonResponse
     {
         Log::info('[Payment Webhook]', $request->all());
+
+        // ── C1 : Vérification signature HMAC CinetPay ─────────────────────────
+        if (config('payment.webhook_verify_signature') && config('payment.gateway') !== 'simulation') {
+            $siteId   = config('payment.cinetpay_site_id');
+            $apiKey   = config('payment.cinetpay_api_key');
+            $transId  = $request->input('cpm_trans_id', '');
+            $amount   = $request->input('cpm_amount', '');
+            $currency = $request->input('cpm_currency', '');
+            $expected = strtoupper(hash('sha256', $siteId . $apiKey . $transId . $amount . $currency));
+            $received = (string) $request->input('cpm_pass', '');
+            if (!hash_equals($expected, $received)) {
+                Log::warning('[Payment Webhook] Signature invalide', ['ip' => $request->ip()]);
+                return response()->json(['message' => 'invalid signature'], 403);
+            }
+            if ($request->input('cpm_site_id') !== $siteId) {
+                Log::warning('[Payment Webhook] site_id inconnu', ['received' => $request->input('cpm_site_id')]);
+                return response()->json(['message' => 'invalid site_id'], 403);
+            }
+        }
 
         $reference = $request->input('cpm_trans_id')    // CinetPay
             ?? $request->input('transaction_id')

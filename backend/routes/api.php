@@ -146,9 +146,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/my-history', [DeliveryController::class, 'myHistory']);
         Route::get('/{delivery}', [DeliveryController::class, 'show']);
         Route::post('/{delivery}/assign', [DeliveryController::class, 'assign']);
-        Route::patch('/{delivery}/status', [DeliveryController::class, 'updateStatus']);
-        Route::post('/{delivery}/driver-location', [DeliveryController::class, 'updateDriverLocation'])
-            ->middleware('throttle:60,1');  // Max 60 GPS updates per minute per user
+        // C4 : réservé aux livreurs enregistrés
+        Route::middleware('driver')->group(function () {
+            Route::patch('/{delivery}/status', [DeliveryController::class, 'updateStatus']);
+            Route::post('/{delivery}/driver-location', [DeliveryController::class, 'updateDriverLocation'])
+                ->middleware('throttle:60,1');
+        });
     });
 });
 
