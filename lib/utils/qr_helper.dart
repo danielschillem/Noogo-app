@@ -4,6 +4,7 @@ class QRHelper {
   /// URLs acceptées comme sources de QR codes valides
   static const List<String> _validBaseUrls = [
     'https://noogo.netlify.app',
+    'https://noogo-dashboard.netlify.app',
     'https://dashboard-noogo.quickdev-it.com',
     'http://localhost',
     'http://127.0.0.1',
@@ -52,6 +53,14 @@ class QRHelper {
   /// Parse l'ID du restaurant depuis le QR Code
   static int? parseRestaurantId(String qrData) {
     try {
+      // Fallback: si c'est un simple numéro, c'est un ID direct
+      final directId = int.tryParse(qrData.trim());
+      if (directId != null) {
+        if (kDebugMode)
+          debugPrint('🔍 Parse Restaurant ID: ID direct = $directId');
+        return directId;
+      }
+
       final uri = Uri.parse(qrData);
       final segments = uri.pathSegments;
 

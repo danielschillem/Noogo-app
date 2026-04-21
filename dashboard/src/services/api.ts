@@ -49,6 +49,8 @@ export const authApi = {
     api.post('/auth/forgot-password', { email }),
   resetPassword: (data: { token: string; password: string; password_confirmation: string }) =>
     api.post('/auth/reset-password', data),
+  changePassword: (data: { current_password: string; password: string; password_confirmation: string }) =>
+    api.post('/auth/change-password', data),
 };
 
 // Dashboard API
@@ -217,6 +219,12 @@ export const deliveryApi = {
   updateDriver: (id: number, data: { name?: string; phone?: string; zone?: string; status?: string }) =>
     api.put(`/admin/drivers/${id}`, data),
   deleteDriver: (id: number) => api.delete(`/admin/drivers/${id}`),
+};
+
+// Ratings API
+export const ratingsApi = {
+  getAll: (restaurantId: number, params?: { page?: number; per_page?: number }) =>
+    api.get(`/restaurants/${restaurantId}/ratings`, { params }),
 };
 
 export default api;

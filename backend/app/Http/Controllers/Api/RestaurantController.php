@@ -272,7 +272,7 @@ class RestaurantController extends Controller
      */
     public function generateQrCode(Restaurant $restaurant): JsonResponse|bool
     {
-        $qrContent = config('app.frontend_url') . '/restaurant/' . $restaurant->id;
+        $qrContent = env('FRONTEND_URL', config('app.url')) . '/restaurant/' . $restaurant->id;
         $filename = 'qrcodes/restaurant-' . $restaurant->id . '.svg';
 
         // Generate QR code (using simple SVG generation)

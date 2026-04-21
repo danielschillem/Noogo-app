@@ -15,7 +15,7 @@ import {
   X,
   Timer,
 } from 'lucide-react';
-import { ordersApi, restaurantsApi } from '../../services/api';
+import { ordersApi, restaurantsApi, deliveryApi } from '../../services/api';
 import { usePusher } from '../../hooks/usePusher';
 import type { Order, OrderStatus, Restaurant } from '../../types';
 
@@ -54,10 +54,12 @@ function elapsedTime(dateStr: string): string {
   return `${Math.floor(diff / 3600)}h${String(Math.floor((diff % 3600) / 60)).padStart(2, '0')}min`;
 }
 
-function OrderDetailPanel({ order, onClose, onUpdateStatus }: {
+function OrderDetailPanel({ order, onClose, onUpdateStatus, onCancel, onRequestDelivery }: {
   order: Order;
   onClose: () => void;
   onUpdateStatus: (id: number, s: OrderStatus) => void;
+  onCancel: (id: number) => void;
+  onRequestDelivery: (order: Order) => void;
 }) {
   const st = STATUS_STYLES[order.status] ?? STATUS_STYLES.completed;
   const nextStatus = NEXT_STATUS[order.status];
@@ -155,10 +157,17 @@ function OrderDetailPanel({ order, onClose, onUpdateStatus }: {
               </button>
             )}
             {['pending', 'confirmed'].includes(order.status) && (
-              <button onClick={() => { onUpdateStatus(order.id, 'cancelled'); onClose(); }}
+              <button onClick={() => { onCancel(order.id); onClose(); }}
                 className="px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors"
                 style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}>
                 Annuler
+              </button>
+            )}
+            {order.order_type === 'livraison' && order.status === 'ready' && (
+              <button onClick={() => { onRequestDelivery(order); onClose(); }}
+                className="px-4 py-2.5 rounded-xl font-semibold text-sm text-white transition-colors"
+                style={{ background: '#7c3aed' }}>
+                🚚 Demander livraison
               </button>
             )}
           </div>
@@ -278,6 +287,27 @@ export default function OrdersPage() {
       fetchOrders(); // rollback
     }
   }, [restaurantId, fetchOrders]);
+
+  const handleCancel = useCallback(async (orderId: number) => {
+    if (!restaurantId) return;
+    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'cancelled' as OrderStatus } : o));
+    try {
+      await ordersApi.cancel(parseInt(restaurantId), orderId);
+    } catch {
+      fetchOrders();
+    }
+  }, [restaurantId, fetchOrders]);
+
+  const handleRequestDelivery = useCallback(async (order: Order) => {
+    try {
+      await deliveryApi.requestDelivery(order.id, {
+        client_address: order.notes || undefined,
+      });
+      fetchOrders();
+    } catch (err) {
+      console.error('Erreur demande livraison:', err);
+    }
+  }, [fetchOrders]);
 
   /* â”€â”€ Drag-and-drop handlers â”€â”€ */
   const onDragStart = (orderId: number) => setDraggingId(orderId);
@@ -449,7 +479,9 @@ export default function OrdersPage() {
                         onAdvance={NEXT_STATUS[order.status]
                           ? () => handleUpdateStatus(order.id, NEXT_STATUS[order.status])
                           : undefined}
-                        onCancel={() => handleUpdateStatus(order.id, 'cancelled')}
+                        onCancel={() => handleCancel(order.id)}
+                        onRequestDelivery={order.order_type === 'livraison' && order.status === 'ready'
+                          ? () => handleRequestDelivery(order) : undefined}
                       />
                     ))}
                   </div>
@@ -520,7 +552,7 @@ export default function OrdersPage() {
 
           {filteredOrders.length > 0 ? (
             <div className="space-y-3">
-              {filteredOrders.map(order => <ListOrderCard key={order.id} order={order} onUpdateStatus={handleUpdateStatus} />)}
+              {filteredOrders.map(order => <ListOrderCard key={order.id} order={order} onUpdateStatus={handleUpdateStatus} onCancel={handleCancel} onRequestDelivery={handleRequestDelivery} />)}
             </div>
           ) : (
             <div className="text-center py-16 rounded-2xl" style={{ background: 'white', border: '1px solid #f1f5f9' }}>
@@ -536,6 +568,8 @@ export default function OrdersPage() {
           order={selectedOrder}
           onClose={() => setSelectedOrderId(null)}
           onUpdateStatus={handleUpdateStatus}
+          onCancel={handleCancel}
+          onRequestDelivery={handleRequestDelivery}
         />
       )}
     </div>
@@ -552,9 +586,10 @@ interface KanbanCardProps {
   onAdvance?: () => void;
   onCancel: () => void;
   onSelect: () => void;
+  onRequestDelivery?: () => void;
 }
 
-function KanbanCard({ order, col, isDragging, onDragStart, onDragEnd, onAdvance, onCancel, onSelect }: KanbanCardProps) {
+function KanbanCard({ order, col, isDragging, onDragStart, onDragEnd, onAdvance, onCancel, onSelect, onRequestDelivery }: KanbanCardProps) {
   return (
     <div draggable onDragStart={onDragStart} onDragEnd={onDragEnd} onClick={onSelect}
       className="rounded-xl p-3 cursor-pointer transition-all select-none"
@@ -612,13 +647,25 @@ function KanbanCard({ order, col, isDragging, onDragStart, onDragEnd, onAdvance,
             âœ•
           </button>
         )}
+        {onRequestDelivery && (
+          <button onClick={e => { e.stopPropagation(); onRequestDelivery(); }}
+            className="flex-1 py-1.5 rounded-lg text-[11px] font-semibold text-white transition-opacity hover:opacity-90"
+            style={{ background: '#7c3aed' }}>
+            🚚 Livraison
+          </button>
+        )}
       </div>
     </div>
   );
 }
 
-/* â”€â”€ ListOrderCard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-function ListOrderCard({ order, onUpdateStatus }: { order: Order; onUpdateStatus: (id: number, s: OrderStatus) => void }) {
+/* â"€â"€ ListOrderCard â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */
+function ListOrderCard({ order, onUpdateStatus, onCancel, onRequestDelivery }: {
+  order: Order;
+  onUpdateStatus: (id: number, s: OrderStatus) => void;
+  onCancel: (id: number) => void;
+  onRequestDelivery?: (order: Order) => void;
+}) {
   const st = STATUS_STYLES[order.status] ?? STATUS_STYLES.completed;
   return (
     <div className="rounded-2xl p-5 transition-shadow hover:shadow-md"
@@ -667,7 +714,7 @@ function ListOrderCard({ order, onUpdateStatus }: { order: Order; onUpdateStatus
               <button onClick={() => onUpdateStatus(order.id, 'confirmed')}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white"
                 style={{ background: '#2563eb' }}>Confirmer</button>
-              <button onClick={() => onUpdateStatus(order.id, 'cancelled')}
+              <button onClick={() => onCancel(order.id)}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold"
                 style={{ background: '#fef2f2', color: '#dc2626' }}>Annuler</button>
             </>)}
@@ -681,11 +728,16 @@ function ListOrderCard({ order, onUpdateStatus }: { order: Order; onUpdateStatus
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white"
                 style={{ background: '#16a34a' }}>Prête</button>
             )}
-            {order.status === 'ready' && (
+            {order.status === 'ready' && (<>
               <button onClick={() => onUpdateStatus(order.id, 'delivered')}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white"
                 style={{ background: '#0891b2' }}>Livrer</button>
-            )}
+              {order.order_type === 'livraison' && onRequestDelivery && (
+                <button onClick={() => onRequestDelivery(order)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white"
+                  style={{ background: '#7c3aed' }}>🚚 Livraison</button>
+              )}
+            </>)}
           </div>
         </div>
       </div>

@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Truck,
   Package,
+  Star,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
@@ -28,6 +29,7 @@ const ADMIN_NAV = [
   { name: 'Commandes', href: '/orders', icon: ShoppingBag },
   { name: 'Menu', href: '/menu', icon: UtensilsCrossed },
   { name: 'Promotions', href: '/promotions', icon: Tag },
+  { name: 'Avis clients', href: '/ratings', icon: Star },
   { name: 'Livreurs', href: '/drivers', icon: Truck },
   { name: 'Livraisons', href: '/deliveries', icon: Package },
   { name: 'Administration', href: '/admin', icon: ShieldCheck },
@@ -64,6 +66,7 @@ export default function Sidebar() {
       { name: 'Commandes', href: '/orders', icon: ShoppingBag },
       { name: 'Menu', href: '/menu', icon: UtensilsCrossed },
       { name: 'Promotions', href: '/promotions', icon: Tag },
+      { name: 'Avis clients', href: '/ratings', icon: Star },
     ];
 
   const handleLogout = async () => { await logout(); navigate('/login'); };

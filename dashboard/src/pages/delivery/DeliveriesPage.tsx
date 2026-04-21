@@ -31,6 +31,7 @@ export default function DeliveriesPage() {
     const [assignModal, setAssignModal] = useState<Delivery | null>(null);
     const [selectedDriverId, setSelectedDriverId] = useState<number | null>(null);
     const [assigning, setAssigning] = useState(false);
+    const [updatingStatusId, setUpdatingStatusId] = useState<number | null>(null);
 
     const fetchDeliveries = useCallback(async () => {
         try {
@@ -67,6 +68,16 @@ export default function DeliveriesPage() {
             fetchDrivers();
         } catch { /* ignore */ }
         finally { setAssigning(false); }
+    };
+
+    const handleStatusUpdate = async (deliveryId: number, status: DeliveryStatus, failureReason?: string) => {
+        setUpdatingStatusId(deliveryId);
+        try {
+            await deliveryApi.updateStatus(deliveryId, status, failureReason);
+            fetchDeliveries();
+            fetchDrivers();
+        } catch { /* ignore */ }
+        finally { setUpdatingStatusId(null); }
     };
 
     const formatDate = (d: string | null) => {
@@ -221,15 +232,60 @@ export default function DeliveriesPage() {
                                             {formatDate(d.created_at)}
                                         </td>
                                         <td className="px-5 py-3.5 text-right">
-                                            {d.status === 'pending_assignment' && (
-                                                <button
-                                                    onClick={() => openAssign(d)}
-                                                    className="px-3 py-1.5 rounded-lg text-xs font-medium"
-                                                    style={{ background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe' }}
-                                                >
-                                                    Assigner
-                                                </button>
-                                            )}
+                                            <div className="flex items-center justify-end gap-1.5">
+                                                {d.status === 'pending_assignment' && (
+                                                    <button
+                                                        onClick={() => openAssign(d)}
+                                                        className="px-3 py-1.5 rounded-lg text-xs font-medium"
+                                                        style={{ background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe' }}
+                                                    >
+                                                        Assigner
+                                                    </button>
+                                                )}
+                                                {d.status === 'assigned' && (
+                                                    <button
+                                                        onClick={() => handleStatusUpdate(d.id, 'picked_up')}
+                                                        disabled={updatingStatusId === d.id}
+                                                        className="px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50"
+                                                        style={{ background: '#e0e7ff', color: '#3730a3', border: '1px solid #a5b4fc' }}
+                                                    >
+                                                        Récupérée
+                                                    </button>
+                                                )}
+                                                {d.status === 'picked_up' && (
+                                                    <button
+                                                        onClick={() => handleStatusUpdate(d.id, 'on_way')}
+                                                        disabled={updatingStatusId === d.id}
+                                                        className="px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50"
+                                                        style={{ background: '#fff7ed', color: '#c2410c', border: '1px solid #fed7aa' }}
+                                                    >
+                                                        En route
+                                                    </button>
+                                                )}
+                                                {d.status === 'on_way' && (
+                                                    <button
+                                                        onClick={() => handleStatusUpdate(d.id, 'delivered')}
+                                                        disabled={updatingStatusId === d.id}
+                                                        className="px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50"
+                                                        style={{ background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0' }}
+                                                    >
+                                                        Livrée ✓
+                                                    </button>
+                                                )}
+                                                {['assigned', 'picked_up', 'on_way'].includes(d.status) && (
+                                                    <button
+                                                        onClick={() => {
+                                                            const reason = prompt('Raison de l\'échec (optionnel):');
+                                                            handleStatusUpdate(d.id, 'failed', reason || undefined);
+                                                        }}
+                                                        disabled={updatingStatusId === d.id}
+                                                        className="px-2 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50"
+                                                        style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 );

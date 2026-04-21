@@ -20,6 +20,7 @@ import AdminPage from './pages/admin/AdminPage';
 import KitchenPage from './pages/restaurants/KitchenPage';
 import DriversPage from './pages/delivery/DriversPage';
 import DeliveriesPage from './pages/delivery/DeliveriesPage';
+import RatingsPage from './pages/ratings/RatingsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -118,6 +119,7 @@ function AppRoutes() {
         <Route path="restaurants/:restaurantId/orders" element={<OrdersPage />} />
         <Route path="menu" element={<MenuPage />} />
         <Route path="promotions" element={<PromotionsPage />} />
+        <Route path="ratings" element={<RatingsPage />} />
         <Route path="drivers" element={
           <AdminRoute>
             <DriversPage />

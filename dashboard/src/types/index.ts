@@ -283,3 +283,15 @@ export interface Delivery {
   created_at: string;
   updated_at: string;
 }
+
+export interface Rating {
+  id: number;
+  order_id: number;
+  restaurant_id: number;
+  user_id: number;
+  note: number;
+  commentaire?: string;
+  user?: { id: number; name: string };
+  order?: { id: number };
+  created_at: string;
+}
