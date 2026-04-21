@@ -15,7 +15,8 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        env('FRONTEND_URL', 'https://noogo-dashboard.netlify.app'),
+        env('FRONTEND_URL', 'https://noogo.netlify.app'),
+        'https://noogo.netlify.app',
         'https://noogo-dashboard.netlify.app',
         'http://localhost:5173',
         'http://localhost:3000',
