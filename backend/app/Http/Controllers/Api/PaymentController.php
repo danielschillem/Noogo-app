@@ -226,10 +226,10 @@ class PaymentController extends Controller
 
         // ── C1 : Vérification signature HMAC CinetPay ─────────────────────────
         if (config('payment.webhook_verify_signature') && config('payment.gateway') !== 'simulation') {
-            $siteId   = config('payment.cinetpay_site_id');
-            $apiKey   = config('payment.cinetpay_api_key');
-            $transId  = $request->input('cpm_trans_id', '');
-            $amount   = $request->input('cpm_amount', '');
+            $siteId = config('payment.cinetpay_site_id');
+            $apiKey = config('payment.cinetpay_api_key');
+            $transId = $request->input('cpm_trans_id', '');
+            $amount = $request->input('cpm_amount', '');
             $currency = $request->input('cpm_currency', '');
             $expected = strtoupper(hash('sha256', $siteId . $apiKey . $transId . $amount . $currency));
             $received = (string) $request->input('cpm_pass', '');
