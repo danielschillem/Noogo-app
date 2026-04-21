@@ -95,9 +95,9 @@ function OrderTicket({
               <p className="text-sm font-semibold truncate" style={{ color: '#f1f5f9' }}>
                 {item.dish?.nom ?? `Plat #${item.dish_id}`}
               </p>
-              {item.notes && (
+              {(item.notes ?? item.special_instructions) && (
                 <p className="text-xs mt-0.5 truncate" style={{ color: '#f97316' }}>
-                  ⚠ {item.notes}
+                  ⚠ {item.notes ?? item.special_instructions}
                 </p>
               )}
             </div>

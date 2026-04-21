@@ -111,6 +111,7 @@ export interface OrderItem {
   unit_price: number;
   total_price: number;
   special_instructions?: string;
+  notes?: string;
   dish?: Dish;
 }
 

@@ -14,7 +14,7 @@ import {
   Star,
 } from 'lucide-react';
 import { dashboardApi, restaurantsApi } from '../../services/api';
-import type { DashboardStats, Order, Restaurant } from '../../types';
+import type { DashboardStats, Order } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useRestaurants } from '../../hooks/useQueries';
 import {

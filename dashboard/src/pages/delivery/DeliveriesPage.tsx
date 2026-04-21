@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
     Package,
-    Search,
     RefreshCw,
     MapPin,
     Clock,
@@ -9,7 +8,6 @@ import {
     XCircle,
     Truck,
     User,
-    ChevronDown,
 } from 'lucide-react';
 import { deliveryApi } from '../../services/api';
 import type { Delivery, DeliveryDriver, DeliveryStatus } from '../../types';
