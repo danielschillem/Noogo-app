@@ -208,5 +208,299 @@
     "placeholders": {
       "count": { "type": "int" }
     }
-  }
+  },
+
+  "delivery_address": "Adresse de livraison",
+  "@delivery_address": { "description": "Champ adresse de livraison" },
+
+  "delivery_address_hint": "Ex: Quartier Zogona, Rue 15.32, Porte 45",
+  "@delivery_address_hint": { "description": "Hint adresse de livraison" },
+
+  "delivery_address_required": "Veuillez entrer une adresse valide (min. 5 car.)",
+  "@delivery_address_required": { "description": "Erreur adresse trop courte" },
+
+  "delivery_subtitle": "Se faire livrer à domicile",
+  "@delivery_subtitle": { "description": "Sous-titre option livraison" },
+
+  "change_password": "Changer le mot de passe",
+  "@change_password": { "description": "Menu changer mot de passe" },
+
+  "current_password": "Mot de passe actuel",
+  "@current_password": { "description": "Champ mot de passe actuel" },
+
+  "new_password": "Nouveau mot de passe",
+  "@new_password": { "description": "Champ nouveau mot de passe" },
+
+  "confirm_password": "Confirmer le mot de passe",
+  "@confirm_password": { "description": "Champ confirmer mot de passe" },
+
+  "password_changed": "Mot de passe modifié avec succès",
+  "@password_changed": { "description": "Message succès changement MDP" },
+
+  "password_min_length": "Minimum 6 caractères",
+  "@password_min_length": { "description": "Erreur MDP trop court" },
+
+  "password_mismatch": "Les mots de passe ne correspondent pas",
+  "@password_mismatch": { "description": "Erreur MDP pas identiques" },
+
+  "my_restaurants": "Mes restaurants enregistrés",
+  "@my_restaurants": { "description": "Menu mes restaurants" },
+
+  "personal_info": "Mes informations personnelles",
+  "@personal_info": { "description": "Menu infos perso" },
+
+  "delivery_addresses": "Adresses de livraison",
+  "@delivery_addresses": { "description": "Menu adresses livraison" },
+
+  "payment_methods": "Méthodes de paiement",
+  "@payment_methods": { "description": "Menu méthodes paiement" },
+
+  "order_history": "Historique des commandes",
+  "@order_history": { "description": "Menu historique" },
+
+  "notification_settings": "Notifications",
+  "@notification_settings": { "description": "Menu notifications settings" },
+
+  "help_support": "Aide et support",
+  "@help_support": { "description": "Menu aide" },
+
+  "about": "À propos",
+  "@about": { "description": "Menu à propos" },
+
+  "dark_mode": "Mode sombre",
+  "@dark_mode": { "description": "Toggle mode sombre" },
+
+  "edit_profile": "Modifier le profil",
+  "@edit_profile": { "description": "Bouton modifier profil" },
+
+  "confirm_order": "Confirmer la commande",
+  "@confirm_order": { "description": "Titre confirmation commande" },
+
+  "empty_cart": "Votre panier est vide",
+  "@empty_cart": { "description": "Message panier vide (alt)" },
+
+  "clear_cart": "Vider le panier",
+  "@clear_cart": { "description": "Action vider le panier" },
+
+  "order_success": "Commande envoyée avec succès !",
+  "@order_success": { "description": "Message succès commande" },
+
+  "order_error": "Erreur lors de l'envoi de la commande",
+  "@order_error": { "description": "Message erreur commande" },
+
+  "track_order": "Suivre la commande",
+  "@track_order": { "description": "Bouton suivre commande" },
+
+  "reorder": "Recommander",
+  "@reorder": { "description": "Bouton recommander" },
+
+  "rated": "Noté",
+  "@rated": { "description": "Label déjà noté" },
+
+  "rate": "Évaluer",
+  "@rate": { "description": "Bouton évaluer" },
+
+  "thank_you_rating": "Merci pour votre évaluation !",
+  "@thank_you_rating": { "description": "Message merci après note" },
+
+  "order_number": "Commande #{id}",
+  "@order_number": {
+    "description": "Titre commande avec numéro",
+    "placeholders": { "id": { "type": "int" } }
+  },
+
+  "order_count": "{count} commande(s)",
+  "@order_count": {
+    "description": "Compteur de commandes",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "my_orders": "Mes Commandes",
+  "@my_orders": { "description": "Titre section commandes" },
+
+  "close": "Fermer",
+  "@close": { "description": "Bouton fermer" },
+
+  "modify": "Modifier",
+  "@modify": { "description": "Bouton modifier" },
+
+  "confirm": "Confirmer",
+  "@confirm": { "description": "Bouton confirmer" },
+
+  "return_back": "Retour",
+  "@return_back": { "description": "Bouton retour" },
+
+  "validate": "Valider",
+  "@validate": { "description": "Bouton valider" },
+
+  "save": "Enregistrer",
+  "@save": { "description": "Bouton enregistrer" },
+
+  "delete": "Supprimer",
+  "@delete": { "description": "Bouton supprimer" },
+
+  "yes": "Oui",
+  "@yes": { "description": "Confirmation oui" },
+
+  "no": "Non",
+  "@no": { "description": "Confirmation non" },
+
+  "search": "Rechercher",
+  "@search": { "description": "Champ recherche" },
+
+  "search_dishes": "Rechercher un plat…",
+  "@search_dishes": { "description": "Hint recherche plats" },
+
+  "popular_dishes": "Plats populaires",
+  "@popular_dishes": { "description": "Section plats populaires" },
+
+  "see_all": "Voir tout",
+  "@see_all": { "description": "Bouton voir tout" },
+
+  "quick_order": "Commande rapide",
+  "@quick_order": { "description": "Section commande rapide" },
+
+  "offline_mode": "Mode hors-ligne",
+  "@offline_mode": { "description": "Bannière hors-ligne" },
+
+  "offline_subtitle": "Connexion limitée — données locales affichées",
+  "@offline_subtitle": { "description": "Sous-titre hors-ligne" },
+
+  "connection_error": "Erreur de connexion",
+  "@connection_error": { "description": "Message erreur réseau" },
+
+  "scan_qr_manual": "Entrer le code manuellement",
+  "@scan_qr_manual": { "description": "Fallback saisie manuelle QR" },
+
+  "welcome_title": "Bienvenue sur Noogo",
+  "@welcome_title": { "description": "Titre écran bienvenue" },
+
+  "create_account": "Créez votre compte NOOGO",
+  "@create_account": { "description": "Titre profil invité" },
+
+  "connect_benefits": "Connectez-vous pour accéder à votre profil, suivre vos commandes et bénéficier d'avantages exclusifs.",
+  "@connect_benefits": { "description": "Description profil invité" },
+
+  "sign_in_up": "Se connecter / S'inscrire",
+  "@sign_in_up": { "description": "Bouton connexion/inscription" },
+
+  "continue_without_account": "Continuer sans compte",
+  "@continue_without_account": { "description": "Lien invité" },
+
+  "logout_confirm": "Voulez-vous vraiment vous déconnecter ?",
+  "@logout_confirm": { "description": "Message confirmation déconnexion" },
+
+  "logout_success": "Déconnexion réussie",
+  "@logout_success": { "description": "Message succès déconnexion" },
+
+  "login_success": "Connexion réussie !",
+  "@login_success": { "description": "Message succès connexion" },
+
+  "profile_updated": "Profil mis à jour avec succès",
+  "@profile_updated": { "description": "Message succès profil" },
+
+  "guest_mode_enabled": "Mode invité activé",
+  "@guest_mode_enabled": { "description": "Message mode invité" },
+
+  "added_to_cart": "Ajouté au panier",
+  "@added_to_cart": { "description": "Snackbar ajout panier" },
+
+  "items_added_to_cart": "Plats ajoutés au panier",
+  "@items_added_to_cart": { "description": "Snackbar reorder" },
+
+  "order_cancelled_success": "Commande annulée avec succès !",
+  "@order_cancelled_success": { "description": "Snackbar annulation" },
+
+  "cancel_order": "Annuler la commande",
+  "@cancel_order": { "description": "Titre dialog annulation" },
+
+  "cancel_order_confirm": "Voulez-vous vraiment annuler la commande #{id} ?",
+  "@cancel_order_confirm": {
+    "description": "Message confirmation annulation",
+    "placeholders": { "id": { "type": "int" } }
+  },
+
+  "discover_menu": "Découvrir le menu",
+  "@discover_menu": { "description": "Bouton vers menu" },
+
+  "change_restaurant": "Changer de restaurant",
+  "@change_restaurant": { "description": "Menu changer restaurant" },
+
+  "full_name": "Nom complet",
+  "@full_name": { "description": "Champ nom complet" },
+
+  "phone": "Téléphone",
+  "@phone": { "description": "Champ téléphone" },
+
+  "member_since": "Membre depuis",
+  "@member_since": { "description": "Label date inscription" },
+
+  "my_stats": "Mes statistiques",
+  "@my_stats": { "description": "Section statistiques profil" },
+
+  "points": "Points",
+  "@points": { "description": "Label points fidélité" },
+
+  "no_address_saved": "Aucune adresse enregistrée",
+  "@no_address_saved": { "description": "Message aucune adresse" },
+
+  "new_address": "Nouvelle adresse...",
+  "@new_address": { "description": "Hint nouvelle adresse" },
+
+  "order_updates": "Mises à jour commandes",
+  "@order_updates": { "description": "Toggle notifs commandes" },
+
+  "order_updates_subtitle": "Statut de vos commandes en temps réel",
+  "@order_updates_subtitle": { "description": "Description notifs commandes" },
+
+  "promotions": "Promotions",
+  "@promotions": { "description": "Toggle notifs promos" },
+
+  "promotions_subtitle": "Offres et réductions",
+  "@promotions_subtitle": { "description": "Description notifs promos" },
+
+  "delivery_alerts": "Alertes livraison",
+  "@delivery_alerts": { "description": "Toggle notifs livraison" },
+
+  "delivery_alerts_subtitle": "Position du livreur et arrivée",
+  "@delivery_alerts_subtitle": { "description": "Description notifs livraison" },
+
+  "about_version": "NOOGO v1.4.0",
+  "@about_version": { "description": "Version affichée dans à propos" },
+
+  "about_description": "Application de commande de repas",
+  "@about_description": { "description": "Description à propos" },
+
+  "about_copyright": "© 2026 Quick dev-it. Tous droits réservés.",
+  "@about_copyright": { "description": "Copyright à propos" },
+
+  "forgot_password": "Mot de passe oublié ?",
+  "@forgot_password": { "description": "Lien mot de passe oublié" },
+
+  "reset_password": "Réinitialiser le mot de passe",
+  "@reset_password": { "description": "Titre réinitialisation MDP" },
+
+  "name_required": "Veuillez entrer votre nom",
+  "@name_required": { "description": "Erreur nom vide" },
+
+  "enter_name": "Entrez votre nom",
+  "@enter_name": { "description": "Hint nom" },
+
+  "enter_phone": "Numéro de téléphone",
+  "@enter_phone": { "description": "Hint téléphone auth" },
+
+  "enter_email": "Email (optionnel)",
+  "@enter_email": { "description": "Hint email" },
+
+  "enter_password": "Mot de passe",
+  "@enter_password": { "description": "Hint MDP" },
+
+  "order_summary": "Récapitulatif",
+  "@order_summary": { "description": "Titre récapitulatif commande" },
+
+  "delivery_fee": "Frais de livraison",
+  "@delivery_fee": { "description": "Label frais livraison" },
+
+  "subtotal": "Sous-total",
+  "@subtotal": { "description": "Label sous-total" }
 }

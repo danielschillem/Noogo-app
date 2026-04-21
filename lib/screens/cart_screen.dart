@@ -51,9 +51,12 @@ class _CartScreenState extends State<CartScreen>
       final savedPhone = await ClientPrefsService.getPhone();
       final savedMmPhone = await ClientPrefsService.getMobileMoneyPhone();
       if (mounted) {
-        if (savedPhone != null) _phoneNumberController.text = savedPhone;
-        if (savedMmPhone != null)
+        if (savedPhone != null) {
+          _phoneNumberController.text = savedPhone;
+        }
+        if (savedMmPhone != null) {
           _mobileMoneyNumberController.text = savedMmPhone;
+        }
       }
     });
   }
@@ -217,7 +220,10 @@ class _CartScreenState extends State<CartScreen>
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          const Text('Mon Panier', style: AppTextStyles.heading1),
+          const Flexible(
+              child: Text('Mon Panier',
+                  style: AppTextStyles.heading1,
+                  overflow: TextOverflow.ellipsis)),
           const Spacer(),
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
@@ -475,12 +481,18 @@ class _CartScreenState extends State<CartScreen>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Frais de livraison', style: AppTextStyles.bodyMedium),
-            Text(
-              'A partir de 1000 f',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.success,
-                fontWeight: FontWeight.w600,
+            const Flexible(
+                child: Text('Frais de livraison',
+                    style: AppTextStyles.bodyMedium)),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                'A partir de 1000 f',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.success,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.end,
               ),
             ),
           ],
@@ -613,16 +625,23 @@ class _CartScreenState extends State<CartScreen>
       return;
     }
 
-    // Étape 1: Choisir le type de commande (sur place ou à emporter)
+    // Étape 1: Choisir le type de commande (sur place, à emporter ou livraison)
     final orderType = await _askOrderType();
     if (orderType == null) return;
 
     String? tableNumber;
+    String? deliveryAddress;
 
     // Étape 2: Si "sur place", demander le numéro de table
     if (orderType == 'sur place') {
       tableNumber = await _askTableNumber();
       if (tableNumber == null) return;
+    }
+
+    // Étape 2b: Si "livraison", demander l'adresse de livraison
+    if (orderType == 'livraison') {
+      deliveryAddress = await _askDeliveryAddress();
+      if (deliveryAddress == null) return;
     }
 
     // Étape 3: Demander le numéro de téléphone
@@ -665,6 +684,7 @@ class _CartScreenState extends State<CartScreen>
     final confirmed = await _confirmOrder(
       orderType: orderType,
       tableNumber: tableNumber,
+      deliveryAddress: deliveryAddress,
       phoneNumber: phoneNumber,
       paymentMethod: paymentMethod,
       mobileMoneyProvider: mobileMoneyProvider,
@@ -678,6 +698,7 @@ class _CartScreenState extends State<CartScreen>
       provider: provider,
       orderType: orderType,
       tableNumber: tableNumber,
+      deliveryAddress: deliveryAddress,
       phoneNumber: phoneNumber,
       paymentMethod: paymentMethod,
       mobileMoneyProvider: mobileMoneyProvider,
@@ -716,6 +737,14 @@ class _CartScreenState extends State<CartScreen>
               'Emporter votre commande',
               AppColors.secondary,
               () => Navigator.pop(context, 'a emporter'),
+            ),
+            const SizedBox(height: 12),
+            _buildOrderTypeOption(
+              'Livraison',
+              Icons.delivery_dining,
+              'Se faire livrer à domicile',
+              const Color(0xFF10B981),
+              () => Navigator.pop(context, 'livraison'),
             ),
           ],
         ),
@@ -853,6 +882,73 @@ class _CartScreenState extends State<CartScreen>
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Valider'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Étape 2b: Demander l'adresse de livraison (si livraison)
+  Future<String?> _askDeliveryAddress() async {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.location_on, color: Color(0xFF10B981)),
+            SizedBox(width: 8),
+            Text('Adresse de livraison'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Indiquez l\'adresse où vous souhaitez être livré',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: 'Adresse complète',
+                hintText: 'Ex: Quartier Zogona, Rue 15.32, Porte 45',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.home_outlined),
+              ),
+              maxLines: 2,
+              textCapitalization: TextCapitalization.sentences,
+              autofocus: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, null),
+            child: const Text('Retour'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final address = controller.text.trim();
+              if (address.length >= 5) {
+                Navigator.pop(dialogContext, address);
+              } else {
+                ScaffoldMessenger.of(dialogContext).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                        'Veuillez entrer une adresse valide (min. 5 car.)'),
+                    backgroundColor: AppColors.error,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
               foregroundColor: Colors.white,
             ),
             child: const Text('Valider'),
@@ -1106,8 +1202,9 @@ class _CartScreenState extends State<CartScreen>
   // Étape 5.1: Demander le numéro Mobile Money
   Future<String?> _askMobileMoneyNumber(String provider) async {
     // Ne pas effacer si déjà prérempli depuis les préférences
-    if (_mobileMoneyNumberController.text.isEmpty)
+    if (_mobileMoneyNumberController.text.isEmpty) {
       _mobileMoneyNumberController.clear();
+    }
     return showDialog<String>(
       context: context,
       barrierDismissible: false,
@@ -1211,6 +1308,7 @@ class _CartScreenState extends State<CartScreen>
   Future<bool?> _confirmOrder({
     required String orderType,
     String? tableNumber,
+    String? deliveryAddress,
     required String phoneNumber,
     required String paymentMethod,
     String? mobileMoneyProvider,
@@ -1229,11 +1327,13 @@ class _CartScreenState extends State<CartScreen>
                   'Type',
                   orderType == 'sur place'
                       ? 'Sur place'
-                      : orderType == 'à emporter'
+                      : orderType == 'a emporter'
                           ? 'À emporter'
                           : 'Livraison'),
               if (tableNumber != null)
                 _buildConfirmationRow('Table', tableNumber),
+              if (deliveryAddress != null)
+                _buildConfirmationRow('Adresse', deliveryAddress),
               _buildConfirmationRow('Téléphone', phoneNumber),
               _buildConfirmationRow(
                 'Paiement',
@@ -1297,6 +1397,7 @@ class _CartScreenState extends State<CartScreen>
     required RestaurantProvider provider,
     required String orderType,
     String? tableNumber,
+    String? deliveryAddress,
     required String phoneNumber,
     required String paymentMethod,
     String? mobileMoneyProvider,
@@ -1331,6 +1432,7 @@ class _CartScreenState extends State<CartScreen>
         paymentMethod: paymentMethod,
         phoneNumber: phoneNumber,
         tableNumber: tableNumber,
+        deliveryAddress: deliveryAddress,
         mobileMoneyProvider: mobileMoneyProvider,
       );
 

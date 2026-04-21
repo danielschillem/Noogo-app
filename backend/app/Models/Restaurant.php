@@ -74,6 +74,11 @@ class Restaurant extends Model
         return $this->hasMany(FlashInfo::class);
     }
 
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(Rating::class);
+    }
+
     // Accessors
     public function getLogoUrlAttribute(): ?string
     {
@@ -85,7 +90,9 @@ class Restaurant extends Model
             return $this->logo;
         }
 
-        return Storage::url($this->logo);
+        $disk = config('filesystems.disks.r2.endpoint') ? 'r2' : 'public';
+
+        return Storage::disk($disk)->url($this->logo);
     }
 
     public function getIsOpenAttribute(): bool

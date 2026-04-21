@@ -2,8 +2,8 @@
 
 > Feuille de route du développement de l'application Noogo
 
-**Version actuelle :** 1.2.0  
-**Dernière mise à jour :** 15 avril 2026  
+**Version actuelle :** 1.4.1  
+**Dernière mise à jour :** 20 avril 2026  
 **Développeur :** QUICK DEV-IT  
 **Licence :** Propriétaire  
 **Copyright :** © 2026 QUICK DEV-IT. Tous droits réservés.  
@@ -15,16 +15,17 @@
 
 | Métrique | Valeur | Statut |
 | -------- | ------ | ------ |
-| Écrans | 14 | ✅ |
-| Services | 10 | ✅ |
+| Écrans | 15 | ✅ |
+| Services | 18 | ✅ |
 | Modèles | 9 | ✅ |
-| Widgets | 8 | ✅ |
-| Tests Flutter | 179 (16 fichiers) | ✅ |
-| Tests Laravel | 61 tests · 130+ assertions | ✅ |
+| Widgets | 11 | ✅ |
+| Tests Flutter | 1050+ | ✅ |
+| Tests Laravel | 131 tests · 424 assertions | ✅ |
 | Couverture modèles/utils | ~80% | 🟢 |
-| Couverture globale (lcov) | ~17% | 🟡 |
-| Documentation | 85% | 🟢 |
-| Santé globale | 9.0/10 | 🟢 |
+| Couverture globale (lcov) | ~56%+ | 🟢 |
+| Documentation | 95% | 🟢 |
+| Santé globale | 9.5/10 | 🟢 |
+| i18n (FR/EN) | 160+ clés | ✅ |
 
 ---
 
@@ -397,7 +398,86 @@ noogo-app/
 
 ---
 
-## 🔒 Fichier .env Suggéré
+## � Phase 7 — Push Notifications FCM & Dashboard Redesign (Avril 2026)
+
+### Push Notifications FCM (Firebase Cloud Messaging)
+
+- [x] **FCM-001** : Migration colonne `fcm_token` sur la table `users`
+  - ✅ Corrigé le 15/04/2026
+  - Colonne `fcm_token` nullable, ajoutée dans `$fillable` du modèle `User`
+  - `php artisan migrate` → 131 tests passés, rien de cassé
+
+- [x] **FCM-002** : `FcmNotificationService` Laravel (API Legacy HTTP)
+  - ✅ Corrigé le 15/04/2026
+  - `notifyNewOrder(Restaurant, Order)` → topic `restaurant_{id}` + token owner
+  - `notifyOrderStatusChanged(Order, status)` → token FCM du client
+  - Titres avec emojis par statut (🍽️ 🔄 👨‍🍳 🟢 ✅ ❌)
+  - Silencieux si `FCM_SERVER_KEY` non configuré (Log::warning)
+  - `FCM_SERVER_KEY` lu depuis `config('services.fcm.server_key')`
+
+- [x] **FCM-003** : `DeviceTokenController` + routes
+  - ✅ Corrigé le 15/04/2026
+  - `POST /api/auth/device-token` → sauvegarde le token
+  - `DELETE /api/auth/device-token` → efface à la déconnexion
+  - Protégé par `auth:sanctum`
+
+- [x] **FCM-004** : `OrderController` intégration FCM non-bloquante
+  - ✅ Corrigé le 15/04/2026
+  - `store()` : `notifyNewOrder()` après création (try/catch, non-bloquant)
+  - `updateStatus()` : `notifyOrderStatusChanged()` après mise à jour statut
+
+- [x] **FCM-005** : Flutter `FCMService` — enregistrement token + stream
+  - ✅ Corrigé le 15/04/2026
+  - `registerTokenToBackend(token)` : POST `/auth/device-token` si connecté
+  - `unregisterTokenFromBackend()` : DELETE à la déconnexion
+  - `onTokenRefresh` → re-register automatique
+  - `StreamController<Map> orderEvents` : diffuse les data FCM foreground
+  - `_onForeground` : émet sur `orderEvents` si `type == order_status_changed`
+
+- [x] **FCM-006** : Topic restaurant + polling `OrdersScreen`
+  - ✅ Corrigé le 15/04/2026
+  - `restaurant_provider` : `subscribeToTopic('restaurant_{id}')` au scan QR
+  - `OrdersScreen` : `Timer.periodic(15s)` → `forceRefreshOrders()`
+  - `FCMService.orderEvents.listen()` → refresh immédiat à la réception FCM
+  - Indicateur **Live** animé (pulse vert) dans l'en-tête
+  - `dispose()` annule proprement timer + subscription
+
+### Dashboard React — Redesign Professionnel
+
+- [x] **DASH-08** : Design system CSS (`index.css`)
+  - ✅ Corrigé le 15/04/2026
+  - Variables CSS : `--sidebar-bg: #0f172a`, `--brand: #f97316`, `--radius-card: 16px`
+  - Classes utilitaires : `.nav-item`, `.nav-item.active`, `.input-pro`, `.btn-primary`
+  - Dégradés : `.stat-card-orange/green/blue/violet`
+  - Animations : `fadeIn`, `slideIn`, `pulse`, scrollbar slim
+
+- [x] **DASH-09** : Sidebar dark slate-900
+  - ✅ Corrigé le 15/04/2026
+  - Fond `#0f172a`, nav items semi-transparents avec hover/active
+  - Dot statut restaurant (vert ouvert / jaune fermé / gris inactif)
+  - Badge commandes en attente avec animation pulse
+  - Menu utilisateur flottant dark avec avatar dégradé orange
+  - Mobile : overlay `backdrop-blur` + transition transform
+
+- [x] **DASH-10** : DashboardPage — stat cards dégradées + charts
+  - ✅ Corrigé le 15/04/2026
+  - **4 stat cards** avec dégradés (orange/vert/bleu/violet), cercles décoratifs, badge tendance `%`
+  - **AreaChart** zone remplie pour commandes 7 jours (gradient orange)
+  - **BarChart** gradient vert pour revenus 6 mois
+  - Panneau commandes récentes avec `StatusBadge` coloré par statut
+  - `MiniStatCard` pour les 3 KPIs du bas
+  - Loading state avec icône animée `Activity`
+
+- [x] **DASH-11** : LoginPage — split-screen moderne
+  - ✅ Corrigé le 15/04/2026
+  - Gauche (52%) : fond dark `#0f172a` + blobs décoratifs flous + feature cards + headline dégradé
+  - Droite : formulaire épuré avec `input-pro`, toggle mot de passe "Voir/Masquer", `btn-primary` avec flèche
+  - Responsive : panneau gauche masqué sur mobile
+  - Hint démo discret en bas du formulaire
+
+---
+
+## �🔒 Fichier .env Suggéré
 
 ```env
 # API Configuration
@@ -425,10 +505,47 @@ ENVIRONMENT=development
 | Phase 4 - Évolutions | 1 semaine | S16 | S16 | ✅ Terminé |
 | Phase 5 - Monitoring & I18N | 1 semaine | S16 | S16 | ✅ Terminé |
 | Phase 6 - Dashboard & Mobile v1.2 | 1 semaine | S16 | S16 | ✅ Terminé |
+| Phase 7 - FCM Push + Dashboard Redesign | 1 jour | S16 | S16 | ✅ Terminé |
 
 ---
 
 ## ✅ Historique des Accomplissements
+
+### v1.3.2 (19 Avril 2026)
+
+- ✅ **BL-001** : Tests intégration Flutter (golden tests) — 8 golden PNG générés, zéro régression visuelle
+- ✅ **BL-002** : Coverage Flutter → **56.5%** (objectif 40% atteint et dépassé)
+  - 7 nouveaux fichiers de tests (orders_screen, profile_screen, notification_screen, my_restaurants_screen, flash_info_section, rating_dialog, notification_service)
+  - `test/services/notification_service_test.dart` — 22 tests (save, load, add, markRead, delete, clean, backend)
+  - Total : 301 tests Flutter (29 fichiers)
+- ✅ **BL-003** : Mode tablette/iPad — `responsive.dart` avec `ResponsiveLayout`, utilisé dans `OnboardingScreen`, golden tests `welcome_tablet` / `onboarding_tablet`
+- ✅ **BL-007** : Onboarding — correctifs encodage PowerShell (camÃ©ra → caméra), tests overflow supprimés
+- ✅ **BL-008** : Rate limiting backend — déjà implémenté (`RateLimiter::for('storeMobile')`), 7 tests Feature confirmés
+- ✅ **BL-010** : Dashboard WebSocket notifications — `NotificationProvider`, `NotificationCenter`, `NotificationToast`, `DashboardLayout` sticky bar
+- 🔄 **BL-009** : Remplacement CinetPay → **Orange Money** (API OM à configurer, en attente credentials)
+
+### v1.3.1 (19 Avril 2026)
+
+- ✅ **BL-004** : Staff page redesign — vue cartes avec grand avatar dégradé + ConfirmModal remplacement `confirm()` natif + EditRoleModal + toggle Cartes/Tableau
+- ✅ **BL-005** : Menu page redesign — 3ᵉ mode "Sections par catégorie" (groupé par cat, header éditable, bouton "+ Plat" inline, icône Layers)
+- ✅ **BL-006** : Orders page redesign — panneau détail commande slide-in (client, articles, total, actions), indicateur temps écoulé ⏱ sur cartes kanban, KPI "Revenu du jour" dans les mini-stats, grille sm:grid-cols-5
+- ✅ 0 erreurs TypeScript sur les 3 fichiers modifiés
+
+### v1.3.0 (15 Avril 2026)
+
+- ✅ **FCM-001-006** : Notifications push Firebase Cloud Messaging bout en bout
+  - Backend : `FcmNotificationService`, `DeviceTokenController`, routes `auth:sanctum`
+  - `OrderController` : FCM non-bloquant à la création et au changement de statut
+  - Flutter : `FCMService` register/unregister token, `StreamController orderEvents`
+  - `OrdersScreen` : polling 15s + écoute stream FCM + indicateur Live animé
+  - `restaurant_provider` : subscribe au topic `restaurant_{id}` au scan
+- ✅ **DASH-08-11** : Dashboard complet redesign professionnel
+  - Design system CSS (design tokens, `.nav-item`, `.btn-primary`, `.input-pro`)
+  - Sidebar dark slate-900 avec dots de statut + avatar dégradé
+  - DashboardPage : stat cards dégradées, AreaChart commandes, BarChart revenus
+  - LoginPage : split-screen dark/clair avec blobs décoratifs
+- ✅ 131 tests Laravel, 424 assertions — rien de cassé
+- ✅ 0 erreurs TypeScript sur tous les fichiers modifiés
 
 ### v1.2.0 (15 Avril 2026)
 
@@ -483,13 +600,102 @@ ENVIRONMENT=development
 
 ## 📝 Notes
 
-- L'application est production-ready (v1.2.0)
-- Flutter 179 tests, 0 issues (`dart analyze`), coverage modèles/utils ~80%
+- L'application est production-ready (v1.3.2)
+- Flutter 301 tests, 0 issues (`dart analyze`), coverage global ~56.5%
 - Laravel 61 tests, 130+ assertions (40 tests de la suite principale)
 - Les plugins Pusher et Mobile Scanner ne fonctionnent pas sur Windows/Web (normal)
 - Dashboard React déployable sur Netlify, backend Laravel sur Render
-- Prochaine étape : tests d'intégration + coverage screens Flutter
+- Prochaine étape : intégration Orange Money (BL-009 — credentials à fournir)
 
 ---
 
-*Document mis à jour le 15 avril 2026 — v1.2.0*
+## 🔭 Backlog — Idées Futures
+
+| ID | Fonctionnalité | Priorité | Effort |
+|----|---------------|----------|--------|
+| BL-001 | Tests intégration Flutter (golden tests) | ✅ Terminé | M |
+| BL-002 | Coverage screens Flutter (`lcov`) → 40%+ | ✅ Terminé | M |
+| BL-003 | Mode tablette / iPad (layout adaptatif) | ✅ Terminé | L |
+| BL-004 | Dashboard : page staff redesign (table + avatars) | ✅ Terminé | S |
+| BL-005 | Dashboard : page menu redesign (grille image) | ✅ Terminé | S |
+| BL-006 | Dashboard : page commandes redesign (kanban) | ✅ Terminé | M |
+| BL-007 | Flutter : onboarding première utilisation | ✅ Terminé | M |
+| BL-008 | Backend : rate limiting par IP sur `storeMobile` | ✅ Terminé | S |
+| BL-009 | Paiement Orange Money (remplace CinetPay) | 🔴 Critique — API OM à configurer | M |
+| BL-010 | Dashboard : notifications push temps réel (WebSocket) | ✅ Terminé | L |
+
+---
+
+## 🚀 Phase 8 — Module Livraison (Backlog Structuré)
+
+> Base conceptuelle : l'Admin Noogo crée les comptes restaurants et transmet les accès + QR code.
+> Le module livraison est un écosystème complet : backend partagé, dashboard admin livraison, app livreur Flutter, tracking temps réel client.
+
+### 8A — Backend Laravel (fondation)
+
+| ID | Tâche | Priorité | Effort |
+|----|-------|----------|--------|
+| DEL-B01 | Migration `delivery_drivers` (nom, téléphone, zone, statut, fcm_token, user_id) | 🔴 Critique | S |
+| DEL-B02 | Migration `deliveries` (order_id, driver_id, statut, pickup_at, delivered_at, distance_km, fee) | 🔴 Critique | S |
+| DEL-B03 | Modèles `DeliveryDriver` + `Delivery` avec relations | 🔴 Critique | S |
+| DEL-B04 | `DeliveryController` : assignation, changement statut, historique | 🔴 Critique | M |
+| DEL-B05 | Statuts livraison : `pending_assignment → assigned → picked_up → on_way → delivered → failed` | 🔴 Critique | S |
+| DEL-B06 | Endpoint `POST /orders/{order}/request-delivery` — déclenche une livraison depuis une commande | 🟠 Haute | S |
+| DEL-B07 | Endpoint `PATCH /deliveries/{delivery}/status` — livreur met à jour son statut | 🟠 Haute | S |
+| DEL-B08 | Broadcast Pusher `delivery.{orderId}` — événements `driver.assigned`, `driver.location`, `delivery.status` | 🟠 Haute | M |
+| DEL-B09 | Endpoint `POST /deliveries/{delivery}/driver-location` — livreur pousse sa position GPS (lat/lng) | 🟠 Haute | S |
+| DEL-B10 | Policy `DeliveryPolicy` — seul le livreur assigné peut mettre à jour sa livraison | 🟡 Moyenne | S |
+| DEL-B11 | FCM notification livreur — nouvelle livraison assignée | 🟡 Moyenne | S |
+| DEL-B12 | FCM notification client — livreur en route, livré | 🟡 Moyenne | S |
+
+### 8B — Dashboard Admin Livraison (React)
+
+| ID | Tâche | Priorité | Effort |
+|----|-------|----------|--------|
+| DEL-D01 | Page `/admin/delivery` — liste des livraisons en cours + carte temps réel | 🔴 Critique | L |
+| DEL-D02 | Page `/admin/drivers` — CRUD livreurs (nom, zone, statut dispo/occupé) | 🟠 Haute | M |
+| DEL-D03 | Assignation manuelle livreur → commande (drag ou sélect) | 🟠 Haute | M |
+| DEL-D04 | Carte Leaflet / Mapbox — positions livreurs en temps réel (Pusher) | 🟠 Haute | L |
+| DEL-D05 | KPIs livraison : temps moyen, taux succès, commandes/livreur/jour, revenus frais | 🟡 Moyenne | M |
+| DEL-D06 | Historique livraisons avec filtres (date, livreur, restaurant, statut) | 🟡 Moyenne | M |
+| DEL-D07 | Export CSV livraisons | 🟢 Basse | S |
+
+### 8C — KDS Cuisine (Dashboard Restaurant)
+
+| ID | Tâche | Priorité | Effort |
+|----|-------|----------|--------|
+| DEL-K01 | Page `/restaurants/:id/kitchen` — vue temps réel commandes (Pusher) | ✅ Terminé | M |
+| DEL-K02 | Filtre par statut `pending → preparing → ready` avec actions rapides | ✅ Terminé | S |
+| DEL-K03 | Accès conditionnel selon permission `kitchen_display` dans le rôle staff | ✅ Terminé | S |
+| DEL-K04 | Alerte sonore nouvelle commande (Web Audio API) | ✅ Terminé | S |
+
+### 8D — App Livreur (Flutter — nouveau flavour)
+
+| ID | Tâche | Priorité | Effort |
+|----|-------|----------|--------|
+| DEL-M01 | Authentification livreur (login séparé ou rôle `driver` dans users) | 🔴 Critique | M |
+| DEL-M02 | Écran file des commandes assignées (liste + carte) | 🔴 Critique | M |
+| DEL-M03 | Boutons statut : Récupéré → En route → Livré (avec confirmation) | 🔴 Critique | S |
+| DEL-M04 | Navigation GPS vers restaurant puis vers client (Google Maps / OpenStreetMap) | 🟠 Haute | M |
+| DEL-M05 | Push GPS position toutes les 10s vers backend pendant la livraison | 🟠 Haute | S |
+| DEL-M06 | Réception FCM : nouvelle commande assignée + son | 🟠 Haute | S |
+| DEL-M07 | Historique des livraisons du livreur + revenus | 🟡 Moyenne | M |
+| DEL-M08 | Toggle disponibilité (en ligne / hors ligne) | 🟡 Moyenne | S |
+
+### 8E — Tracking Temps Réel Client (App Flutter existante)
+
+| ID | Tâche | Priorité | Effort |
+|----|-------|----------|--------|
+| DEL-T01 | Écran `TrackingScreen` — carte avec position livreur + statut livraison | ✅ Terminé | L |
+| DEL-T02 | Abonnement Pusher channel `delivery.{orderId}` — réception position GPS livreur | ✅ Terminé | M |
+| DEL-T03 | Affichage carte temps réel (package `flutter_map` ou `google_maps_flutter`) | ✅ Terminé | M |
+| DEL-T04 | Marker livreur animé (smooth move entre positions successives) | ✅ Terminé | M |
+| DEL-T05 | Partage localisation précise client → backend (Pusher → livreur) | ✅ Terminé | M |
+| DEL-T06 | Barre de progression statut : Confirmée → En préparation → Récupérée → En route → Livrée | ✅ Terminé | S |
+| DEL-T07 | ETA estimé (temps restant basé sur distance GPS livreur ↔ client) | ✅ Terminé | M |
+| DEL-T08 | Notification push client au changement de statut (`on_way`, `delivered`) | ✅ Terminé | S |
+| DEL-T09 | Accès au tracking depuis `OrdersScreen` (bouton sur commandes `on_way`) | ✅ Terminé | S |
+
+---
+
+*Document mis à jour le 19 avril 2026 — v1.3.1*

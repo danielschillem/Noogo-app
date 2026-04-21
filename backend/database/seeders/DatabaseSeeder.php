@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'phone' => '+226 70000000',
             'is_admin' => true,
+            'role' => 'admin',
             'email_verified_at' => now(),
         ]);
 
@@ -98,6 +99,8 @@ class DatabaseSeeder extends Seeder
             'date_fin' => now()->addDays(7),
             'is_active' => true,
         ]);
+
+        $this->call(AdminUsersSeeder::class);
 
         $this->command->info('✅ Database seeded! Admin: admin@noogo.com / password');
     }

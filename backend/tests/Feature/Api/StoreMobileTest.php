@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\Restaurant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 /**
@@ -25,6 +26,10 @@ class StoreMobileTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Vider le cache du rate limiter entre chaque test
+        // (évite les 429 lorsque StoreMobileRateLimitTest précède ce fichier)
+        Cache::flush();
 
         $user = User::factory()->create(['is_admin' => false]);
 
@@ -183,13 +188,16 @@ class StoreMobileTest extends TestCase
         ];
 
         foreach ($types as $input => $expected) {
+            // Réinitialise les compteurs du rate limiter entre chaque itération
+            // (la limite par IP+restaurant est 3/min, or on envoie 4 types différents)
+            Cache::flush();
             Order::query()->forceDelete();
 
             $response = $this->postJson('/api/commandes', $this->payload([
                 'type' => $input,
             ]));
 
-            $response->assertStatus(201, "Type '$input' devrait être accepté");
+            $this->assertEquals(201, $response->status(), "Type '$input' devrait être accepté");
             $this->assertDatabaseHas('orders', ['order_type' => $expected]);
         }
     }

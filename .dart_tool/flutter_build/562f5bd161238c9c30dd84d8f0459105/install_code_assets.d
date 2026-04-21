@@ -1,1 +1,0 @@
- C:\\Users\\QUICK-DEV-IT\\Desktop\\Noogo-App\\.dart_tool\\flutter_build\\562f5bd161238c9c30dd84d8f0459105\\native_assets.json: 

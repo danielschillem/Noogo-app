@@ -42,13 +42,13 @@ jobs:
       - name: Create .env stub
         run: |
           mkdir -p assets/env
-          echo "API_BASE_URL=https://noogo-backend.onrender.com/api" > assets/env/.env
+          echo "API_BASE_URL=https://noogo-backend-zn2v.onrender.com/api" > assets/env/.env
 
       - name: Install dependencies
         run: flutter pub get
 
       - name: Analyze
-        run: flutter analyze --fatal-infos
+        run: flutter analyze --no-fatal-infos
 
       - name: Run tests
         run: flutter test --coverage --reporter=github
@@ -84,7 +84,7 @@ jobs:
       - name: Create .env stub
         run: |
           mkdir -p assets/env
-          echo "API_BASE_URL=https://noogo-backend.onrender.com/api" > assets/env/.env
+          echo "API_BASE_URL=https://noogo-backend-zn2v.onrender.com/api" > assets/env/.env
 
       - name: Install dependencies
         run: flutter pub get

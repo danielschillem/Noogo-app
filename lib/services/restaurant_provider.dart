@@ -17,6 +17,7 @@ import 'notification_service.dart';
 import 'realtime_service.dart';
 import 'analytics_service.dart';
 import 'favorites_service.dart';
+import 'fcm_service.dart';
 
 /// Machine d'état pour la soumission de commandes
 enum OrderSubmitState { idle, submitting, success, error }
@@ -818,6 +819,9 @@ class RestaurantProvider with ChangeNotifier {
       // FLASH INFOS
       _loadFlashInfosInBackground(restaurantId);
 
+      // S'abonner au topic FCM du restaurant (pour recevoir les notifs push staff)
+      FCMService.subscribeToTopic('restaurant_$restaurantId').ignore();
+
       if (kDebugMode) {
         debugPrint('✅ === loadAllInitialData TERMINÉ ===');
         debugPrint('   - Restaurant: ${_restaurant?.nom}');
@@ -1201,6 +1205,7 @@ class RestaurantProvider with ChangeNotifier {
     required String paymentMethod,
     required String phoneNumber,
     String? tableNumber,
+    String? deliveryAddress,
     String? mobileMoneyProvider,
   }) async {
     _orderSubmitState = OrderSubmitState.submitting;
@@ -1256,6 +1261,10 @@ class RestaurantProvider with ChangeNotifier {
 
       if (orderType == 'sur place' && tableNumber != null) {
         orderData['table'] = tableNumber;
+      }
+
+      if (normalizedOrderType == 'livraison' && deliveryAddress != null) {
+        orderData['delivery_address'] = deliveryAddress;
       }
 
       if (paymentMethod == 'mobile_money' && mobileMoneyProvider != null) {

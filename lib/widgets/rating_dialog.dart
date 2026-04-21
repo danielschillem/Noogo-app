@@ -7,11 +7,13 @@ import '../utils/app_text_styles.dart';
 class RatingDialog extends StatefulWidget {
   final Order order;
   final VoidCallback onRated;
+  final int? restaurantId;
 
   const RatingDialog({
     super.key,
     required this.order,
     required this.onRated,
+    this.restaurantId,
   });
 
   @override
@@ -38,6 +40,7 @@ class _RatingDialogState extends State<RatingDialog> {
       _commentController.text.trim().isEmpty
           ? null
           : _commentController.text.trim(),
+      restaurantId: widget.restaurantId,
     );
     if (mounted) {
       Navigator.of(context).pop();

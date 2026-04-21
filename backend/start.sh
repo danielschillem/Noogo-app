@@ -17,6 +17,9 @@ fi
 echo "▶ Migrations..."
 php artisan migrate --force
 
+echo "▶ Seeding admin users..."
+php artisan db:seed --class=AdminUsersSeeder --force
+
 echo "▶ Caches Laravel..."
 php artisan config:cache
 php artisan route:cache
@@ -26,5 +29,8 @@ echo "▶ Lien storage..."
 php artisan storage:link 2>/dev/null || true
 
 echo "▶ Démarrage PHP-FPM + Nginx (serversideup)..."
+# Render injecte PORT dynamiquement — on le mappe au port Nginx
+export NGINX_HTTP_PORT=${PORT:-8080}
+echo "   → Nginx écoutera sur le port $NGINX_HTTP_PORT"
 # Lance le superviseur serversideup qui gère FPM + Nginx
 exec /init

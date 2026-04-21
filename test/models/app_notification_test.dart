@@ -1,13 +1,13 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
 import 'package:noogo/models/app_notification.dart';
 
 void main() {
   final baseTimestamp = DateTime(2026, 4, 14, 10, 30);
 
-  AppNotification _makeNotification({
+  AppNotification makeNotification({
     String id = 'notif_1',
-    String title = 'Commande confirmée',
-    String body = 'Votre commande #42 est confirmée',
+    String title = 'Commande confirmÃ©e',
+    String body = 'Votre commande #42 est confirmÃ©e',
     bool isRead = false,
     String? type = 'order',
     Map<String, dynamic>? data,
@@ -23,18 +23,18 @@ void main() {
       );
 
   group('AppNotification.constructor', () {
-    test('crée une notification avec les valeurs fournies', () {
-      final notif = _makeNotification();
+    test('crÃ©e une notification avec les valeurs fournies', () {
+      final notif = makeNotification();
 
       expect(notif.id, 'notif_1');
-      expect(notif.title, 'Commande confirmée');
-      expect(notif.body, 'Votre commande #42 est confirmée');
+      expect(notif.title, 'Commande confirmÃ©e');
+      expect(notif.body, 'Votre commande #42 est confirmÃ©e');
       expect(notif.timestamp, baseTimestamp);
       expect(notif.isRead, false);
       expect(notif.type, 'order');
     });
 
-    test('isRead vaut false par défaut', () {
+    test('isRead vaut false par dÃ©faut', () {
       final notif = AppNotification(
         id: 'x',
         title: 'Test',
@@ -57,8 +57,8 @@ void main() {
   });
 
   group('AppNotification.copyWith', () {
-    test('retourne une copie avec isRead modifié', () {
-      final notif = _makeNotification(isRead: false);
+    test('retourne une copie avec isRead modifiÃ©', () {
+      final notif = makeNotification(isRead: false);
       final read = notif.copyWith(isRead: true);
 
       expect(read.isRead, true);
@@ -67,8 +67,8 @@ void main() {
       expect(read.body, notif.body);
     });
 
-    test('retourne une copie avec title modifié', () {
-      final notif = _makeNotification();
+    test('retourne une copie avec title modifiÃ©', () {
+      final notif = makeNotification();
       final updated = notif.copyWith(title: 'Nouveau titre');
 
       expect(updated.title, 'Nouveau titre');
@@ -77,14 +77,14 @@ void main() {
     });
 
     test('ne modifie pas l\'original', () {
-      final notif = _makeNotification(isRead: false);
+      final notif = makeNotification(isRead: false);
       notif.copyWith(isRead: true);
 
       expect(notif.isRead, false);
     });
 
     test('copyWith sans arguments retourne une copie identique', () {
-      final notif = _makeNotification(data: {'orderId': '42'});
+      final notif = makeNotification(data: {'orderId': '42'});
       final copy = notif.copyWith();
 
       expect(copy.id, notif.id);
@@ -94,20 +94,20 @@ void main() {
   });
 
   group('AppNotification.toJson', () {
-    test('sérialise correctement en JSON', () {
-      final notif = _makeNotification(type: 'promo', data: {'code': 'PROMO10'});
+    test('sÃ©rialise correctement en JSON', () {
+      final notif = makeNotification(type: 'promo', data: {'code': 'PROMO10'});
       final json = notif.toJson();
 
       expect(json['id'], 'notif_1');
-      expect(json['title'], 'Commande confirmée');
-      expect(json['body'], 'Votre commande #42 est confirmée');
+      expect(json['title'], 'Commande confirmÃ©e');
+      expect(json['body'], 'Votre commande #42 est confirmÃ©e');
       expect(json['isRead'], false);
       expect(json['type'], 'promo');
       expect(json['data'], {'code': 'PROMO10'});
     });
 
-    test('timestamp sérialisé en ISO 8601', () {
-      final notif = _makeNotification();
+    test('timestamp sÃ©rialisÃ© en ISO 8601', () {
+      final notif = makeNotification();
       final json = notif.toJson();
 
       expect(json['timestamp'], baseTimestamp.toIso8601String());
@@ -115,7 +115,7 @@ void main() {
   });
 
   group('AppNotification.fromJson', () {
-    test('désérialise correctement depuis JSON', () {
+    test('dÃ©sÃ©rialise correctement depuis JSON', () {
       final json = {
         'id': 'notif_42',
         'title': 'Livraison en route',
@@ -147,8 +147,8 @@ void main() {
       expect(notif.isRead, false);
     });
 
-    test('round-trip toJson/fromJson préserve les données', () {
-      final original = _makeNotification(
+    test('round-trip toJson/fromJson prÃ©serve les donnÃ©es', () {
+      final original = makeNotification(
         isRead: true,
         type: 'order',
         data: {'orderId': '7'},

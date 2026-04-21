@@ -1,0 +1,47 @@
+#!/bin/sh
+# s6 oneshot: runs AFTER Nginx is up
+# Waits for DB, then runs migrations + seed
+set +e
+
+cd /var/www/html
+
+echo "⏳ [noogo-db-init] Attente de la base de données (max 120s)..."
+RETRY=0
+MAX_RETRIES=120
+
+DB_CHECK_CMD='
+    $u = parse_url(getenv("DB_URL"));
+    if (!$u || !isset($u["host"])) exit(1);
+    $dsn = "pgsql:host=" . $u["host"]
+         . ";port=" . ($u["port"] ?? 5432)
+         . ";dbname=" . ltrim($u["path"] ?? "/postgres", "/");
+    $ssl = getenv("DB_SSLMODE") ?: "require";
+    $dsn .= ";sslmode=" . $ssl;
+    try {
+        new PDO($dsn, $u["user"] ?? "", $u["pass"] ?? "", [PDO::ATTR_TIMEOUT => 5]);
+    } catch (Exception $e) {
+        exit(1);
+    }
+'
+
+until php -r "$DB_CHECK_CMD" 2>/dev/null; do
+    RETRY=$((RETRY + 1))
+    if [ $RETRY -ge $MAX_RETRIES ]; then
+        echo "❌ [noogo-db-init] Base de données injoignable après ${MAX_RETRIES}s — migrations ignorées"
+        exit 0
+    fi
+    if [ $((RETRY % 15)) -eq 0 ]; then
+        echo "⏳ [noogo-db-init] Toujours en attente de la DB... ${RETRY}s/${MAX_RETRIES}s"
+    fi
+    sleep 1
+done
+
+echo "✅ [noogo-db-init] Base de données prête après ${RETRY}s"
+
+echo "🚀 [noogo-db-init] Migrations..."
+php artisan migrate --force 2>&1 || echo "⚠️ [noogo-db-init] Migration échouée (non-fatal)"
+
+echo "🌱 [noogo-db-init] Seeding admin..."
+php artisan db:seed --class=AdminUsersSeeder --force 2>&1 || echo "⚠️ [noogo-db-init] Seed échoué (non-fatal)"
+
+echo "✅ [noogo-db-init] Terminé."

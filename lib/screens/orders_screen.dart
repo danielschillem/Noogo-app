@@ -1,13 +1,16 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/order.dart';
+import '../services/fcm_service.dart';
 import '../services/rating_service.dart';
 import '../services/restaurant_provider.dart';
 import '../utils/app_colors.dart';
 import '../utils/app_text_styles.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/rating_dialog.dart';
+import 'tracking_screen.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -24,6 +27,10 @@ class _OrdersScreenState extends State<OrdersScreen>
   late Animation<double> _fadeAnimation;
 
   late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  Timer? _pollingTimer;
+  StreamSubscription<Map<String, dynamic>>? _fcmSubscription;
 
   Set<int> _ratedOrderIds = {};
 
@@ -46,12 +53,34 @@ class _OrdersScreenState extends State<OrdersScreen>
       vsync: this,
     )..repeat(reverse: true);
 
+    _pulseAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
     // ✅ Charger les commandes au démarrage
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<RestaurantProvider>().forceRefreshOrders();
         _loadRatedOrders();
+        _startPolling();
+        _listenToFcmEvents();
       }
+    });
+  }
+
+  void _startPolling() {
+    _pollingTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      if (mounted) {
+        context.read<RestaurantProvider>().forceRefreshOrders();
+      }
+    });
+  }
+
+  void _listenToFcmEvents() {
+    _fcmSubscription = FCMService.orderEvents.listen((data) {
+      if (!mounted) return;
+      // Rafraîchissement immédiat quand une notif de commande arrive
+      context.read<RestaurantProvider>().forceRefreshOrders();
     });
   }
 
@@ -62,6 +91,8 @@ class _OrdersScreenState extends State<OrdersScreen>
 
   @override
   void dispose() {
+    _pollingTimer?.cancel();
+    _fcmSubscription?.cancel();
     _animationController.dispose();
     _pulseController.dispose();
     super.dispose();
@@ -143,7 +174,8 @@ class _OrdersScreenState extends State<OrdersScreen>
                     padding: const EdgeInsets.all(16),
                     child: Row(
                       children: [
-                        const Text('Mes Commandes', style: AppTextStyles.heading1),
+                        const Text('Mes Commandes',
+                            style: AppTextStyles.heading1),
                         const Spacer(),
 
                         // Indicateur auto-refresh
@@ -192,10 +224,46 @@ class _OrdersScreenState extends State<OrdersScreen>
     );
   }
 
-  /// Indicateur d'auto-refresh (toujours actif)
   Widget _buildAutoRefreshIndicator() {
-    return const Tooltip(
-      message: 'Mises à jour automatiques toutes les 30s',
+    return Tooltip(
+      message: 'Mises à jour automatiques toutes les 15s',
+      child: AnimatedBuilder(
+        animation: _pulseAnimation,
+        builder: (context, child) {
+          return Opacity(
+            opacity: _pulseAnimation.value,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: AppColors.success,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.success.withValues(alpha: 0.4),
+                        blurRadius: 4,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Live',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.success,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -402,6 +470,12 @@ class _OrdersScreenState extends State<OrdersScreen>
                       child: const Text('Suivre la commande'),
                     ),
                   ),
+                  // DEL-T09 : mini-carte tracking pour livraisons en route
+                  if (order.orderType == OrderType.livraison)
+                    TrackingMiniCard(
+                      order: order,
+                      onTap: () => _trackOrder(order),
+                    ),
                 ] else if (order.status == OrderStatus.delivered ||
                     order.status == OrderStatus.completed) ...[
                   const SizedBox(height: 16),
@@ -596,6 +670,18 @@ class _OrdersScreenState extends State<OrdersScreen>
   }
 
   void _trackOrder(Order order) {
+    // DEL-T09 : livraison en cours → ouvrir TrackingScreen
+    if (order.orderType == OrderType.livraison) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => TrackingScreen(order: order),
+        ),
+      );
+      return;
+    }
+
+    // Autres types : dialog simple
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -631,10 +717,12 @@ class _OrdersScreenState extends State<OrdersScreen>
   }
 
   void _showRatingDialog(Order order) {
+    final restaurantId = context.read<RestaurantProvider>().restaurant?.id;
     showDialog(
       context: context,
       builder: (context) => RatingDialog(
         order: order,
+        restaurantId: restaurantId,
         onRated: () {
           setState(() => _ratedOrderIds.add(order.id));
           if (mounted) {

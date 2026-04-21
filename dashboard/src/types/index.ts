@@ -208,3 +208,90 @@ export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
 }
+
+// ── Admin types ───────────────────────────────────────────────────────────────
+
+export interface AdminUser {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string;
+  is_admin: boolean;
+  restaurants_count: number;
+  created_at: string;
+}
+
+export interface AdminRestaurant {
+  id: number;
+  nom: string;
+  adresse: string;
+  email?: string;
+  logo_url?: string;
+  is_active: boolean;
+  orders_count: number;
+  dishes_count: number;
+  created_at: string;
+  user?: { id: number; name: string; email: string };
+}
+
+export interface AdminStats {
+  users: { total: number; admins: number; this_month: number };
+  restaurants: { total: number; active: number; this_month: number };
+  orders: { total: number; today: number; pending: number };
+  revenue: { total: number; this_month: number };
+}
+
+// Delivery types
+export type DeliveryStatus = 'pending_assignment' | 'assigned' | 'picked_up' | 'on_way' | 'delivered' | 'failed';
+export type DriverStatus = 'available' | 'busy' | 'offline';
+
+export interface DeliveryDriver {
+  id: number;
+  name: string;
+  phone: string;
+  zone: string | null;
+  status: DriverStatus;
+  lat: number | null;
+  lng: number | null;
+  fcm_token: string | null;
+  user_id: number | null;
+  active_delivery_count?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Delivery {
+  id: number;
+  order_id: number;
+  delivery_driver_id: number | null;
+  status: DeliveryStatus;
+  assigned_at: string | null;
+  picked_up_at: string | null;
+  delivered_at: string | null;
+  driver_lat: number | null;
+  driver_lng: number | null;
+  driver_location_at: string | null;
+  client_lat: number | null;
+  client_lng: number | null;
+  client_address: string | null;
+  distance_km: number | null;
+  fee: number;
+  notes: string | null;
+  failure_reason: string | null;
+  order?: Order;
+  driver?: DeliveryDriver;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Rating {
+  id: number;
+  order_id: number;
+  restaurant_id: number;
+  user_id: number;
+  note: number;
+  commentaire?: string;
+  user?: { id: number; name: string };
+  order?: { id: number };
+  created_at: string;
+}

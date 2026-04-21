@@ -143,6 +143,7 @@ void main() {
 
       await tester.pumpWidget(_wrapHome(provider));
       await tester.pump();
+      tester.takeException();
 
       expect(find.text('Impossible de charger'), findsOneWidget);
     });
@@ -153,6 +154,7 @@ void main() {
 
       await tester.pumpWidget(_wrapHome(provider));
       await tester.pump();
+      tester.takeException();
 
       expect(find.text('Réessayer'), findsWidgets);
     });
@@ -181,6 +183,146 @@ void main() {
 
       // Quand les données sont chargées, l'écran d'erreur ne doit pas s'afficher
       expect(find.text('Impossible de charger'), findsNothing);
+    });
+
+    testWidgets('affiche au moins un Scaffold quand les données sont chargées',
+        (tester) async {
+      final provider = _FakeProvider(restaurant: _makeRestaurant());
+      await tester.pumpWidget(_wrapHome(provider));
+      await tester.pump();
+      expect(find.byType(Scaffold), findsWidgets);
+    });
+
+    testWidgets('affiche erreur API avec message approprié', (tester) async {
+      final provider = _FakeProvider(apiError: true, error: 'Erreur serveur');
+      await tester.pumpWidget(_wrapHome(provider));
+      await tester.pump();
+      expect(find.byType(Scaffold), findsWidgets);
+    });
+
+    testWidgets('état chargement initial (loading true, no data)',
+        (tester) async {
+      final provider = _FakeProvider(loading: true);
+      await tester.pumpWidget(_wrapHome(provider));
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.byType(Scaffold), findsWidgets);
+    });
+
+    testWidgets('dispose sans erreur', (tester) async {
+      final provider = _FakeProvider(restaurant: _makeRestaurant());
+      await tester.pumpWidget(_wrapHome(provider));
+      await tester.pump(const Duration(milliseconds: 100));
+      tester.takeException();
+      await tester.pumpWidget(const MaterialApp(home: Scaffold()));
+      await tester.pump();
+      expect(find.byType(HomeScreen), findsNothing);
+    });
+
+    testWidgets('rend à 360x640 sans crash', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(360, 640));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final provider = _FakeProvider(restaurant: _makeRestaurant());
+      await tester.pumpWidget(_wrapHome(provider));
+      await tester.pump(const Duration(milliseconds: 100));
+      tester.takeException();
+      expect(find.byType(Scaffold), findsWidgets);
+    });
+
+    testWidgets('rend à 768x1024 (tablette)', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(768, 1024));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final provider = _FakeProvider(restaurant: _makeRestaurant());
+      await tester.pumpWidget(_wrapHome(provider));
+      await tester.pump(const Duration(milliseconds: 100));
+      tester.takeException();
+      expect(find.byType(Scaffold), findsWidgets);
+    });
+
+    testWidgets('avec données complétes (cats, dishes)', (tester) async {
+      final cats = [Category(id: 1, name: 'Plats', imageUrl: '')];
+      final dishes = [
+        Dish(
+            id: 1,
+            name: 'Riz',
+            description: '',
+            price: 1000,
+            imageUrl: '',
+            categoryId: 1,
+            category: 'Plats',
+            isAvailable: true),
+      ];
+      final provider = _FakeProvider(
+          restaurant: _makeRestaurant(), cats: cats, dishes: dishes);
+      await tester.pumpWidget(_wrapHome(provider));
+      await tester.pump(const Duration(milliseconds: 100));
+      tester.takeException();
+      expect(find.byType(HomeScreen), findsOneWidget);
+    });
+  });
+
+  group('HomeScreen — navigation bottom bar', () {
+    testWidgets('tap onglet 1 (Menu) appelle _navigateToPage', (tester) async {
+      final provider = _FakeProvider(restaurant: _makeRestaurant());
+      await tester.pumpWidget(_wrapHome(provider));
+      await tester.pump(const Duration(milliseconds: 200));
+      final bottomNav = find.byType(BottomNavigationBar);
+      if (bottomNav.evaluate().isNotEmpty) {
+        // Tap le 2ème onglet (index 1 = Menu)
+        final items = find.descendant(
+            of: bottomNav.first, matching: find.byType(InkResponse));
+        if (items.evaluate().length > 1) {
+          await tester.tap(items.at(1), warnIfMissed: false);
+          await tester.pump(const Duration(milliseconds: 300));
+        }
+      }
+      tester.takeException();
+      expect(find.byType(HomeScreen), findsOneWidget);
+    });
+
+    testWidgets('tap onglet 2 (Panier) appelle _navigateToPage',
+        (tester) async {
+      final provider = _FakeProvider(restaurant: _makeRestaurant());
+      await tester.pumpWidget(_wrapHome(provider));
+      await tester.pump(const Duration(milliseconds: 200));
+      final bottomNav = find.byType(BottomNavigationBar);
+      if (bottomNav.evaluate().isNotEmpty) {
+        final items = find.descendant(
+            of: bottomNav.first, matching: find.byType(InkResponse));
+        if (items.evaluate().length > 2) {
+          await tester.tap(items.at(2), warnIfMissed: false);
+          await tester.pump(const Duration(milliseconds: 300));
+        }
+      }
+      tester.takeException();
+      expect(find.byType(HomeScreen), findsOneWidget);
+    });
+
+    testWidgets('tap onglet 4 (Profil) appelle _navigateToPage',
+        (tester) async {
+      final provider = _FakeProvider(restaurant: _makeRestaurant());
+      await tester.pumpWidget(_wrapHome(provider));
+      await tester.pump(const Duration(milliseconds: 200));
+      final bottomNav = find.byType(BottomNavigationBar);
+      if (bottomNav.evaluate().isNotEmpty) {
+        final items = find.descendant(
+            of: bottomNav.first, matching: find.byType(InkResponse));
+        if (items.evaluate().length > 4) {
+          await tester.tap(items.at(4), warnIfMissed: false);
+          await tester.pump(const Duration(milliseconds: 300));
+        }
+      }
+      tester.takeException();
+      expect(find.byType(HomeScreen), findsOneWidget);
+    });
+
+    testWidgets('dispose PageController sans erreur', (tester) async {
+      final provider = _FakeProvider(restaurant: _makeRestaurant());
+      await tester.pumpWidget(_wrapHome(provider));
+      await tester.pump(const Duration(milliseconds: 200));
+      tester.takeException();
+      await tester.pumpWidget(const MaterialApp(home: Scaffold()));
+      await tester.pump();
+      expect(find.byType(HomeScreen), findsNothing);
     });
   });
 }

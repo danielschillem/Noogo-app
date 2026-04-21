@@ -20,7 +20,7 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        // Get user's restaurants
+        // Get user's restaurants (single query, reused below)
         $restaurantIds = Restaurant::forUser($user->id)->pluck('id');
 
         $today = Carbon::today();
@@ -28,57 +28,46 @@ class DashboardController extends Controller
         $lastMonth = Carbon::now()->subMonth()->startOfMonth();
         $lastMonthEnd = Carbon::now()->subMonth()->endOfMonth();
 
+        // Single aggregate query instead of 9 separate ones
+        $orderStats = Order::whereIn('restaurant_id', $restaurantIds)
+            ->where('order_date', '>=', $lastMonth)
+            ->selectRaw("
+                COUNT(CASE WHEN DATE(order_date) = ? THEN 1 END) as today_orders,
+                COALESCE(SUM(CASE WHEN DATE(order_date) = ? AND status != 'cancelled' THEN total_amount END), 0) as today_revenue,
+                COUNT(CASE WHEN DATE(order_date) = ? AND status = 'pending' THEN 1 END) as today_pending,
+                COUNT(CASE WHEN order_date >= ? THEN 1 END) as month_orders,
+                COALESCE(SUM(CASE WHEN order_date >= ? AND status != 'cancelled' THEN total_amount END), 0) as month_revenue,
+                COUNT(CASE WHEN order_date >= ? AND status IN ('delivered','completed') THEN 1 END) as month_completed,
+                COUNT(CASE WHEN order_date >= ? AND order_date <= ? THEN 1 END) as last_month_orders,
+                COALESCE(SUM(CASE WHEN order_date >= ? AND order_date <= ? AND status != 'cancelled' THEN total_amount END), 0) as last_month_revenue
+            ", [$today, $today, $today, $thisMonth, $thisMonth, $thisMonth, $lastMonth, $lastMonthEnd, $lastMonth, $lastMonthEnd])
+            ->first();
+
+        // Single query for dish counts
+        $dishStats = Dish::whereIn('restaurant_id', $restaurantIds)
+            ->selectRaw("COUNT(*) as total, COUNT(CASE WHEN disponibilite = true THEN 1 END) as active")
+            ->first();
+
         $stats = [
-            // Today's stats
             'today' => [
-                'orders' => Order::whereIn('restaurant_id', $restaurantIds)
-                    ->whereDate('order_date', $today)
-                    ->count(),
-                'revenue' => Order::whereIn('restaurant_id', $restaurantIds)
-                    ->whereDate('order_date', $today)
-                    ->whereNotIn('status', ['cancelled'])
-                    ->sum('total_amount'),
-                'pending_orders' => Order::whereIn('restaurant_id', $restaurantIds)
-                    ->whereDate('order_date', $today)
-                    ->where('status', 'pending')
-                    ->count(),
+                'orders' => $orderStats->today_orders,
+                'revenue' => $orderStats->today_revenue,
+                'pending_orders' => $orderStats->today_pending,
             ],
-
-            // This month stats
             'this_month' => [
-                'orders' => Order::whereIn('restaurant_id', $restaurantIds)
-                    ->where('order_date', '>=', $thisMonth)
-                    ->count(),
-                'revenue' => Order::whereIn('restaurant_id', $restaurantIds)
-                    ->where('order_date', '>=', $thisMonth)
-                    ->whereNotIn('status', ['cancelled'])
-                    ->sum('total_amount'),
-                'completed_orders' => Order::whereIn('restaurant_id', $restaurantIds)
-                    ->where('order_date', '>=', $thisMonth)
-                    ->whereIn('status', ['delivered', 'completed'])
-                    ->count(),
+                'orders' => $orderStats->month_orders,
+                'revenue' => $orderStats->month_revenue,
+                'completed_orders' => $orderStats->month_completed,
             ],
-
-            // Last month stats for comparison
             'last_month' => [
-                'orders' => Order::whereIn('restaurant_id', $restaurantIds)
-                    ->whereBetween('order_date', [$lastMonth, $lastMonthEnd])
-                    ->count(),
-                'revenue' => Order::whereIn('restaurant_id', $restaurantIds)
-                    ->whereBetween('order_date', [$lastMonth, $lastMonthEnd])
-                    ->whereNotIn('status', ['cancelled'])
-                    ->sum('total_amount'),
+                'orders' => $orderStats->last_month_orders,
+                'revenue' => $orderStats->last_month_revenue,
             ],
-
-            // General stats
-            'total_restaurants' => Restaurant::forUser($user->id)->count(),
-            'total_dishes' => Dish::whereIn('restaurant_id', $restaurantIds)->count(),
-            'active_dishes' => Dish::whereIn('restaurant_id', $restaurantIds)
-                ->where('disponibilite', true)
-                ->count(),
+            'total_restaurants' => count($restaurantIds),
+            'total_dishes' => $dishStats->total,
+            'active_dishes' => $dishStats->active,
         ];
 
-        // Calculate growth percentages
         $stats['growth'] = [
             'orders' => $this->calculateGrowth(
                 $stats['this_month']['orders'],
@@ -129,7 +118,7 @@ class DashboardController extends Controller
 
         $orders = Order::whereIn('restaurant_id', $restaurantIds)
             ->where('order_date', '>=', $startDate)
-            ->selectRaw('DATE(order_date) as date, COUNT(*) as count, SUM(CASE WHEN status != "cancelled" THEN total_amount ELSE 0 END) as revenue')
+            ->selectRaw("DATE(order_date) as date, COUNT(*) as count, SUM(CASE WHEN status != 'cancelled' THEN total_amount ELSE 0 END) as revenue")
             ->groupBy('date')
             ->orderBy('date')
             ->get()
@@ -234,6 +223,25 @@ class DashboardController extends Controller
         return response()->json([
             'success' => true,
             'data' => $topDishes
+        ]);
+    }
+
+    /**
+     * Lightweight pending count for sidebar badge (avoids full stats query)
+     */
+    public function pendingCount(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $restaurantIds = Restaurant::forUser($user->id)->pluck('id');
+
+        $count = Order::whereIn('restaurant_id', $restaurantIds)
+            ->whereDate('order_date', Carbon::today())
+            ->where('status', 'pending')
+            ->count();
+
+        return response()->json([
+            'success' => true,
+            'data' => ['pending_orders' => $count]
         ]);
     }
 

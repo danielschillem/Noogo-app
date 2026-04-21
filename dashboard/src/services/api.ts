@@ -4,6 +4,7 @@ const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const api = axios.create({
   baseURL: API_URL,
+  timeout: 60000,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -44,11 +45,18 @@ export const authApi = {
   logout: () => api.post('/auth/logout'),
   me: () => api.get('/auth/me'),
   updateUser: (data: { name?: string; email?: string }) => api.put('/auth/user/update', data),
+  forgotPassword: (email: string) =>
+    api.post('/auth/forgot-password', { email }),
+  resetPassword: (data: { token: string; password: string; password_confirmation: string }) =>
+    api.post('/auth/reset-password', data),
+  changePassword: (data: { current_password: string; password: string; password_confirmation: string }) =>
+    api.post('/auth/change-password', data),
 };
 
 // Dashboard API
 export const dashboardApi = {
   getStats: () => api.get('/dashboard'),
+  getPendingCount: () => api.get('/dashboard/pending-count'),
   getRecentOrders: (limit = 10) => api.get(`/dashboard/recent-orders?limit=${limit}`),
   getOrdersChart: (days = 7) => api.get(`/dashboard/orders-chart?days=${days}`),
   getRevenueChart: (months = 6) => api.get(`/dashboard/revenue-chart?months=${months}`),
@@ -167,6 +175,56 @@ export const staffApi = {
 // My restaurants (pour les non-admins)
 export const myRestaurantsApi = {
   get: () => api.get('/auth/my-restaurants'),
+};
+
+// Admin API (super admin only)
+export const adminApi = {
+  getStats: () => api.get('/admin/stats'),
+
+  // Users
+  listUsers: (params?: { search?: string; page?: number; per_page?: number; is_admin?: boolean }) =>
+    api.get('/admin/users', { params }),
+  createUser: (data: { name: string; email: string; phone?: string; password: string; is_admin?: boolean }) =>
+    api.post('/admin/users', data),
+  updateUser: (id: number, data: { name?: string; email?: string; phone?: string; is_admin?: boolean; password?: string }) =>
+    api.put(`/admin/users/${id}`, data),
+  deleteUser: (id: number) => api.delete(`/admin/users/${id}`),
+  toggleAdmin: (id: number) => api.post(`/admin/users/${id}/toggle-admin`),
+
+  // Restaurants
+  listRestaurants: (params?: { search?: string; page?: number; per_page?: number; is_active?: boolean }) =>
+    api.get('/admin/restaurants', { params }),
+  toggleRestaurantActive: (id: number) => api.post(`/admin/restaurants/${id}/toggle-active`),
+};
+
+// Delivery API
+export const deliveryApi = {
+  // Deliveries (admin)
+  getAll: (params?: { status?: string; driver_id?: number; page?: number }) =>
+    api.get('/admin/deliveries', { params }),
+  getById: (id: number) => api.get(`/deliveries/${id}`),
+  requestDelivery: (orderId: number, data: {
+    client_lat?: number; client_lng?: number; client_address?: string; fee?: number; notes?: string;
+  }) => api.post(`/orders/${orderId}/request-delivery`, data),
+  assign: (deliveryId: number, driverIdValue: number) =>
+    api.post(`/deliveries/${deliveryId}/assign`, { delivery_driver_id: driverIdValue }),
+  updateStatus: (deliveryId: number, status: string, failureReason?: string) =>
+    api.patch(`/deliveries/${deliveryId}/status`, { status, failure_reason: failureReason }),
+
+  // Drivers (admin)
+  getDrivers: (params?: { status?: string; zone?: string; search?: string; page?: number }) =>
+    api.get('/admin/drivers', { params }),
+  createDriver: (data: { name: string; phone: string; zone?: string; user_id?: number }) =>
+    api.post('/admin/drivers', data),
+  updateDriver: (id: number, data: { name?: string; phone?: string; zone?: string; status?: string }) =>
+    api.put(`/admin/drivers/${id}`, data),
+  deleteDriver: (id: number) => api.delete(`/admin/drivers/${id}`),
+};
+
+// Ratings API
+export const ratingsApi = {
+  getAll: (restaurantId: number, params?: { page?: number; per_page?: number }) =>
+    api.get(`/restaurants/${restaurantId}/ratings`, { params }),
 };
 
 export default api;

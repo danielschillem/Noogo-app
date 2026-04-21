@@ -21,7 +21,7 @@ if [ ! -f "android/key.properties" ]; then
 fi
 
 if [ ! -f "assets/env/.env" ]; then
-    error "assets/env/.env manquant ! Créez ce fichier avec API_BASE_URL=https://noogo-backend.onrender.com/api"
+    error "assets/env/.env manquant ! Créez ce fichier avec API_BASE_URL=https://noogo-backend-zn2v.onrender.com/api"
 fi
 
 API_URL=$(grep "API_BASE_URL" assets/env/.env | cut -d '=' -f2)

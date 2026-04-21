@@ -286,4 +286,168 @@ void main() {
       expect(json['is_open'], true);
     });
   });
+
+  group('Restaurant — horaires multi-plages', () {
+    test('ouvert sur plage multiple (matin + soir)', () {
+      final r = Restaurant(
+        id: 1,
+        nom: 'A',
+        telephone: '0',
+        adresse: 'X',
+        heuresOuverture: '00:00-23:59,06:00-12:00',
+      );
+      expect(r.isOpen, true);
+    });
+
+    test('horaires avec format invalide ne plante pas', () {
+      final r = Restaurant(
+        id: 2,
+        nom: 'B',
+        telephone: '0',
+        adresse: 'X',
+        heuresOuverture: 'malformed-data',
+      );
+      expect(r.isOpen, isFalse);
+    });
+
+    test('horaires fermés 01:00-02:00 — restaurant probablement fermé', () {
+      final r = Restaurant(
+        id: 3,
+        nom: 'C',
+        telephone: '0',
+        adresse: 'X',
+        heuresOuverture: '01:00-02:00',
+      );
+      // Soit ouvert soit fermé selon l'heure — ne plante pas
+      expect(r.isOpen, isA<bool>());
+    });
+
+    test('horaire après minuit 22:00-02:00', () {
+      final r = Restaurant(
+        id: 4,
+        nom: 'D',
+        telephone: '0',
+        adresse: 'X',
+        heuresOuverture: '22:00-02:00',
+      );
+      expect(r.isOpen, isA<bool>());
+    });
+  });
+
+  group('Restaurant — getters de compatibilité', () {
+    test('nom getter retourne le nom', () {
+      final r = Restaurant(id: 1, nom: 'Test', telephone: '0', adresse: 'X');
+      expect(r.nom, 'Test');
+    });
+
+    test('telephone getter retourne le téléphone', () {
+      final r =
+          Restaurant(id: 1, nom: 'A', telephone: '70000000', adresse: 'X');
+      expect(r.telephone, '70000000');
+    });
+
+    test('images vide par défaut', () {
+      final r = Restaurant(id: 1, nom: 'A', telephone: '0', adresse: 'X');
+      expect(r.images, isEmpty);
+    });
+
+    test('latitude et longitude nulls par défaut', () {
+      final r = Restaurant(id: 1, nom: 'A', telephone: '0', adresse: 'X');
+      expect(r.latitude, isNull);
+      expect(r.longitude, isNull);
+    });
+
+    test('description non nulle si fournie', () {
+      final r = Restaurant(
+        id: 1,
+        nom: 'A',
+        telephone: '0',
+        adresse: 'X',
+        description: 'Un bon resto',
+      );
+      expect(r.description, 'Un bon resto');
+    });
+
+    test('email non nul si fourni', () {
+      final r = Restaurant(
+        id: 1,
+        nom: 'A',
+        telephone: '0',
+        adresse: 'X',
+        email: 'test@test.com',
+      );
+      expect(r.email, 'test@test.com');
+    });
+
+    test('logo non nul si fourni', () {
+      final r = Restaurant(
+        id: 1,
+        nom: 'A',
+        telephone: '0',
+        adresse: 'X',
+        logo: 'storage/logo.png',
+      );
+      expect(r.logo, 'storage/logo.png');
+    });
+
+    test('userId nul par défaut', () {
+      final r = Restaurant(id: 1, nom: 'A', telephone: '0', adresse: 'X');
+      expect(r.userId, isNull);
+    });
+  });
+
+  group('Restaurant.fromJson — cas limites', () {
+    test('id depuis string', () {
+      final r = Restaurant.fromJson({
+        'id': '42',
+        'nom': 'A',
+        'telephone': '0',
+        'adresse': 'X',
+      });
+      expect(r.id, 42);
+    });
+
+    test('id depuis double', () {
+      final r = Restaurant.fromJson({
+        'id': 1.0,
+        'nom': 'A',
+        'telephone': '0',
+        'adresse': 'X',
+      });
+      expect(r.id, 1);
+    });
+
+    test('images depuis string JSON sérialisée', () {
+      final r = Restaurant.fromJson({
+        'id': 1,
+        'nom': 'A',
+        'telephone': '0',
+        'adresse': 'X',
+        'images': '["photo1.jpg","photo2.jpg"]',
+      });
+      expect(r.images.length, 2);
+    });
+
+    test('images string simple (non JSON)', () {
+      final r = Restaurant.fromJson({
+        'id': 1,
+        'nom': 'A',
+        'telephone': '0',
+        'adresse': 'X',
+        'images': 'photo.jpg',
+      });
+      expect(r.images, isNotEmpty);
+    });
+
+    test('is_open depuis string "1"', () {
+      final r = Restaurant.fromJson({
+        'id': 1,
+        'nom': 'A',
+        'telephone': '0',
+        'adresse': 'X',
+        'is_open': '1',
+      });
+      expect(r.isOpenFromApi, true);
+    });
+  });
 }

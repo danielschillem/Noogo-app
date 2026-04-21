@@ -469,20 +469,22 @@ class _MenuScreenState extends State<MenuScreen>
                 ),
               ),
               const SizedBox(height: 8),
-              SizedBox(
-                width: 70,
-                child: Text(
-                  name,
-                  style: AppTextStyles.caption.copyWith(
-                    color: isSelected
-                        ? AppColors.primary
-                        : AppColors.textSecondary,
-                    fontWeight:
-                        isSelected ? FontWeight.w600 : FontWeight.normal,
+              Flexible(
+                child: SizedBox(
+                  width: 70,
+                  child: Text(
+                    name,
+                    style: AppTextStyles.caption.copyWith(
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.textSecondary,
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.normal,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
