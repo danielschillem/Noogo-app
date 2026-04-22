@@ -1,36 +1,36 @@
-     # Build outputs
-     build/
-     .dart_tool/
-     .flutter-plugins
-     .flutter-plugins-dependencies
-     .packages
-     .pub-cache/
-     .pub/
+﻿# Build outputs
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
 
-     # iOS
-     ios/Pods/
-     ios/.symlinks/
-     ios/Flutter/Flutter.framework
-     ios/Flutter/Flutter.podspec
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
 
-     # Android
-     android/.gradle
-     android/captures/
-     android/gradlew
-     android/gradlew.bat
-     android/local.properties
-     android/.idea
-     android/key.properties
-     *.jks
-     *.keystore
+# Android
+android/.gradle
+android/captures/
+android/gradlew
+android/gradlew.bat
+android/local.properties
+android/.idea
+android/key.properties
+*.jks
+*.keystore
 
-     # Large files
-     *.apk
-     *.ipa
-     *.aab
-     *.mp4
-     *.mov
-     *.avi
+# Large files
+*.apk
+*.ipa
+*.aab
+*.mp4
+*.mov
+*.avi
 *.hprof
 
 # Scripts avec credentials (cles API, mots de passe)
@@ -39,7 +39,7 @@
 .env
 *.env.local
 
-# Symboles de débogage obfusqués (générés par flutter build --split-debug-info)
+# Symboles de dÃ©bogage obfusquÃ©s (gÃ©nÃ©rÃ©s par flutter build --split-debug-info)
 build/debug-info/
 
 # Google Play Service Account key
