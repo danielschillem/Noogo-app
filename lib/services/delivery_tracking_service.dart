@@ -60,6 +60,9 @@ class DeliveryStatusEvent {
 /// - Écoute `driver.location` → stream [driverLocationStream]
 /// - Écoute `delivery.status` → stream [deliveryStatusStream]
 /// - Permet de partager la position GPS du client vers le backend
+///
+/// Utilise l'instance Pusher de RealtimeService si disponible,
+/// sinon crée sa propre connexion (fallback).
 class DeliveryTrackingService {
   static final DeliveryTrackingService _instance =
       DeliveryTrackingService._internal();
@@ -67,6 +70,7 @@ class DeliveryTrackingService {
   DeliveryTrackingService._internal();
 
   PusherChannelsFlutter? _pusher;
+  bool _ownsConnection = false; // true si on a créé notre propre Pusher
   String? _currentChannelName;
   String? _authToken;
 
@@ -93,25 +97,36 @@ class DeliveryTrackingService {
     await stopTracking(); // nettoyer l'abonnement précédent
 
     try {
+      // Réutiliser l'instance Pusher de RealtimeService si connecté
       _pusher = PusherChannelsFlutter.getInstance();
-      // C3 : init + connect obligatoires avant subscribe
-      await _pusher!.init(
-        apiKey: ApiConfig.pusherKey,
-        cluster: ApiConfig.pusherCluster,
-        onConnectionStateChange: (current, previous) {
-          AppLogger.info('Pusher: $previous → $current');
-        },
-        onError: (message, code, error) {
-          AppLogger.error('Pusher error [$code]: $message', error: error);
-        },
-      );
-      await _pusher!.connect();
+      _ownsConnection = false;
 
-      // Canal delivery.{orderId} — GPS livreur + statuts livraison
-      await _pusher!.subscribe(
-        channelName: deliveryChannel,
-        onEvent: _handleEvent,
-      );
+      // Si RealtimeService n'est pas connecté, init+connect nous-mêmes
+      // On vérifie si on peut souscrire sans init ; si ça échoue, on init.
+      try {
+        await _pusher!.subscribe(
+          channelName: deliveryChannel,
+          onEvent: _handleEvent,
+        );
+      } catch (_) {
+        // Pusher pas encore initialisé — fallback : init + connect
+        _ownsConnection = true;
+        await _pusher!.init(
+          apiKey: ApiConfig.pusherKey,
+          cluster: ApiConfig.pusherCluster,
+          onConnectionStateChange: (current, previous) {
+            AppLogger.info('Pusher: $previous → $current');
+          },
+          onError: (message, code, error) {
+            AppLogger.error('Pusher error [$code]: $message', error: error);
+          },
+        );
+        await _pusher!.connect();
+        await _pusher!.subscribe(
+          channelName: deliveryChannel,
+          onEvent: _handleEvent,
+        );
+      }
 
       // Canal order.{orderId} — statuts commande (confirmed, preparing, ready)
       await _pusher!.subscribe(
@@ -121,7 +136,7 @@ class DeliveryTrackingService {
 
       _currentChannelName = deliveryChannel;
       AppLogger.info(
-          'DeliveryTracking: abonné à $deliveryChannel + $orderChannel');
+          'DeliveryTracking: abonné à $deliveryChannel + $orderChannel (ownsConnection: $_ownsConnection)');
     } catch (e) {
       AppLogger.error('DeliveryTracking: erreur abonnement', error: e);
     }
@@ -132,12 +147,15 @@ class DeliveryTrackingService {
     if (_currentChannelName != null && _pusher != null) {
       try {
         await _pusher!.unsubscribe(channelName: _currentChannelName!);
-        // Also unsubscribe from order channel
         final orderId = _currentChannelName!.replaceFirst('delivery.', '');
         await _pusher!.unsubscribe(channelName: 'order.$orderId');
-        await _pusher!.disconnect();
+        // Ne déconnecter que si on a créé notre propre connexion
+        if (_ownsConnection) {
+          await _pusher!.disconnect();
+        }
       } catch (_) {}
       _currentChannelName = null;
+      _ownsConnection = false;
     }
   }
 

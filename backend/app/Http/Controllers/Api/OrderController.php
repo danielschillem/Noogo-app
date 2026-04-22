@@ -198,6 +198,14 @@ class OrderController extends Controller
             ], 422);
         }
 
+        // Validation des transitions de statut
+        if (!$order->canTransitionTo($request->status)) {
+            return response()->json([
+                'success' => false,
+                'message' => "Transition vers '{$request->status}' non autorisée depuis '{$order->status}'.",
+            ], 422);
+        }
+
         $order->updateStatus($request->status);
 
         // Broadcast temps réel (D11) — silencieux si Pusher non configuré
@@ -456,6 +464,20 @@ class OrderController extends Controller
             $order->calculateTotal();
 
             DB::commit();
+
+            // Broadcast temps réel → dashboard reçoit la nouvelle commande
+            try {
+                broadcast(new OrderStatusChanged($order, 'order.created'));
+            } catch (\Exception $broadcastEx) {
+                \Illuminate\Support\Facades\Log::warning('Broadcast storeMobile failed: ' . $broadcastEx->getMessage());
+            }
+
+            // Notification push FCM au restaurant
+            try {
+                (new FcmNotificationService())->notifyNewOrder($restaurant, $order);
+            } catch (\Exception $fcmEx) {
+                \Illuminate\Support\Facades\Log::warning('FCM notifyNewOrder (mobile) failed: ' . $fcmEx->getMessage());
+            }
 
             return response()->json([
                 'success' => true,

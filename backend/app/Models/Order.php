@@ -125,11 +125,27 @@ class Order extends Model
         return $query->where('status', $status);
     }
 
+    // Transitions autorisées (statut actuel → statuts suivants valides)
+    const TRANSITIONS = [
+        'pending' => ['confirmed', 'cancelled'],
+        'confirmed' => ['preparing', 'cancelled'],
+        'preparing' => ['ready'],
+        'ready' => ['delivered', 'completed'],
+        'delivered' => ['completed'],
+        'completed' => [],
+        'cancelled' => [],
+    ];
+
     // Methods
     public function calculateTotal(): void
     {
         $this->total_amount = $this->items->sum('total_price');
         $this->save();
+    }
+
+    public function canTransitionTo(string $newStatus): bool
+    {
+        return in_array($newStatus, self::TRANSITIONS[$this->status] ?? []);
     }
 
     public function updateStatus(string $status): void

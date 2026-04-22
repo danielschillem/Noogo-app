@@ -212,9 +212,6 @@ class RealtimeService {
       return;
     }
 
-    // Note: le canal private-user.{id}.orders n'existe pas côté backend.
-    // On garde la souscription pour compatibilité future,
-    // mais les vrais updates passent par order.{orderId} (public) — voir subscribeToOrder().
     try {
       final channelName = 'private-user.$userId.orders';
       await _pusher!.subscribe(
@@ -223,8 +220,7 @@ class RealtimeService {
       );
       if (kDebugMode) debugPrint('✅ Pusher subscribed: $channelName');
     } catch (e) {
-      if (kDebugMode)
-        debugPrint('⚠️ Pusher subscribe user orders fallback: $e');
+      if (kDebugMode) debugPrint('⚠️ Pusher subscribe user orders: $e');
     }
   }
 

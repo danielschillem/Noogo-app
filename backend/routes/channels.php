@@ -87,3 +87,16 @@ Broadcast::channel('driver.{userId}', function ($user, int $userId): bool {
     }
     return $user->id === $userId;
 });
+
+/**
+ * Canal private-user.{userId}.orders :
+ *   - L'utilisateur lui-même
+ *   - Admin Noogo
+ * Utilisé pour notifier le client de tout changement de statut de ses commandes.
+ */
+Broadcast::channel('user.{userId}.orders', function ($user, int $userId): bool {
+    if ($user->is_admin) {
+        return true;
+    }
+    return $user->id === $userId;
+});

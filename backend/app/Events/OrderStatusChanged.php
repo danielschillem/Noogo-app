@@ -32,16 +32,24 @@ class OrderStatusChanged implements ShouldBroadcastNow
     }
 
     /**
-     * Broadcast sur 2 canaux :
-     *  - private-restaurant.{id} → dashboard (existant)
-     *  - order.{orderId}         → client Flutter (nouveau, public)
+     * Broadcast sur 3 canaux :
+     *  - private-restaurant.{id}        → dashboard / staff
+     *  - order.{orderId}                → client Flutter (public)
+     *  - private-user.{userId}.orders   → client Flutter authentifié
      */
     public function broadcastOn(): array
     {
-        return [
+        $channels = [
             new PrivateChannel("restaurant.{$this->order->restaurant_id}"),
             new Channel("order.{$this->order->id}"),
         ];
+
+        // Canal privé du client (si la commande a un user_id)
+        if ($this->order->user_id) {
+            $channels[] = new PrivateChannel("user.{$this->order->user_id}.orders");
+        }
+
+        return $channels;
     }
 
     public function broadcastAs(): string

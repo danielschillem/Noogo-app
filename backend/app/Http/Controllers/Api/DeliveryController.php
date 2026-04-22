@@ -39,6 +39,13 @@ class DeliveryController extends Controller
             ], 422);
         }
 
+        if (!in_array($order->status, ['confirmed', 'preparing', 'ready'])) {
+            return response()->json([
+                'success' => false,
+                'message' => "La commande doit être confirmée, en préparation ou prête pour demander une livraison (statut actuel : {$order->status}).",
+            ], 422);
+        }
+
         if ($order->delivery()->exists()) {
             return response()->json([
                 'success' => false,
@@ -201,6 +208,19 @@ class DeliveryController extends Controller
         // Libérer le livreur si livraison terminée
         if ($delivery->isTerminal() && $delivery->driver) {
             $delivery->driver->markAvailable();
+        }
+
+        // Auto-avancer le statut de la commande quand la livraison est livrée
+        if ($newStatus === 'delivered' && $delivery->order) {
+            $order = $delivery->order;
+            if (in_array($order->status, ['ready', 'preparing', 'confirmed'])) {
+                $order->updateStatus('delivered');
+                try {
+                    broadcast(new \App\Events\OrderStatusChanged($order->fresh(), 'order.updated'));
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::warning('Broadcast auto-delivered failed: ' . $e->getMessage());
+                }
+            }
         }
 
         $eventName = "delivery.{$newStatus}";
@@ -458,7 +478,8 @@ class DeliveryController extends Controller
             $driver->markAvailable();
         });
 
-        broadcast(new DeliveryStatusChanged($delivery->fresh()->load('driver'), 'delivery.rejected'));
+        // Le statut réel est pending_assignment, on broadcast avec le vrai statut
+        broadcast(new DeliveryStatusChanged($delivery->fresh()->load('driver'), 'delivery.pending_assignment'));
 
         return response()->json([
             'success' => true,
