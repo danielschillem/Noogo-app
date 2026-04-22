@@ -18,8 +18,7 @@ class ApiConfig {
 
   /// Base URL pour les QR codes
   static String get qrBaseUrl =>
-      dotenv.env['QR_BASE_URL'] ??
-      'https://noogo-e5ygx.ondigitalocean.app/api';
+      dotenv.env['QR_BASE_URL'] ?? 'https://noogo-e5ygx.ondigitalocean.app/api';
 
   // ============================================
   // 🔌 CONFIGURATION PUSHER
