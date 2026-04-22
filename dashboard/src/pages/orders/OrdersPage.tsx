@@ -247,7 +247,7 @@ export default function OrdersPage() {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [fetchOrders, restaurantId]);
 
-  usePusher(restaurantId ? `restaurant.${restaurantId}` : null, {
+  usePusher(restaurantId ? `private-restaurant.${restaurantId}` : null, {
     'order.created': (data) => {
       const newOrder = data as Order;
       if (!prevIdsRef.current.has(newOrder.id)) {

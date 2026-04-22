@@ -8,15 +8,14 @@ import {
     TrendingUp,
 } from 'lucide-react';
 import { ratingsApi, restaurantsApi } from '../../services/api';
-import { useAuth } from '../../context/AuthContext';
 import type { Rating, Restaurant } from '../../types';
 
 export default function RatingsPage() {
-    useAuth();
     const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
     const [selectedRestaurantId, setSelectedRestaurantId] = useState<string>('');
     const [ratings, setRatings] = useState<Rating[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [fetchError, setFetchError] = useState<string | null>(null);
     const [page, setPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
 
@@ -40,7 +39,10 @@ export default function RatingsPage() {
             } else {
                 setRatings(Array.isArray(data) ? data : []);
             }
-        } catch { setRatings([]); }
+        } catch {
+            setFetchError('Impossible de charger les avis. Veuillez réessayer.');
+            // Preserve existing ratings — do NOT clear the list on network error
+        }
         finally { setIsLoading(false); }
     }, [selectedRestaurantId, page]);
 
@@ -73,6 +75,14 @@ export default function RatingsPage() {
 
     return (
         <div className="space-y-6 animate-fadeIn">
+            {/* Error banner */}
+            {fetchError && (
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium"
+                    style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}>
+                    <span className="flex-1">{fetchError}</span>
+                    <button onClick={() => setFetchError(null)} style={{ flexShrink: 0 }}>✕</button>
+                </div>
+            )}
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>

@@ -264,4 +264,36 @@ void main() {
       expect(item.unitPrice, 1000.0);
     });
   });
+
+  group('Delivery.needsAcceptance', () {
+    Delivery make({required String status, String? acceptedAt}) =>
+        Delivery.fromJson({
+          'id': 1,
+          'order_id': 1,
+          'status': status,
+          'accepted_at': acceptedAt,
+          'created_at': '2026-04-22T12:00:00Z',
+        });
+
+    test('assigned sans accepted_at → true', () {
+      expect(
+          make(status: 'assigned', acceptedAt: null).needsAcceptance, isTrue);
+    });
+
+    test('assigned avec accepted_at → false', () {
+      expect(
+          make(status: 'assigned', acceptedAt: '2026-04-22T10:00:00Z')
+              .needsAcceptance,
+          isFalse);
+    });
+
+    test('picked_up sans accepted_at → false', () {
+      expect(
+          make(status: 'picked_up', acceptedAt: null).needsAcceptance, isFalse);
+    });
+
+    test('delivered → false', () {
+      expect(make(status: 'delivered').needsAcceptance, isFalse);
+    });
+  });
 }

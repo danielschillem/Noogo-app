@@ -1298,7 +1298,7 @@ class RestaurantProvider with ChangeNotifier {
           transactionId: responseData['transaction_id']?.toString(),
           mobileMoneyProvider: mobileMoneyProvider,
           phoneNumber: phoneNumber,
-          restaurantId: _restaurant!.id.toString(),
+          restaurantId: _restaurant!.id,
           orderType: Order.parseOrderType(orderType),
         );
 

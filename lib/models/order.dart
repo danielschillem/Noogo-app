@@ -56,7 +56,7 @@ class Order {
   final String? mobileMoneyProvider;
   final String? phoneNumber;
   final String? userId;
-  final String? restaurantId;
+  final int? restaurantId;
 
   Order({
     required this.id,
@@ -167,8 +167,8 @@ class Order {
       transactionId: json['transaction_id'],
       mobileMoneyProvider: json['mobile_money_provider'],
       phoneNumber: json['phone_number'],
-      userId: json['user_id'],
-      restaurantId: json['restaurant_id'],
+      userId: json['user_id']?.toString(),
+      restaurantId: (json['restaurant_id'] as num?)?.toInt(),
     );
   }
 
@@ -215,7 +215,7 @@ class Order {
     String? mobileMoneyProvider,
     String? phoneNumber,
     String? userId,
-    String? restaurantId,
+    int? restaurantId,
   }) {
     return Order(
       id: id ?? this.id,

@@ -1,8 +1,7 @@
 import 'dart:async';
-import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import '../config/api_config.dart';
+import '../services/api_service.dart';
 import '../utils/app_colors.dart';
 
 class RestaurantSearchScreen extends StatefulWidget {
@@ -43,20 +42,10 @@ class _RestaurantSearchScreenState extends State<RestaurantSearchScreen> {
   Future<void> _search(String query) async {
     setState(() => _isLoading = true);
     try {
-      final uri = Uri.parse('${ApiConfig.baseUrl}/restaurants/search')
-          .replace(queryParameters: query.isNotEmpty ? {'q': query} : {});
-      final resp = await http.get(uri, headers: {
-        'Accept': 'application/json',
-      }).timeout(const Duration(seconds: 10));
-
-      if (resp.statusCode == 200) {
-        final data = jsonDecode(resp.body);
-        setState(() {
-          _results = List<Map<String, dynamic>>.from(data['data'] ?? []);
-        });
-      }
+      final results = await ApiService.instance.searchRestaurants(query);
+      if (mounted) setState(() => _results = results);
     } catch (e) {
-      debugPrint('Search error: $e');
+      if (kDebugMode) debugPrint('Search error: $e');
     }
     if (mounted) setState(() => _isLoading = false);
   }

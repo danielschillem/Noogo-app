@@ -106,6 +106,7 @@ export default function DeliveriesPage() {
     const [assigning, setAssigning] = useState(false);
     const [updatingStatusId, setUpdatingStatusId] = useState<number | null>(null);
     const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+    const [actionError, setActionError] = useState<string | null>(null);
 
     const fetchDeliveries = useCallback(async () => {
         try {
@@ -126,6 +127,13 @@ export default function DeliveriesPage() {
 
     useEffect(() => { fetchDeliveries(); }, [fetchDeliveries]);
     useEffect(() => { fetchDrivers(); }, [fetchDrivers]);
+
+    // ── Polling fallback si Pusher indisponible (ex. prod sans VITE_PUSHER_KEY) ──
+    useEffect(() => {
+        if (getPusher()) return; // Pusher actif → pas besoin de polling
+        const id = setInterval(() => { fetchDeliveries(); }, 30_000);
+        return () => clearInterval(id);
+    }, [fetchDeliveries]);
 
     // ── Pusher real-time: driver location + status updates ──
     useEffect(() => {
@@ -171,23 +179,27 @@ export default function DeliveriesPage() {
     const handleAssign = async () => {
         if (!assignModal || !selectedDriverId) return;
         setAssigning(true);
+        setActionError(null);
         try {
             await deliveryApi.assign(assignModal.id, selectedDriverId);
             setAssignModal(null);
             fetchDeliveries();
             fetchDrivers();
-        } catch { /* ignore */ }
-        finally { setAssigning(false); }
+        } catch {
+            setActionError('Impossible d\'assigner le livreur. Veuillez réessayer.');
+        } finally { setAssigning(false); }
     };
 
     const handleStatusUpdate = async (deliveryId: number, status: DeliveryStatus, failureReason?: string) => {
         setUpdatingStatusId(deliveryId);
+        setActionError(null);
         try {
             await deliveryApi.updateStatus(deliveryId, status, failureReason);
             fetchDeliveries();
             fetchDrivers();
-        } catch { /* ignore */ }
-        finally { setUpdatingStatusId(null); }
+        } catch {
+            setActionError('Impossible de mettre à jour le statut. Veuillez réessayer.');
+        } finally { setUpdatingStatusId(null); }
     };
 
     const formatDate = (d: string | null) => {
@@ -234,6 +246,17 @@ export default function DeliveriesPage() {
 
     return (
         <div className="space-y-6 animate-fadeIn">
+            {/* Error banner */}
+            {actionError && (
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium"
+                    style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}>
+                    <XCircle size={16} className="flex-shrink-0" />
+                    <span className="flex-1">{actionError}</span>
+                    <button onClick={() => setActionError(null)} className="flex-shrink-0">
+                        <X size={14} />
+                    </button>
+                </div>
+            )}
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>

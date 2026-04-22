@@ -12,7 +12,7 @@ class IsAdmin
     {
         $user = $request->user();
 
-        if (!$user || !$user->is_admin) {
+        if (!$user || !$user->isAdmin()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Accès réservé aux administrateurs.',

@@ -179,6 +179,26 @@ export const flashInfosApi = {
     api.post(`/restaurants/${restaurantId}/flash-infos/${id}/toggle-active`),
 };
 
+// Coupons API
+export const couponsApi = {
+  getAll: (restaurantId: number) =>
+    api.get(`/restaurants/${restaurantId}/coupons`),
+  create: (restaurantId: number, data: {
+    code: string; type: 'percentage' | 'fixed'; value: number;
+    min_order?: number; max_discount?: number; max_uses?: number;
+    starts_at?: string; expires_at?: string; is_active?: boolean;
+  }) => api.post(`/restaurants/${restaurantId}/coupons`, data),
+  update: (restaurantId: number, id: number, data: Partial<{
+    code: string; type: 'percentage' | 'fixed'; value: number;
+    min_order: number | null; max_discount: number | null; max_uses: number | null;
+    starts_at: string | null; expires_at: string | null; is_active: boolean;
+  }>) => api.put(`/restaurants/${restaurantId}/coupons/${id}`, data),
+  delete: (restaurantId: number, id: number) =>
+    api.delete(`/restaurants/${restaurantId}/coupons/${id}`),
+  toggleActive: (restaurantId: number, id: number) =>
+    api.post(`/restaurants/${restaurantId}/coupons/${id}/toggle-active`),
+};
+
 // Staff API
 export const staffApi = {
   getAll: (restaurantId: number) =>

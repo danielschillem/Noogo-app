@@ -120,9 +120,11 @@ class AuthService {
               return {'success': true, 'user': user, 'data': data};
             }
           } catch (_) {
-            // fallthrough to generic success if server indicates 2xx but payload not standard
-            // try best-effort: if server returned something but we couldn't parse, still return success
-            return {'success': true, 'data': data};
+            // La réponse 2xx existe mais le format est inattendu → erreur explicite
+            return {
+              'success': false,
+              'message': 'Erreur lors de la création du compte'
+            };
           }
         }
 

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class DeliveryDriver extends Model
@@ -25,15 +26,15 @@ class DeliveryDriver extends Model
     ];
 
     protected $casts = [
-        'lat'              => 'float',
-        'lng'              => 'float',
+        'lat' => 'float',
+        'lng' => 'float',
         'last_location_at' => 'datetime',
     ];
 
     const STATUSES = [
         'available' => 'Disponible',
-        'busy'      => 'En livraison',
-        'offline'   => 'Hors ligne',
+        'busy' => 'En livraison',
+        'offline' => 'Hors ligne',
     ];
 
     // ── Relations ────────────────────────────────────────────────────────────
@@ -48,6 +49,14 @@ class DeliveryDriver extends Model
         return $this->hasOne(Delivery::class)
             ->whereNotIn('status', ['delivered', 'failed'])
             ->latest();
+    }
+
+    /**
+     * Toutes les livraisons (historique complet) de ce livreur.
+     */
+    public function deliveries(): HasMany
+    {
+        return $this->hasMany(Delivery::class);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
@@ -70,8 +79,8 @@ class DeliveryDriver extends Model
     public function updateLocation(float $lat, float $lng): void
     {
         $this->update([
-            'lat'              => $lat,
-            'lng'              => $lng,
+            'lat' => $lat,
+            'lng' => $lng,
             'last_location_at' => now(),
         ]);
     }

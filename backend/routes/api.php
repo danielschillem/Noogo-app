@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\DeliveryController;
 use App\Http\Controllers\Api\RatingController;
+use App\Http\Controllers\Api\CouponController;
 
 /*
 |--------------------------------------------------------------------------
@@ -70,8 +71,8 @@ Route::middleware('throttle:30,1')->group(function () {
 // ============================================================================
 Route::middleware('throttle:order-mobile')->post('/commandes', [OrderController::class, 'storeMobile']);
 
-// Validation de coupon (app mobile Flutter)
-Route::post('/coupons/validate', [\App\Http\Controllers\Api\CouponController::class, 'validate']);
+// Validation de coupon (app mobile Flutter — route publique, protégée par rate limiter anti-brute-force)
+Route::middleware('throttle:coupon-validate')->post('/coupons/validate', [\App\Http\Controllers\Api\CouponController::class, 'validate']);
 
 
 // ============================================================================
@@ -137,6 +138,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('flash-infos', FlashInfoController::class);
         Route::post('/flash-infos/{flashInfo}/toggle-active', [FlashInfoController::class, 'toggleActive']);
 
+        // Coupons / Codes promo
+        Route::get('/coupons', [CouponController::class, 'index']);
+        Route::post('/coupons', [CouponController::class, 'store']);
+        Route::put('/coupons/{coupon}', [CouponController::class, 'update']);
+        Route::delete('/coupons/{coupon}', [CouponController::class, 'destroy']);
+        Route::post('/coupons/{coupon}/toggle-active', [CouponController::class, 'toggleActive']);
+
         // Ratings / Avis
         Route::get('/ratings', [RatingController::class, 'index']);
         Route::post('/orders/{order}/rate', [RatingController::class, 'store']);
@@ -164,6 +172,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/{delivery}/driver-location', [DeliveryController::class, 'updateDriverLocation'])
                 ->middleware('throttle:60,1');
         });
+        // C5 : client partage sa position GPS au livreur
+        Route::post('/{delivery}/client-location', [DeliveryController::class, 'updateClientLocation'])
+            ->middleware('throttle:60,1');
     });
 
     // Livreur connecté — profil & disponibilité

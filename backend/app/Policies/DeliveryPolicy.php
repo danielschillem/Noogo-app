@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Models\Delivery;
+use App\Models\RestaurantStaff;
 use App\Models\User;
 
 class DeliveryPolicy
@@ -56,9 +57,24 @@ class DeliveryPolicy
 
     /**
      * Seul le gérant du restaurant (ou admin) peut assigner un livreur.
+     * Le staff avec permission manage_orders est également autorisé.
      */
     public function assign(User $user, Delivery $delivery): bool
     {
-        return $delivery->order?->restaurant?->user_id === $user->id;
+        $restaurant = $delivery->order?->restaurant;
+        if (!$restaurant) {
+            return false;
+        }
+
+        if ($restaurant->user_id === $user->id) {
+            return true;
+        }
+
+        $staff = RestaurantStaff::where('user_id', $user->id)
+            ->where('restaurant_id', $restaurant->id)
+            ->where('is_active', true)
+            ->first();
+
+        return $staff?->canManageOrders() ?? false;
     }
 }

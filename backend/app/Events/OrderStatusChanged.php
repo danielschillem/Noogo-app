@@ -5,6 +5,7 @@ namespace App\Events;
 use App\Models\Order;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
@@ -13,7 +14,8 @@ use Illuminate\Queue\SerializesModels;
  * Événement broadcasté via Pusher à chaque changement de statut de commande,
  * ou lors de la création d'une nouvelle commande.
  *
- * Canal public : restaurant.{restaurantId}
+ * Canal privé : private-restaurant.{restaurantId}
+ * (authentification requise — voir routes/channels.php)
  * Événements :
  *   - order.created  → nouvelle commande (status = pending)
  *   - order.updated  → changement de statut
@@ -28,9 +30,9 @@ class OrderStatusChanged implements ShouldBroadcastNow
     ) {
     }
 
-    public function broadcastOn(): Channel
+    public function broadcastOn(): PrivateChannel
     {
-        return new Channel("restaurant.{$this->order->restaurant_id}");
+        return new PrivateChannel("restaurant.{$this->order->restaurant_id}");
     }
 
     public function broadcastAs(): string

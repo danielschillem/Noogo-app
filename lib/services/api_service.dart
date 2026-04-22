@@ -7,7 +7,6 @@ import '../models/dish.dart';
 import '../models/flash_info.dart';
 import '../models/category.dart';
 import '../models/order.dart';
-import '../models/app_notification.dart';
 import '../config/api_config.dart';
 import '../utils/api_exceptions.dart';
 import 'auth_service.dart';
@@ -67,8 +66,7 @@ class ApiService {
       } on TimeoutException catch (e) {
         attempt++;
         if (kDebugMode) {
-          debugPrint(
-              '⚠️ Timeout GET (tentative $attempt/$maxRetries): $e');
+          debugPrint('⚠️ Timeout GET (tentative $attempt/$maxRetries): $e');
         }
         if (attempt > maxRetries) {
           throw const NetworkException(
@@ -142,8 +140,7 @@ class ApiService {
       } on TimeoutException catch (e) {
         attempt++;
         if (kDebugMode) {
-          debugPrint(
-              '⚠️ Timeout POST (tentative $attempt/$maxRetries): $e');
+          debugPrint('⚠️ Timeout POST (tentative $attempt/$maxRetries): $e');
         }
         if (attempt > maxRetries) {
           throw const NetworkException(
@@ -190,23 +187,25 @@ class ApiService {
   Future<RestaurantMenuData> getRestaurantMenu(
       {required int restaurantId}) async {
     try {
-      debugPrint('📡 === API getRestaurantMenu ===');
-      debugPrint('   - Restaurant ID: $restaurantId');
-      debugPrint('   - URL complète: $baseUrl/restaurant/$restaurantId/menu');
+      if (kDebugMode) {
+        debugPrint('📡 === API getRestaurantMenu ===');
+        debugPrint('   - Restaurant ID: $restaurantId');
+      }
 
       final data = await _get('/restaurant/$restaurantId/menu');
       if (data == null || data.isEmpty) {
-        debugPrint('❌ Aucune donnée reçue de l\'API');
+        if (kDebugMode) debugPrint('❌ Aucune donnée reçue de l\'API');
         throw Exception('Aucune donnée reçue de l\'API');
       }
-      debugPrint('✅ Données brutes reçues: ${data.keys}');
+      if (kDebugMode) debugPrint('✅ Données brutes reçues: ${data.keys}');
       if (!data.containsKey('data')) {
-        debugPrint('❌ Clé "data" manquante. Clés présentes: ${data.keys}');
+        if (kDebugMode)
+          debugPrint('❌ Clé "data" manquante. Clés présentes: ${data.keys}');
         throw Exception('Structure de réponse invalide');
       }
 
       final menuData = data['data'] as Map<String, dynamic>;
-      debugPrint('✅ Contenu de menuData: ${menuData.keys}');
+      if (kDebugMode) debugPrint('✅ Contenu de menuData: ${menuData.keys}');
 
       // Extraire le restaurant
       final restaurantJson = menuData['restaurant'] as Map<String, dynamic>;
@@ -245,10 +244,12 @@ class ApiService {
         }
       }
 
-      debugPrint('✅ Menu chargé: ${restaurant.nom}');
-      debugPrint('   - ${allDishes.length} plats');
-      debugPrint('   - ${dishesOfTheDay.length} plats du jour');
-      debugPrint('   - ${categories.length} catégories');
+      if (kDebugMode) {
+        debugPrint('✅ Menu chargé: ${restaurant.nom}');
+        debugPrint('   - ${allDishes.length} plats');
+        debugPrint('   - ${dishesOfTheDay.length} plats du jour');
+        debugPrint('   - ${categories.length} catégories');
+      }
 
       return RestaurantMenuData(
         restaurant: restaurant,
@@ -257,8 +258,10 @@ class ApiService {
         categories: categories,
       );
     } catch (e, stackTrace) {
-      debugPrint('❌ ERREUR ApiService.getRestaurantMenu: $e');
-      debugPrint('📍 Stack: $stackTrace');
+      if (kDebugMode) {
+        debugPrint('❌ ERREUR ApiService.getRestaurantMenu: $e');
+        debugPrint('📍 Stack: $stackTrace');
+      }
       rethrow;
     }
   }
@@ -267,36 +270,40 @@ class ApiService {
 
   Future<List<FlashInfo>> getFlashInfos({required int restaurantId}) async {
     try {
-      debugPrint('📡 Appel API: /offres/actives/$restaurantId');
+      if (kDebugMode) debugPrint('📡 Appel API: /offres/actives/$restaurantId');
 
       final data = await _get('/offres/actives/$restaurantId');
 
       if (data == null) {
-        debugPrint('⚠️ Aucune donnée reçue pour les offres actives');
+        if (kDebugMode)
+          debugPrint('⚠️ Aucune donnée reçue pour les offres actives');
         return [];
       }
 
-      debugPrint('✅ Données offres actives reçues: $data');
+      if (kDebugMode)
+        debugPrint('✅ Données offres actives reçues: ${data.keys}');
 
-      // Adapter selon la structure de réponse de votre API
-      // Essayer différentes clés possibles
       final List<dynamic> list = data['data'] ??
           data['offres'] ??
           data['flash_infos'] ??
           (data is List ? data : []);
 
-      debugPrint('📋 Liste offres actives: ${list.length} éléments');
+      if (kDebugMode)
+        debugPrint('📋 Liste offres actives: ${list.length} éléments');
 
       if (list.isEmpty) {
-        debugPrint('⚠️ Liste vide, vérifiez la structure de la réponse API');
-        debugPrint('📋 Structure complète: $data');
+        if (kDebugMode) {
+          debugPrint('⚠️ Liste vide, vérifiez la structure de la réponse API');
+          debugPrint('📋 Structure complète: $data');
+        }
       }
 
       return list.map((json) => FlashInfo.fromJson(json)).toList();
     } catch (e, stackTrace) {
-      debugPrint('⚠️ ApiService-getFlashInfos: Erreur ($e)');
-      debugPrint('📍 Stack: $stackTrace');
-      // Retourner une liste vide au lieu de crasher l'app
+      if (kDebugMode) {
+        debugPrint('⚠️ ApiService-getFlashInfos: Erreur ($e)');
+        debugPrint('📍 Stack: $stackTrace');
+      }
       return [];
     }
   }
@@ -315,21 +322,8 @@ class ApiService {
       final List<dynamic> list = data['data'] ?? [];
       return list.map((json) => Order.fromJson(json)).toList();
     } catch (e) {
-      debugPrint('⚠️ ApiService-getOrders: Endpoint non disponible ($e)');
-      return [];
-    }
-  }
-
-  Future<List<AppNotification>> getNotifications() async {
-    try {
-      final data = await _get('/notifications');
-      if (data == null) return [];
-      final List<dynamic> list = data['data'] ?? [];
-      return list.map((json) => AppNotification.fromJson(json)).toList();
-    } catch (e) {
-      debugPrint(
-          '⚠️ ApiService-getNotifications: Endpoint non disponible ($e)');
-      // Retourner une liste vide si l'endpoint n'existe pas
+      if (kDebugMode)
+        debugPrint('⚠️ ApiService-getOrders: Endpoint non disponible ($e)');
       return [];
     }
   }
@@ -340,69 +334,34 @@ class ApiService {
       if (data == null) return null;
       return Order.fromJson(data['data']);
     } catch (e) {
-      debugPrint('⚠️ Failed to place order via API: $e');
+      if (kDebugMode) debugPrint('⚠️ Failed to place order via API: $e');
       return null;
     }
   }
 
-  Future<AppNotification?> markNotificationAsRead(int notificationId) async {
-    try {
-      final data = await _post('/notifications/$notificationId/read', {});
-      if (data == null) return null;
-      return AppNotification.fromJson(data['data']);
-    } catch (e) {
-      debugPrint('⚠️ Failed to mark notification as read via API: $e');
-      return null;
-    }
+  /// Recherche de restaurants par nom/adresse (public, avec retry et token si dispo).
+  Future<List<Map<String, dynamic>>> searchRestaurants(String query) async {
+    final endpoint = query.isEmpty
+        ? '/restaurants/search'
+        : '/restaurants/search?q=${Uri.encodeQueryComponent(query)}';
+    final data = await _get(endpoint);
+    if (data == null) return [];
+    final list = data['data'];
+    if (list is List) return List<Map<String, dynamic>>.from(list);
+    return [];
   }
 
-  // ===================================================================
-  // ANCIENNES MÉTHODES (conservées pour compatibilité)
-  // ===================================================================
-  @Deprecated('Utilisez getRestaurantMenu() à la place')
-  Future<Restaurant?> getRestaurantInfo({required int restaurantId}) async {
-    try {
-      final data = await _get('/restaurant/$restaurantId');
-      if (data == null || data.isEmpty) return null;
-
-      if (data.containsKey('data')) {
-        return Restaurant.fromJson(data['data']);
-      } else if (data.containsKey('restaurant')) {
-        return Restaurant.fromJson(data['restaurant']);
-      } else {
-        return Restaurant.fromJson(data);
-      }
-    } catch (e) {
-      debugPrint('ApiService-getRestaurantInfo: $e');
-      rethrow;
-    }
-  }
-
-  @Deprecated('Utilisez getRestaurantMenu() à la place')
-  Future<List<Dish>> getDishes({required int restaurantId}) async {
-    try {
-      final data = await _get('/restaurant/$restaurantId/plats');
-      if (data == null) return [];
-      final List<dynamic> list = data['data'] ?? [];
-      return list.map((json) => Dish.fromJson(json)).toList();
-    } catch (e) {
-      debugPrint('ApiService-getDishes: $e');
-      rethrow;
-    }
-  }
-
-  @Deprecated('Utilisez getRestaurantMenu() à la place')
-  Future<List<Category>> getRestaurantCategories(
-      {required int restaurantId}) async {
-    try {
-      final data = await _get('/restaurant/$restaurantId/categories');
-      if (data == null) return [];
-      final List<dynamic> list = data['data'] ?? [];
-      return list.map((json) => Category.fromJson(json)).toList();
-    } catch (e) {
-      debugPrint('ApiService-getRestaurantCategories: $e');
-      rethrow;
-    }
+  /// Valide un coupon pour un restaurant (avec retry et token si dispo).
+  Future<Map<String, dynamic>?> validateCoupon({
+    required String code,
+    required int restaurantId,
+    required double orderTotal,
+  }) async {
+    return _post('/coupons/validate', {
+      'code': code,
+      'restaurant_id': restaurantId,
+      'order_total': orderTotal,
+    });
   }
 }
 

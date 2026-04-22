@@ -15,8 +15,10 @@ export default defineConfig({
       },
     },
   },
-  // Expose les env vars VITE_* au bundle de production
-  define: {
-    __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/test/setup.ts'],
+    css: false,
   },
 })

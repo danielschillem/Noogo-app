@@ -14,7 +14,7 @@ import {
   Star,
 } from 'lucide-react';
 import { dashboardApi, restaurantsApi } from '../../services/api';
-import type { DashboardStats, Order } from '../../types';
+import type { DashboardStats, Order, RestaurantStats } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useRestaurants } from '../../hooks/useQueries';
 import {
@@ -32,17 +32,6 @@ import {
 
 // â”€â”€â”€ Local types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-interface RestaurantStats {
-  total_orders: number;
-  orders_today: number;
-  pending_orders: number;
-  total_revenue: number;
-  revenue_today: number;
-  total_dishes: number;
-  available_dishes: number;
-  total_categories: number;
-  active_promotions: number;
-}
 
 // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 

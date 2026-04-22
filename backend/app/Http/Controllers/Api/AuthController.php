@@ -24,7 +24,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'telephone' => 'nullable|string|max:20|unique:users,phone',
             'email' => 'nullable|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
         if ($validator->fails()) {
@@ -64,7 +64,7 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'telephone' => 'required|string|max:20|unique:users,phone',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => 'required|string|min:8|confirmed',
             'zone' => 'nullable|string|max:100',
         ]);
 
@@ -287,18 +287,20 @@ class AuthController extends Controller
 
         // Clé primaire de password_reset_tokens : email de l'user, ou phone si pas d'email
         $resetKey = $user->email ?? $user->phone;
-        $token = Str::random(60);
+        $rawToken = Str::random(60);
+        // Stocker un HMAC du token (jamais le token brut) — prevents DB breach reuse
+        $tokenHash = hash_hmac('sha256', $rawToken, config('app.key'));
 
         DB::table('password_reset_tokens')->updateOrInsert(
             ['email' => $resetKey],
-            ['token' => $token, 'created_at' => now()]
+            ['token' => $tokenHash, 'created_at' => now()]
         );
 
         // Envoi email si l'utilisateur a un email configuré
         if ($user->email) {
             try {
                 \Illuminate\Support\Facades\Mail::raw(
-                    "Bonjour {$user->name},\n\nVotre code de réinitialisation Noogo : {$token}\n\nCe code expire dans 60 minutes.\n\nSi vous n'avez pas demandé cette réinitialisation, ignorez ce message.",
+                    "Bonjour {$user->name},\n\nVotre code de réinitialisation Noogo : {$rawToken}\n\nCe code expire dans 60 minutes.\n\nSi vous n'avez pas demandé cette réinitialisation, ignorez ce message.",
                     function ($message) use ($user) {
                         $message->to($user->email)
                             ->subject('Réinitialisation de mot de passe Noogo');
@@ -323,7 +325,7 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'token' => 'required|string',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => 'required|string|min:8|confirmed',
             'password_confirmation' => 'required|string',
         ]);
 
@@ -335,8 +337,11 @@ class AuthController extends Controller
             ], 422);
         }
 
+        // Re-calculer le HMAC pour la recherche (même clé que lors de l'enregistrement)
+        $tokenHash = hash_hmac('sha256', $request->token, config('app.key'));
+
         $record = DB::table('password_reset_tokens')
-            ->where('token', $request->token)
+            ->where('token', $tokenHash)
             ->first();
 
         if (!$record) {
@@ -349,7 +354,7 @@ class AuthController extends Controller
         // Vérification de l'expiration (60 minutes)
         if ((now()->timestamp - strtotime($record->created_at)) > 3600) {
             DB::table('password_reset_tokens')
-                ->where('token', $request->token)
+                ->where('token', $tokenHash)
                 ->delete();
 
             return response()->json([
@@ -377,7 +382,7 @@ class AuthController extends Controller
 
         // Consommer le token de reset (usage unique)
         DB::table('password_reset_tokens')
-            ->where('token', $request->token)
+            ->where('token', $tokenHash)
             ->delete();
 
         return response()->json([
@@ -394,7 +399,7 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'current_password' => 'required|string',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => 'required|string|min:8|confirmed',
             'password_confirmation' => 'required|string',
         ]);
 

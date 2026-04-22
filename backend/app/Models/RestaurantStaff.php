@@ -65,6 +65,14 @@ class RestaurantStaff extends Model
         return in_array($this->role, ['owner', 'manager']);
     }
 
+    /**
+     * Peut accéder à l'affichage cuisine (KDS).
+     */
+    public function canViewKitchenDisplay(): bool
+    {
+        return in_array($this->role, ['owner', 'manager', 'cashier']);
+    }
+
     // ─── Relations ────────────────────────────────────────────────────────────
 
     public function user(): BelongsTo

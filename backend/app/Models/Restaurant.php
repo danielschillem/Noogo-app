@@ -22,6 +22,7 @@ class Restaurant extends Model
         'logo',
         'description',
         'heures_ouverture',
+        'horaire_fermeture',
         'images',
         'is_active',
         'is_open_override',
@@ -77,6 +78,16 @@ class Restaurant extends Model
     public function ratings(): HasMany
     {
         return $this->hasMany(Rating::class);
+    }
+
+    public function coupons(): HasMany
+    {
+        return $this->hasMany(Coupon::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
     }
 
     // Accessors

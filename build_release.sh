@@ -4,7 +4,7 @@
 # ============================================================
 # Prérequis :
 #   1. android/key.properties renseigné (noogo-release.jks)
-#   2. assets/env/.env avec API_BASE_URL pointant sur Render
+#   2. assets/env/.env avec API_BASE_URL pointant sur DigitalOcean
 #   3. Flutter SDK installé
 # Usage : chmod +x build_release.sh && ./build_release.sh
 # ============================================================
@@ -21,7 +21,7 @@ if [ ! -f "android/key.properties" ]; then
 fi
 
 if [ ! -f "assets/env/.env" ]; then
-    error "assets/env/.env manquant ! Créez ce fichier avec API_BASE_URL=https://noogo-e5ygx.ondigitalocean.app/api"
+    error "assets/env/.env manquant ! Créez ce fichier avec API_BASE_URL=https://noogo-e5ygx.ondigitalocean.app/api (URL DigitalOcean production)"
 fi
 
 API_URL=$(grep "API_BASE_URL" assets/env/.env | cut -d '=' -f2)

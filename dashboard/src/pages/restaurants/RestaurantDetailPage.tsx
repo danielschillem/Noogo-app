@@ -20,19 +20,7 @@ import {
     ChefHat,
 } from 'lucide-react';
 import { restaurantsApi } from '../../services/api';
-import type { Restaurant } from '../../types';
-
-interface RestaurantStats {
-    total_orders: number;
-    orders_today: number;
-    pending_orders: number;
-    total_revenue: number;
-    revenue_today: number;
-    total_dishes: number;
-    available_dishes: number;
-    total_categories: number;
-    active_promotions: number;
-}
+import type { Restaurant, RestaurantStats } from '../../types';
 
 function buildImageUrl(path?: string | null): string {
     if (!path) return '';

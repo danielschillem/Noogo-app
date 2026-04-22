@@ -70,9 +70,11 @@ class _OrdersScreenState extends State<OrdersScreen>
 
   void _startPolling() {
     _pollingTimer = Timer.periodic(const Duration(seconds: 15), (_) {
-      if (mounted) {
-        context.read<RestaurantProvider>().forceRefreshOrders();
-      }
+      if (!mounted) return;
+      final provider = context.read<RestaurantProvider>();
+      // Skip si Pusher est connecté — le provider auto-refresh (30s) suffit
+      if (provider.isRealtimeConnected) return;
+      provider.forceRefreshOrders();
     });
   }
 

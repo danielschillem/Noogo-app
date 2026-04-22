@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
+import 'auth_service.dart';
 
 // ─── Statuts ─────────────────────────────────────────────────────────────────
 
@@ -117,10 +118,14 @@ class PaymentResult {
 class PaymentService {
   static String get _base => ApiConfig.baseUrl;
 
-  static Map<String, String> get _headers => const {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
+  static Future<Map<String, String>> _authHeaders() async {
+    final token = await AuthService.getToken();
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    };
+  }
 
   // ─── Initiation ────────────────────────────────────────────────────────────
 
@@ -143,7 +148,7 @@ class PaymentService {
       final response = await http
           .post(
             Uri.parse('$_base/payments/initiate'),
-            headers: _headers,
+            headers: await _authHeaders(),
             body: jsonEncode(body),
           )
           .timeout(const Duration(seconds: 20));
@@ -184,7 +189,7 @@ class PaymentService {
       final response = await http
           .post(
             Uri.parse('$_base/payments/$paymentId/confirm-otp'),
-            headers: _headers,
+            headers: await _authHeaders(),
             body: jsonEncode({'otp': otp}),
           )
           .timeout(const Duration(seconds: 15));
@@ -210,7 +215,7 @@ class PaymentService {
       final response = await http
           .get(
             Uri.parse('$_base/payments/$paymentId/status'),
-            headers: _headers,
+            headers: await _authHeaders(),
           )
           .timeout(const Duration(seconds: 10));
 
@@ -259,7 +264,7 @@ class PaymentService {
       final response = await http
           .delete(
             Uri.parse('$_base/payments/$paymentId'),
-            headers: _headers,
+            headers: await _authHeaders(),
           )
           .timeout(const Duration(seconds: 10));
       return response.statusCode == 200;

@@ -8,6 +8,7 @@ use App\Models\Payment;
 use App\Services\PaymentGatewayService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -147,8 +148,8 @@ class PaymentController extends Controller
             ], 422);
         }
 
-        // Stocker l'OTP et le vérifier
-        $payment->update(['otp_code' => $request->otp]);
+        // Stocker l'OTP haché (ne jamais stocker un OTP en clair)
+        $payment->update(['otp_code' => Hash::make($request->otp)]);
         $valid = $this->gateway->verifyOtp($payment, $request->otp);
 
         if (!$valid) {

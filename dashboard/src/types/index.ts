@@ -167,6 +167,23 @@ export interface FlashInfo {
   is_valid: boolean;
 }
 
+export interface Coupon {
+  id: number;
+  restaurant_id: number;
+  code: string;
+  type: 'percentage' | 'fixed';
+  value: number;
+  min_order?: number | null;
+  max_discount?: number | null;
+  max_uses?: number | null;
+  used_count: number;
+  starts_at?: string | null;
+  expires_at?: string | null;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface DashboardStats {
   today: {
     orders: number;
@@ -298,4 +315,16 @@ export interface Rating {
   user?: { id: number; name: string };
   order?: { id: number };
   created_at: string;
+}
+
+export interface RestaurantStats {
+  total_orders: number;
+  orders_today: number;
+  pending_orders: number;
+  total_revenue: number;
+  revenue_today: number;
+  total_dishes: number;
+  available_dishes: number;
+  total_categories: number;
+  active_promotions: number;
 }

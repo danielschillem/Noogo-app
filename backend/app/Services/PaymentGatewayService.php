@@ -93,8 +93,9 @@ class PaymentGatewayService
 
     private function simulationCheckStatus(Payment $payment): array
     {
-        // En simulation : si l'OTP a été saisi et stocké, on valide
-        if ($payment->otp_code && in_array($payment->otp_code, ['1234', '000000', '123456'])) {
+        // En simulation : le statut COMPLETED est déjà défini par confirmOtp —
+        // on ne relit plus l'OTP brut (il est stocké haché depuis S4).
+        if ($payment->isCompleted()) {
             return ['status' => Payment::STATUS_COMPLETED, 'transaction_id' => $payment->operator_transaction_id];
         }
 

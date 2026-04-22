@@ -86,7 +86,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
     _mainController.forward();
 
     // Appeler le callback après l'animation
-    Future.delayed(const Duration(milliseconds: 10000), () {
+    Future.delayed(const Duration(milliseconds: 2500), () {
       if (mounted) {
         widget.onInitializationComplete();
       }
@@ -190,7 +190,8 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
               child: Opacity(
                 opacity: 0.3,
                 child: Transform.rotate(
-                  angle: -angle, // Contre-rotation pour garder les icônes droites
+                  angle:
+                      -angle, // Contre-rotation pour garder les icônes droites
                   child: Icon(
                     _foodIcons[index],
                     size: 40,

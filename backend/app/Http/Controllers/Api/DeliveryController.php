@@ -261,6 +261,38 @@ class DeliveryController extends Controller
         return response()->json(['success' => true]);
     }
 
+    // ─── Client : partage de position GPS vers le livreur ───────────────────
+
+    /**
+     * POST /api/deliveries/{delivery}/client-location
+     *
+     * Permet au client de pousser sa position GPS afin que le livreur puisse
+     * naviguer vers lui. Met à jour client_lat/client_lng sur la livraison.
+     */
+    public function updateClientLocation(Request $request, Delivery $delivery): JsonResponse
+    {
+        $this->authorize('view', $delivery);
+
+        if ($delivery->isTerminal()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La livraison est terminée.',
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'latitude' => 'required|numeric|between:-90,90',
+            'longitude' => 'required|numeric|between:-180,180',
+        ]);
+
+        $delivery->update([
+            'client_lat' => $validated['latitude'],
+            'client_lng' => $validated['longitude'],
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
     // ─── Admin : liste toutes les livraisons ────────────────────────────────
 
     /**

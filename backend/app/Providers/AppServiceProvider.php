@@ -64,5 +64,15 @@ class AppServiceProvider extends ServiceProvider
                     ], 429)),
             ];
         });
+
+        // coupon-validate : protège POST /coupons/validate (public, sans auth)
+        //   - 20 validations / minute par IP (anti-brute-force sur les codes)
+        RateLimiter::for('coupon-validate', function (Request $request) {
+            return Limit::perMinute(20)->by('coupon-ip:' . $request->ip())
+                ->response(fn() => response()->json([
+                    'success' => false,
+                    'message' => 'Trop de tentatives. Veuillez patienter avant de réessayer.',
+                ], 429));
+        });
     }
 }

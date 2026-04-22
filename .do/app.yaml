@@ -110,24 +110,29 @@ spec:
           value: file
           scope: RUN_TIME
 
-        # ── Pusher (optionnel — temps réel) ─────────────────
-        # Décommenter si vous utilisez Pusher
+        # ── Pusher (temps réel — activé en production) ───────
+        - key: BROADCAST_CONNECTION
+          value: pusher
+          scope: RUN_TIME
+
+        - key: PUSHER_APP_KEY
+          value: c1ae7868685df7094dd2
+          scope: RUN_TIME
+
+        - key: PUSHER_APP_CLUSTER
+          value: eu
+          scope: RUN_TIME
+
+        # ⚠ Renseigner PUSHER_APP_ID et PUSHER_APP_SECRET dans
+        #   le panneau DigitalOcean → App → Settings → Env Vars
+        #   (ne jamais committer ces valeurs secrètes dans ce fichier)
         # - key: PUSHER_APP_ID
-        #   value: VOTRE_PUSHER_APP_ID
+        #   value: <valeur dans DO console>
         #   type: SECRET
-        #   scope: RUN_TIME
-        # - key: PUSHER_APP_KEY
-        #   value: VOTRE_PUSHER_APP_KEY
         #   scope: RUN_TIME
         # - key: PUSHER_APP_SECRET
-        #   value: VOTRE_PUSHER_APP_SECRET
+        #   value: <valeur dans DO console>
         #   type: SECRET
-        #   scope: RUN_TIME
-        # - key: PUSHER_APP_CLUSTER
-        #   value: eu
-        #   scope: RUN_TIME
-        # - key: BROADCAST_CONNECTION
-        #   value: pusher
         #   scope: RUN_TIME
 
         # ── Mail (optionnel) ─────────────────────────────────

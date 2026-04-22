@@ -69,12 +69,12 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
   Future<void> _scanAndValidateQRCode() async {
     if (_isValidating) {
-      debugPrint('⚠️ Validation déjà en cours, ignoré');
+      if (kDebugMode) debugPrint('⚠️ Validation déjà en cours, ignoré');
       return;
     }
 
     try {
-      debugPrint('📱 Ouverture du scanner QR...');
+      if (kDebugMode) debugPrint('📱 Ouverture du scanner QR...');
 
       if (!mounted) return;
 
@@ -88,7 +88,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       if (!mounted) return;
 
       if (qrCode == null) {
-        debugPrint('⚠️ Scan annulé par l\'utilisateur');
+        if (kDebugMode) debugPrint('⚠️ Scan annulé par l\'utilisateur');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Scan annulé'),
@@ -100,13 +100,13 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       }
 
       if (qrCode.isEmpty) {
-        debugPrint('⚠️ QR code vide reçu');
+        if (kDebugMode) debugPrint('⚠️ QR code vide reçu');
         _showErrorDialog(
             'QR code vide', 'Le QR code scanné ne contient aucune donnée.');
         return;
       }
 
-      debugPrint('✅ QR Code reçu du scanner: "$qrCode"');
+      if (kDebugMode) debugPrint('✅ QR Code reçu du scanner: "$qrCode"');
 
       if (!mounted) return;
 
@@ -121,7 +121,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
         listen: false,
       );
 
-      debugPrint('🔄 Validation du QR code en cours...');
+      if (kDebugMode) debugPrint('🔄 Validation du QR code en cours...');
 
       // 🔥 FIX : Valider ET charger les données en une seule opération
       await provider.validateRestaurantQRCode(qrCode).timeout(
@@ -170,10 +170,12 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       );
       setState(() => _hasSavedRestaurants = true);
 
-      debugPrint(
-          '✅ Validation réussie! Restaurant: ${provider.restaurant?.name}');
-      debugPrint('   - Plats: ${provider.dishes.length}');
-      debugPrint('   - Catégories: ${provider.categories.length}');
+      if (kDebugMode) {
+        debugPrint(
+            '✅ Validation réussie! Restaurant: ${provider.restaurant?.name}');
+        debugPrint('   - Plats: ${provider.dishes.length}');
+        debugPrint('   - Catégories: ${provider.categories.length}');
+      }
 
       if (!mounted) return;
 
@@ -213,7 +215,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
         (route) => false, // Supprime toutes les routes précédentes
       );
     } catch (e) {
-      debugPrint('❌ Erreur lors de la validation: $e');
+      if (kDebugMode) debugPrint('❌ Erreur lors de la validation: $e');
 
       if (!mounted) return;
 

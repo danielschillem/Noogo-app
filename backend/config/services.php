@@ -39,4 +39,6 @@ return [
         'project_id' => env('FIREBASE_PROJECT_ID', 'noogo-568e6'),
     ],
 
+    'frontend_url' => env('FRONTEND_URL', env('APP_URL', 'http://localhost')),
+
 ];

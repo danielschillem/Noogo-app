@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class StaffController extends Controller
 {
@@ -29,16 +30,19 @@ class StaffController extends Controller
             'manage_menu',
             'manage_orders',
             'view_stats',
+            'kitchen_display',
         ],
         'manager' => [
             'edit_restaurant',
             'manage_menu',
             'manage_orders',
             'view_stats',
+            'kitchen_display',
         ],
         'cashier' => [
             'manage_orders',
             'view_stats',
+            'kitchen_display',
         ],
         'waiter' => [
             'manage_orders',
@@ -151,7 +155,7 @@ class StaffController extends Controller
             }
         } else {
             // Créer un nouveau compte
-            $password = $request->password ?? substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 12);
+            $password = $request->password ?? Str::random(12);
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,

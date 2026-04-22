@@ -34,15 +34,26 @@ class EnsureDriverLinked
             return $next($request);
         }
 
-        // Vérifier que l'utilisateur est lié à un livreur actif
-        $hasDriverRecord = DeliveryDriver::where('user_id', $user->id)
-            ->whereIn('status', ['available', 'busy'])
-            ->exists();
+        // Récupérer le profil livreur lié à cet utilisateur
+        $driver = DeliveryDriver::where('user_id', $user->id)->first();
 
-        if (!$hasDriverRecord) {
+        if (!$driver) {
             return response()->json([
                 'success' => false,
                 'message' => 'Accès refusé : vous n\'êtes pas enregistré comme livreur.',
+            ], 403);
+        }
+
+        // Autoriser si le livreur est en ligne (available/busy) OU s'il a une livraison
+        // en cours (assigned/picked_up/on_way) — permet de terminer une livraison même
+        // après une perte de connexion qui aurait basculé le statut en offline.
+        $isOnline = in_array($driver->status, ['available', 'busy']);
+        $hasActiveDelivery = $driver->activeDelivery()->exists();
+
+        if (!$isOnline && !$hasActiveDelivery) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Accès refusé : vous êtes hors ligne et n\'avez aucune livraison en cours.',
             ], 403);
         }
 

@@ -73,6 +73,16 @@ class Order extends Model
         return $this->hasOne(Delivery::class);
     }
 
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(Rating::class);
+    }
+
     // Accessors
     public function getStatusTextAttribute(): string
     {

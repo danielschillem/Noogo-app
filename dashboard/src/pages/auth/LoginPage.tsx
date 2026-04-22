@@ -25,7 +25,7 @@ export default function LoginPage() {
       // Pour les super_admin on redirige directement vers /admin.
       const stored = localStorage.getItem('user');
       const u = stored ? JSON.parse(stored) : null;
-      if (u?.role === 'super_admin' || (u?.is_admin && u?.role === 'super_admin')) {
+      if (u?.role === 'super_admin') {
         navigate('/admin');
       } else {
         navigate('/');

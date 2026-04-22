@@ -105,7 +105,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         const pusher = getPusher();
         if (!pusher) return;
 
-        const channelName = `restaurant.${restaurantId}`;
+        const channelName = `private-restaurant.${restaurantId}`;
         if (channelsRef.current.has(channelName)) return;
 
         const channel = pusher.subscribe(channelName);
