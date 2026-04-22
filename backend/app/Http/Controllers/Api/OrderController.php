@@ -345,6 +345,10 @@ class OrderController extends Controller
             'plats.*.id' => 'required|integer|exists:dishes,id',
             // Quantité max raisonnable par plat
             'plats.*.quantite' => 'required|integer|min:1|max:100',
+            // Adresse et coordonnées de livraison
+            'delivery_address' => 'nullable|string|max:500',
+            'delivery_lat' => 'nullable|numeric|between:-90,90',
+            'delivery_lng' => 'nullable|numeric|between:-180,180',
         ]);
 
         if ($validator->fails()) {
@@ -408,6 +412,9 @@ class OrderController extends Controller
                 'customer_phone' => $request->telephone,
                 'order_type' => $orderType,
                 'table_number' => $request->table,
+                'delivery_address' => $request->delivery_address,
+                'delivery_lat' => $request->delivery_lat,
+                'delivery_lng' => $request->delivery_lng,
                 'payment_method' => $request->moyen_paiement,
                 'mobile_money_provider' => $request->mobile_money_provider,
                 'status' => 'pending',

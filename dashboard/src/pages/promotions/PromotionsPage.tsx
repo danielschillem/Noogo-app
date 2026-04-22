@@ -1,7 +1,8 @@
 ﻿import { useEffect, useState, useCallback } from 'react';
-import { Plus, Pencil, Trash2, Tag, X, ToggleLeft, ToggleRight, Ticket } from 'lucide-react';
-import { flashInfosApi, restaurantsApi, couponsApi } from '../../services/api';
-import type { FlashInfo, Restaurant, Coupon } from '../../types';
+import { Plus, Pencil, Trash2, Tag, X, ToggleLeft, ToggleRight, Ticket, Store } from 'lucide-react';
+import { flashInfosApi, couponsApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
+import type { FlashInfo, Coupon } from '../../types';
 
 const TYPE_LABELS: Record<string, string> = {
     promotion: 'Promotion',
@@ -320,8 +321,7 @@ function ConfirmDialog({ message, onConfirm, onCancel }: { message: string; onCo
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function PromotionsPage() {
-    const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-    const [selectedRestaurantId, setSelectedRestaurantId] = useState<number | null>(null);
+    const { selectedRestaurantId, setSelectedRestaurantId, myRestaurants } = useAuth();
     const [activeTab, setActiveTab] = useState<'flash' | 'coupons'>('flash');
 
     // Flash infos state
@@ -336,14 +336,6 @@ export default function PromotionsPage() {
 
     // Confirm dialog state
     const [confirmDialog, setConfirmDialog] = useState<{ message: string; onConfirm: () => void } | null>(null);
-
-    useEffect(() => {
-        restaurantsApi.getAll().then(r => {
-            const list: Restaurant[] = r.data.data.data || r.data.data;
-            setRestaurants(list);
-            if (list.length > 0) setSelectedRestaurantId(list[0].id);
-        }).catch(console.error);
-    }, []);
 
     const fetchFlashInfos = useCallback(() => {
         if (!selectedRestaurantId) return;
@@ -421,13 +413,19 @@ export default function PromotionsPage() {
                     <p className="text-gray-600">Gérez les offres, flash infos et codes promo</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <select
-                        value={selectedRestaurantId ?? ''}
-                        onChange={e => setSelectedRestaurantId(Number(e.target.value))}
-                        className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500"
-                    >
-                        {restaurants.map(r => <option key={r.id} value={r.id}>{r.nom}</option>)}
-                    </select>
+                    {myRestaurants.length > 1 && (
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
+                            style={{ background: 'white', border: '1px solid #e2e8f0' }}>
+                            <Store className="h-4 w-4 flex-shrink-0" style={{ color: '#94a3b8' }} />
+                            <select
+                                value={selectedRestaurantId ?? ''}
+                                onChange={e => setSelectedRestaurantId(Number(e.target.value))}
+                                className="text-sm bg-transparent border-none outline-none" style={{ color: '#374151' }}
+                            >
+                                {myRestaurants.map(r => <option key={r.id} value={r.id}>{r.nom}</option>)}
+                            </select>
+                        </div>
+                    )}
                     {activeTab === 'flash' ? (
                         <button
                             onClick={() => setFlashModal({ open: true, flashInfo: null })}

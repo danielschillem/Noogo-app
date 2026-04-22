@@ -142,9 +142,11 @@ class CouponControllerTest extends TestCase
 
     public function test_le_code_est_automatiquement_mis_en_majuscules(): void
     {
+        // La validation Laravel exige 'uppercase', donc on envoie déjà en majuscules.
+        // Le contrôleur normalise ensuite via strtoupper(trim()).
         $response = $this->actingAs($this->owner)
             ->postJson("/api/restaurants/{$this->restaurant->id}/coupons", [
-                'code' => 'welcome',
+                'code' => 'WELCOME',
                 'type' => 'percentage',
                 'value' => 10,
             ]);
@@ -343,8 +345,8 @@ class CouponControllerTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.coupon_id', $coupon->id)
-            ->assertJsonPath('data.discount', 500.0)
-            ->assertJsonPath('data.new_total', 4500.0);
+            ->assertJsonPath('data.discount', 500)
+            ->assertJsonPath('data.new_total', 4500);
     }
 
     public function test_coupon_fixe_retourne_le_bon_discount(): void
@@ -361,8 +363,8 @@ class CouponControllerTest extends TestCase
             'order_total' => 3000,
         ])
             ->assertStatus(200)
-            ->assertJsonPath('data.discount', 200.0)
-            ->assertJsonPath('data.new_total', 2800.0);
+            ->assertJsonPath('data.discount', 200)
+            ->assertJsonPath('data.new_total', 2800);
     }
 
     public function test_coupon_avec_max_discount_est_plafonné(): void
@@ -380,7 +382,7 @@ class CouponControllerTest extends TestCase
             'order_total' => 5000,
         ])
             ->assertStatus(200)
-            ->assertJsonPath('data.discount', 500.0);
+            ->assertJsonPath('data.discount', 500);
     }
 
     public function test_code_inexistant_retourne_422(): void

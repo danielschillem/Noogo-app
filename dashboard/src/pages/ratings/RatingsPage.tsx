@@ -7,31 +7,25 @@ import {
     User,
     TrendingUp,
 } from 'lucide-react';
-import { ratingsApi, restaurantsApi } from '../../services/api';
-import type { Rating, Restaurant } from '../../types';
+import { ratingsApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
+import type { Rating } from '../../types';
 
 export default function RatingsPage() {
-    const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-    const [selectedRestaurantId, setSelectedRestaurantId] = useState<string>('');
+    const { selectedRestaurantId, setSelectedRestaurantId, myRestaurants } = useAuth();
     const [ratings, setRatings] = useState<Rating[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [fetchError, setFetchError] = useState<string | null>(null);
     const [page, setPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
 
-    useEffect(() => {
-        restaurantsApi.getAll().then(res => {
-            const list: Restaurant[] = res.data.data?.data ?? res.data.data ?? [];
-            setRestaurants(list);
-            if (list.length > 0) setSelectedRestaurantId(String(list[0].id));
-        }).catch(() => { }).finally(() => setIsLoading(false));
-    }, []);
+    // No restaurant fetch needed: myRestaurants comes from AuthContext
 
     const fetchRatings = useCallback(async () => {
         if (!selectedRestaurantId) return;
         setIsLoading(true);
         try {
-            const res = await ratingsApi.getAll(parseInt(selectedRestaurantId), { page, per_page: 20 });
+            const res = await ratingsApi.getAll(selectedRestaurantId, { page, per_page: 20 });
             const data = res.data.data;
             if (data?.data) {
                 setRatings(data.data);
@@ -90,13 +84,13 @@ export default function RatingsPage() {
                     <p className="text-sm mt-0.5" style={{ color: '#64748b' }}>Consultez les avis et notes de vos restaurants</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    {restaurants.length > 1 && (
+                    {myRestaurants.length > 1 && (
                         <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
                             style={{ background: 'white', border: '1px solid #e2e8f0' }}>
                             <Store className="h-4 w-4 flex-shrink-0" style={{ color: '#94a3b8' }} />
-                            <select value={selectedRestaurantId} onChange={e => { setSelectedRestaurantId(e.target.value); setPage(1); }}
+                            <select value={selectedRestaurantId ?? ''} onChange={e => { setSelectedRestaurantId(Number(e.target.value)); setPage(1); }}
                                 className="text-sm bg-transparent border-none outline-none" style={{ color: '#374151' }}>
-                                {restaurants.map(r => <option key={r.id} value={r.id}>{r.nom}</option>)}
+                                {myRestaurants.map(r => <option key={r.id} value={r.id}>{r.nom}</option>)}
                             </select>
                         </div>
                     )}

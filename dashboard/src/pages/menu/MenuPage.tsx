@@ -4,9 +4,9 @@ import {
     Plus, Pencil, Trash2, ToggleLeft, ToggleRight, Star, UtensilsCrossed, X,
     Search, LayoutGrid, List, ChevronDown, Filter, Layers,
 } from 'lucide-react';
-import { categoriesApi, dishesApi, restaurantsApi } from '../../services/api';
+import { categoriesApi, dishesApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import type { Category, Dish, Restaurant } from '../../types';
+import type { Category, Dish } from '../../types';
 
 function buildImageUrl(path?: string | null): string {
     if (!path) return '';
@@ -251,12 +251,11 @@ function DishCard({ dish, onEdit, onDelete, onToggleAvail, onTogglePdj }: {
 export default function MenuPage() {
     // Route /r/:restaurantId/menu (staff verrouillé) ou /menu (admin/owner)
     const { restaurantId: paramRestaurantId } = useParams<{ restaurantId?: string }>();
-    const { lockedRestaurantId } = useAuth();
-    // Priorité : param URL > contexte verrouillé
+    const { lockedRestaurantId, selectedRestaurantId: ctxRestaurantId, setSelectedRestaurantId, myRestaurants } = useAuth();
+    // Priority: URL param > locked context > global selection
     const forcedRestaurantId = paramRestaurantId ? Number(paramRestaurantId) : lockedRestaurantId;
+    const selectedRestaurantId = forcedRestaurantId ?? ctxRestaurantId;
 
-    const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-    const [selectedRestaurantId, setSelectedRestaurantId] = useState<number | null>(forcedRestaurantId ?? null);
     const [categories, setCategories] = useState<Category[]>([]);
     const [dishes, setDishes] = useState<Dish[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -269,16 +268,10 @@ export default function MenuPage() {
 
     useEffect(() => {
         // Si un restaurant est déjà forcé (staff verrouillé), pas besoin de charger la liste
-        if (forcedRestaurantId) {
-            setSelectedRestaurantId(forcedRestaurantId);
-            return;
-        }
-        restaurantsApi.getAll().then(r => {
-            const list: Restaurant[] = r.data.data.data || r.data.data;
-            setRestaurants(list);
-            if (list.length > 0) setSelectedRestaurantId(list[0].id);
-        }).catch(console.error);
-    }, [forcedRestaurantId]);
+        if (forcedRestaurantId) return;
+        // If no selection yet and myRestaurants available, auto-select first
+        if (!ctxRestaurantId && myRestaurants.length > 0) setSelectedRestaurantId(myRestaurants[0].id);
+    }, [forcedRestaurantId, ctxRestaurantId, myRestaurants, setSelectedRestaurantId]);
 
     useEffect(() => {
         if (!selectedRestaurantId) return;
@@ -340,9 +333,9 @@ export default function MenuPage() {
                     </p>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
-                    {restaurants.length > 1 && (
+                    {!forcedRestaurantId && myRestaurants.length > 1 && (
                         <select value={selectedRestaurantId ?? ''} onChange={e => setSelectedRestaurantId(Number(e.target.value))} className="input-pro text-sm" style={{ width: 'auto' }}>
-                            {restaurants.map(r => <option key={r.id} value={r.id}>{r.nom}</option>)}
+                            {myRestaurants.map(r => <option key={r.id} value={r.id}>{r.nom}</option>)}
                         </select>
                     )}
                     <button onClick={() => setCategoryModal({ open: true, category: null })} className="px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1.5" style={{ background: '#f8fafc', color: '#374151', border: '1px solid #e2e8f0' }}>

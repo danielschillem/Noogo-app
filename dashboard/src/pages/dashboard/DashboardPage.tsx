@@ -1,4 +1,5 @@
-﻿import { useCallback, useEffect, useRef, useState } from 'react';
+﻿import { useCallback, useEffect, useState } from 'react';
+import { useInterval } from '../../hooks/useInterval';
 import {
   ShoppingBag,
   DollarSign,
@@ -53,10 +54,11 @@ const TODAY_LABEL = new Date().toLocaleDateString('fr-FR', {
 // â”€â”€â”€ Main Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, selectedRestaurantId, setSelectedRestaurantId, myRestaurants } = useAuth();
 
-  const { data: restaurants = [] } = useRestaurants();
-  const [selectedRestaurantId, setSelectedRestaurantId] = useState<number | null>(null);
+  // Admin: can see all restaurants for per-restaurant stats
+  const { data: adminRestaurants = [] } = useRestaurants();
+  const restaurants = user?.is_admin ? adminRestaurants : myRestaurants;
   const [restaurantStats, setRestaurantStats] = useState<RestaurantStats | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
@@ -66,7 +68,7 @@ export default function DashboardPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [chartTab, setChartTab] = useState<'orders' | 'revenue'>('orders');
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
 
   useEffect(() => {
     if (!selectedRestaurantId) { setRestaurantStats(null); return; }
@@ -99,9 +101,9 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchData();
-    intervalRef.current = setInterval(() => fetchData(true), 30_000);
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [fetchData]);
+
+  useInterval(() => fetchData(true), 30_000);
 
   // â”€â”€ Derived values â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const active = selectedRestaurantId && restaurantStats ? restaurantStats : null;

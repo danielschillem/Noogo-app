@@ -1,9 +1,17 @@
-﻿import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import type { AuthState } from '../types';
+﻿import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import type { AuthState, MyRestaurant } from '../types';
 import { authApi, myRestaurantsApi } from '../services/api';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 interface AuthContextType extends AuthState {
   lockedRestaurantId: number | null;
+  /** Tous les restaurants accessibles (owned + staff). Vide pour les admins. */
+  myRestaurants: MyRestaurant[];
+  /** Restaurant actuellement sélectionné dans les pages globales (persisté). */
+  selectedRestaurantId: number | null;
+  setSelectedRestaurantId: (id: number | null) => void;
+  /** Recharge la liste des restaurants (utile après création/suppression). */
+  refreshMyRestaurants: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   loginForRestaurant: (email: string, password: string, restaurantId: number) => Promise<void>;
   logout: () => Promise<void>;
@@ -20,10 +28,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated: false,
     isLoading: true,
   });
-  const [lockedRestaurantId, setLockedRestaurantId] = useState<number | null>(() => {
-    const stored = localStorage.getItem('locked_restaurant_id');
-    return stored ? Number(stored) : null;
-  });
+  const [lockedRestaurantId, setLockedRestaurantId, removeLockedRestaurantId] = useLocalStorage<number | null>('locked_restaurant_id', null);
+  const [myRestaurants, setMyRestaurants] = useState<MyRestaurant[]>([]);
+  const [selectedRestaurantId, setSelectedRestaurantIdRaw, removeSelectedRestaurantId] = useLocalStorage<number | null>('selected_restaurant_id', null);
+
+  // Wrap setter: when explicitly choosing a restaurant, persist it
+  const setSelectedRestaurantId = useCallback((id: number | null) => {
+    if (id === null) removeSelectedRestaurantId();
+    else setSelectedRestaurantIdRaw(id);
+  }, [setSelectedRestaurantIdRaw, removeSelectedRestaurantId]);
+
+  const refreshMyRestaurants = useCallback(async () => {
+    try {
+      const res = await myRestaurantsApi.get();
+      const list: MyRestaurant[] = res.data.data ?? [];
+      setMyRestaurants(list);
+      // Auto-select first if nothing persisted or persisted id no longer accessible
+      setSelectedRestaurantIdRaw(prev => {
+        const ids = list.map(r => r.id);
+        if (prev && ids.includes(prev)) return prev;
+        return list[0]?.id ?? null;
+      });
+    } catch { /* silently ignore */ }
+  }, [setSelectedRestaurantIdRaw]);
 
   useEffect(() => {
     const initAuth = async () => {
@@ -40,6 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             isAuthenticated: true,
             isLoading: false,
           });
+          // Charger les restaurants accessibles dès que l'auth est confirmée
+          if (!user.is_admin) refreshMyRestaurants();
         } catch {
           localStorage.removeItem('auth_token');
           localStorage.removeItem('user');
@@ -56,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     initAuth();
-  }, []);
+  }, [refreshMyRestaurants]);
 
   const login = async (email: string, password: string) => {
     const response = await authApi.login(email, password);
@@ -65,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('auth_token', token);
     localStorage.setItem('user', JSON.stringify(user));
     // Login global : aucun restaurant verrouillé
-    localStorage.removeItem('locked_restaurant_id');
+    removeLockedRestaurantId();
     setLockedRestaurantId(null);
 
     setState({
@@ -74,6 +103,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: true,
       isLoading: false,
     });
+
+    if (!user.is_admin) refreshMyRestaurants();
   };
 
   // Login depuis la page d'un restaurant (/r/:id/login)
@@ -87,10 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (user.is_admin) {
       localStorage.setItem('auth_token', token);
       localStorage.setItem('user', JSON.stringify(user));
-      localStorage.removeItem('locked_restaurant_id');
-      setLockedRestaurantId(null);
-      setState({ user, token, isAuthenticated: true, isLoading: false });
-      return;
+      removeLockedRestaurantId();
     }
 
     // Pour les non-admins : vérifier qu'ils ont accès à ce restaurant
@@ -109,7 +137,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       localStorage.setItem('user', JSON.stringify(user));
-      localStorage.setItem('locked_restaurant_id', String(restaurantId));
       setLockedRestaurantId(restaurantId);
       setState({ user, token, isAuthenticated: true, isLoading: false });
     } catch (err: unknown) {
@@ -129,8 +156,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
-    localStorage.removeItem('locked_restaurant_id');
+    removeLockedRestaurantId();
     setLockedRestaurantId(null);
+    removeSelectedRestaurantId();
+    setMyRestaurants([]);
 
     setState({
       user: null,
@@ -163,7 +192,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ ...state, lockedRestaurantId, login, loginForRestaurant, logout, register, updateProfile }}>
+    <AuthContext.Provider value={{
+      ...state,
+      lockedRestaurantId,
+      myRestaurants,
+      selectedRestaurantId,
+      setSelectedRestaurantId,
+      refreshMyRestaurants,
+      login,
+      loginForRestaurant,
+      logout,
+      register,
+      updateProfile,
+    }}>
       {children}
     </AuthContext.Provider>
   );

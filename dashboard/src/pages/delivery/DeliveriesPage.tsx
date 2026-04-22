@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useInterval } from '../../hooks/useInterval';
 import {
     Package,
     RefreshCw,
@@ -129,11 +130,7 @@ export default function DeliveriesPage() {
     useEffect(() => { fetchDrivers(); }, [fetchDrivers]);
 
     // ── Polling fallback si Pusher indisponible (ex. prod sans VITE_PUSHER_KEY) ──
-    useEffect(() => {
-        if (getPusher()) return; // Pusher actif → pas besoin de polling
-        const id = setInterval(() => { fetchDeliveries(); }, 30_000);
-        return () => clearInterval(id);
-    }, [fetchDeliveries]);
+    useInterval(() => { if (!getPusher()) fetchDeliveries(); }, 30_000);
 
     // ── Pusher real-time: driver location + status updates ──
     useEffect(() => {

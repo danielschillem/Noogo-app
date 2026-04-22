@@ -1,4 +1,5 @@
 ﻿import { useEffect, useRef, useState } from 'react';
+import { useDebounce } from '../../hooks/useDebounce';
 import { Link } from 'react-router-dom';
 import { QRCodeCanvas } from 'qrcode.react';
 import {
@@ -28,6 +29,7 @@ export default function RestaurantsPage() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 250);
   const [filterTab, setFilterTab] = useState<FilterTab>('all');
 
   useEffect(() => {
@@ -75,8 +77,8 @@ export default function RestaurantsPage() {
 
   const filteredRestaurants = restaurants
     .filter(r => {
-      const matchSearch = r.nom.toLowerCase().includes(search.toLowerCase()) ||
-        r.adresse.toLowerCase().includes(search.toLowerCase());
+      const matchSearch = r.nom.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        r.adresse.toLowerCase().includes(debouncedSearch.toLowerCase());
       const matchTab =
         filterTab === 'all' ? true :
           filterTab === 'active' ? r.is_active :
@@ -146,8 +148,8 @@ export default function RestaurantsPage() {
               key={tab.key}
               onClick={() => setFilterTab(tab.key)}
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${filterTab === tab.key
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
                 }`}
             >
               {tab.label}

@@ -17,9 +17,8 @@ import {
   Package,
   Star,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { myRestaurantsApi } from '../../services/api';
 import { usePendingCount } from '../../hooks/useQueries';
 import type { MyRestaurant } from '../../types';
 
@@ -38,11 +37,10 @@ const ADMIN_NAV = [
 export default function Sidebar({ restaurantId }: { restaurantId?: number }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, myRestaurants, selectedRestaurantId, setSelectedRestaurantId } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { data: pendingCount = 0 } = usePendingCount();
-  const [myRestaurants, setMyRestaurants] = useState<MyRestaurant[]>([]);
   const [showAll, setShowAll] = useState(false);
 
   const uniqueRestaurants = useMemo(() => {
@@ -54,11 +52,6 @@ export default function Sidebar({ restaurantId }: { restaurantId?: number }) {
   const MAX_VISIBLE = 4;
   const visible = showAll ? uniqueRestaurants : uniqueRestaurants.slice(0, MAX_VISIBLE);
   const hiddenCount = uniqueRestaurants.length - MAX_VISIBLE;
-
-  useEffect(() => {
-    if (user && !user.is_admin)
-      myRestaurantsApi.get().then(r => setMyRestaurants(r.data.data ?? [])).catch(() => { });
-  }, [user]);
 
   // Mode verrouillé : navigation limitée à ce restaurant
   const isLocked = !!restaurantId;
@@ -125,8 +118,8 @@ export default function Sidebar({ restaurantId }: { restaurantId?: number }) {
               const href = `/restaurants/${r.id}`;
               const isActive = location.pathname.startsWith(href);
               return (
-                <Link key={r.id} to={href} onClick={() => setIsOpen(false)}
-                  className={`nav-item${isActive ? ' active' : ''}`}>
+                <Link key={r.id} to={href} onClick={() => { setSelectedRestaurantId(r.id); setIsOpen(false); }}
+                  className={`nav-item${isActive || r.id === selectedRestaurantId ? ' active' : ''}`}>
                   <div className="relative shrink-0">
                     <Store className="h-4 w-4" />
                     <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-[#0f172a]"

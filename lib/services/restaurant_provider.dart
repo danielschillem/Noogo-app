@@ -1206,6 +1206,8 @@ class RestaurantProvider with ChangeNotifier {
     required String phoneNumber,
     String? tableNumber,
     String? deliveryAddress,
+    double? deliveryLat,
+    double? deliveryLng,
     String? mobileMoneyProvider,
   }) async {
     _orderSubmitState = OrderSubmitState.submitting;
@@ -1265,6 +1267,8 @@ class RestaurantProvider with ChangeNotifier {
 
       if (normalizedOrderType == 'livraison' && deliveryAddress != null) {
         orderData['delivery_address'] = deliveryAddress;
+        if (deliveryLat != null) orderData['delivery_lat'] = deliveryLat;
+        if (deliveryLng != null) orderData['delivery_lng'] = deliveryLng;
       }
 
       if (paymentMethod == 'mobile_money' && mobileMoneyProvider != null) {

@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { useInterval } from '../../hooks/useInterval';
 import { useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -196,7 +197,7 @@ export default function KitchenPage() {
   const [lastRefresh, setLastRefresh] = useState(new Date());
 
   const audioCtxRef = useRef<AudioContext | null>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
 
   /* ── Audio alert ── */
   const playAlert = useCallback(() => {
@@ -283,10 +284,7 @@ export default function KitchenPage() {
   }, [rid, user]);
 
   /* ── Polling 15s ── */
-  useEffect(() => {
-    pollRef.current = setInterval(fetchOrders, 15_000);
-    return () => { if (pollRef.current) clearInterval(pollRef.current); };
-  }, [fetchOrders]);
+  useInterval(fetchOrders, 15_000);
 
   /* ── Pusher ── */
   usePusher(rid ? `orders.${rid}` : null, {

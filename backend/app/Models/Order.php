@@ -21,6 +21,9 @@ class Order extends Model
         'status',
         'order_type',
         'table_number',
+        'delivery_address',
+        'delivery_lat',
+        'delivery_lng',
         'total_amount',
         'payment_method',
         'transaction_id',
@@ -31,6 +34,8 @@ class Order extends Model
 
     protected $casts = [
         'total_amount' => 'decimal:2',
+        'delivery_lat' => 'float',
+        'delivery_lng' => 'float',
         'order_date' => 'datetime',
     ];
 

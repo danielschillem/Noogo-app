@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState, useRef, useCallback } from 'react';
+import { useInterval } from '../../hooks/useInterval';
 import { useParams } from 'react-router-dom';
 import {
   Clock,
@@ -18,9 +19,10 @@ import {
   Phone,
   Truck,
 } from 'lucide-react';
-import { ordersApi, restaurantsApi, deliveryApi } from '../../services/api';
+import { ordersApi, deliveryApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import { usePusher } from '../../hooks/usePusher';
-import type { Order, OrderStatus, Restaurant } from '../../types';
+import type { Order, OrderStatus } from '../../types';
 
 const POLL_INTERVAL = 15_000;
 
@@ -182,9 +184,10 @@ function OrderDetailPanel({ order, onClose, onUpdateStatus, onCancel, onRequestD
 
 export default function OrdersPage() {
   const { restaurantId: paramRestaurantId } = useParams();
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | undefined>(paramRestaurantId);
-  const restaurantId = paramRestaurantId ?? selectedRestaurantId;
+  const { selectedRestaurantId: ctxRestaurantId, setSelectedRestaurantId, myRestaurants } = useAuth();
+  // URL param takes priority; otherwise fall back to globally selected restaurant
+  const selectedRestaurantId = paramRestaurantId ?? (ctxRestaurantId ? String(ctxRestaurantId) : undefined);
+  const restaurantId = selectedRestaurantId;
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -195,21 +198,13 @@ export default function OrdersPage() {
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const [dragOverCol, setDragOverCol] = useState<string | null>(null);
   const prevIdsRef = useRef<Set<number>>(new Set());
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
 
   const [pendingCounts, setPendingCounts] = useState<{ pending: number; confirmed: number; preparing: number; ready: number } | null>(null);
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const selectedOrder = selectedOrderId ? (orders.find(o => o.id === selectedOrderId) ?? null) : null;
 
-  useEffect(() => {
-    if (!paramRestaurantId) {
-      restaurantsApi.getAll().then(res => {
-        const list: Restaurant[] = res.data.data?.data ?? res.data.data ?? [];
-        setRestaurants(list);
-        if (list.length > 0 && !selectedRestaurantId) setSelectedRestaurantId(String(list[0].id));
-      }).catch(console.error);
-    }
-  }, [paramRestaurantId, selectedRestaurantId]);
+  // No need to fetch restaurants: use myRestaurants from auth context
 
   const fetchOrders = useCallback(async (silent = false) => {
     if (!restaurantId) return;
@@ -242,10 +237,10 @@ export default function OrdersPage() {
     setIsLoading(true);
     if (restaurantId) {
       fetchOrders();
-      intervalRef.current = setInterval(() => fetchOrders(true), POLL_INTERVAL);
     }
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [fetchOrders, restaurantId]);
+
+  useInterval(() => { if (restaurantId) fetchOrders(true); }, POLL_INTERVAL);
 
   usePusher(restaurantId ? `private-restaurant.${restaurantId}` : null, {
     'order.created': (data) => {
@@ -363,13 +358,13 @@ export default function OrdersPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {!paramRestaurantId && restaurants.length > 0 && (
+          {!paramRestaurantId && myRestaurants.length > 1 && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
               style={{ background: 'white', border: '1px solid #e2e8f0' }}>
               <Store className="h-4 w-4 flex-shrink-0" style={{ color: '#94a3b8' }} />
-              <select value={selectedRestaurantId ?? ''} onChange={e => { setSelectedRestaurantId(e.target.value); setNewCount(0); }}
+              <select value={ctxRestaurantId ?? ''} onChange={e => { setSelectedRestaurantId(e.target.value ? Number(e.target.value) : null); setNewCount(0); }}
                 className="text-sm bg-transparent border-none outline-none" style={{ color: '#374151' }}>
-                {restaurants.map(r => <option key={r.id} value={r.id}>{r.nom}</option>)}
+                {myRestaurants.map(r => <option key={r.id} value={r.id}>{r.nom}</option>)}
               </select>
             </div>
           )}

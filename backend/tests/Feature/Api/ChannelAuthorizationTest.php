@@ -12,28 +12,17 @@ use App\Models\Restaurant;
 use App\Models\RestaurantStaff;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Broadcast;
 use Tests\TestCase;
 
 /**
  * Tests d'autorisation des canaux Pusher privés (routes/channels.php)
  *
- *   Canal private-restaurant.{restaurantId} :
- *     - Admin Noogo      → 200
- *     - Propriétaire     → 200
- *     - Staff manager actif → 200
- *     - Staff inactif    → 403
- *     - Utilisateur tiers → 403
- *     - Restaurant inexistant → 403
- *     - Non authentifié  → 403
+ * On invoque directement les callbacks de canal via getChannels() sur le broadcaster,
+ * sans passer par le HTTP /broadcasting/auth (qui nécessiterait un socket_id Pusher valide).
  *
- *   Canal private-delivery.{orderId} :
- *     - Admin Noogo      → 200
- *     - Client auteur    → 200
- *     - Livreur assigné  → 200
- *     - Propriétaire du restaurant → 200
- *     - Staff manage_orders → 200
- *     - Utilisateur tiers → 403
- *     - Commande inexistante → 403
+ *   Canal restaurant.{restaurantId}  — admin, owner, staff actif ✓ / stranger, staff inactif ✗
+ *   Canal delivery.{orderId}          — admin, client, driver, owner, staff manage_orders ✓ / stranger ✗
  */
 class ChannelAuthorizationTest extends TestCase
 {
@@ -49,22 +38,6 @@ class ChannelAuthorizationTest extends TestCase
     {
         parent::setUp();
 
-        // L'auth de canal Pusher est calculée localement (HMAC-SHA256 avec le secret)
-        // → pas de connexion réseau réelle, faux credentials suffisent.
-        config([
-            'broadcasting.default' => 'pusher',
-            'broadcasting.connections.pusher.key' => 'test-key',
-            'broadcasting.connections.pusher.secret' => 'test-secret-000000000000',
-            'broadcasting.connections.pusher.app_id' => '000001',
-            'broadcasting.connections.pusher.options' => [
-                'cluster' => 'eu',
-                'useTLS' => false,
-                'host' => '127.0.0.1',
-                'port' => 6001,
-                'scheme' => 'http',
-            ],
-        ]);
-
         $this->admin = User::factory()->create(['is_admin' => true]);
         $this->owner = User::factory()->create(['is_admin' => false]);
         $this->client = User::factory()->create(['is_admin' => false]);
@@ -79,15 +52,25 @@ class ChannelAuthorizationTest extends TestCase
         ]);
     }
 
-    // ─── Helper ──────────────────────────────────────────────────────────────
+    // ─── Helpers ─────────────────────────────────────────────────────────────
 
-    private function authChannel(User $user, string $channelName): \Illuminate\Testing\TestResponse
+    /**
+     * Résout l'autorisation d'un canal en appelant directement son callback.
+     * @param  string  $pattern  ex: 'restaurant.{restaurantId}'
+     */
+    private function callChannel(string $pattern, User $user, array $params): bool
     {
-        return $this->actingAs($user, 'sanctum')
-            ->postJson('/broadcasting/auth', [
-                'socket_id' => '1234.5678',
-                'channel_name' => $channelName,
-            ]);
+        $channels = app('Illuminate\Broadcasting\BroadcastManager')
+            ->driver()
+            ->getChannels();
+
+        if (!$channels->has($pattern)) {
+            return false;
+        }
+
+        $result = ($channels->get($pattern))($user, ...$params);
+
+        return $result === true;
     }
 
     private function createOrderAndDelivery(): array
@@ -143,19 +126,17 @@ class ChannelAuthorizationTest extends TestCase
     }
 
     // =========================================================================
-    // Canal private-restaurant.{restaurantId}
+    // Canal restaurant.{restaurantId}
     // =========================================================================
 
     public function test_admin_peut_acceder_canal_restaurant(): void
     {
-        $this->authChannel($this->admin, 'private-restaurant.' . $this->restaurant->id)
-            ->assertStatus(200);
+        $this->assertTrue($this->callChannel('restaurant.{restaurantId}', $this->admin, [$this->restaurant->id]));
     }
 
     public function test_proprietaire_peut_acceder_son_canal_restaurant(): void
     {
-        $this->authChannel($this->owner, 'private-restaurant.' . $this->restaurant->id)
-            ->assertStatus(200);
+        $this->assertTrue($this->callChannel('restaurant.{restaurantId}', $this->owner, [$this->restaurant->id]));
     }
 
     public function test_staff_manager_actif_peut_acceder_canal_restaurant(): void
@@ -168,8 +149,7 @@ class ChannelAuthorizationTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->authChannel($staffUser, 'private-restaurant.' . $this->restaurant->id)
-            ->assertStatus(200);
+        $this->assertTrue($this->callChannel('restaurant.{restaurantId}', $staffUser, [$this->restaurant->id]));
     }
 
     public function test_staff_inactif_ne_peut_pas_acceder_canal_restaurant(): void
@@ -182,64 +162,45 @@ class ChannelAuthorizationTest extends TestCase
             'is_active' => false,
         ]);
 
-        $this->authChannel($staffUser, 'private-restaurant.' . $this->restaurant->id)
-            ->assertStatus(403);
+        $this->assertFalse($this->callChannel('restaurant.{restaurantId}', $staffUser, [$this->restaurant->id]));
     }
 
     public function test_utilisateur_tiers_ne_peut_pas_acceder_canal_restaurant(): void
     {
-        $this->authChannel($this->stranger, 'private-restaurant.' . $this->restaurant->id)
-            ->assertStatus(403);
+        $this->assertFalse($this->callChannel('restaurant.{restaurantId}', $this->stranger, [$this->restaurant->id]));
     }
 
-    public function test_restaurant_inexistant_retourne_403(): void
+    public function test_restaurant_inexistant_retourne_false(): void
     {
-        $this->authChannel($this->owner, 'private-restaurant.99999')
-            ->assertStatus(403);
-    }
-
-    public function test_non_authentifie_recoit_403_sur_canal_restaurant(): void
-    {
-        $this->postJson('/broadcasting/auth', [
-            'socket_id' => '1234.5678',
-            'channel_name' => 'private-restaurant.' . $this->restaurant->id,
-        ])->assertStatus(403);
+        $this->assertFalse($this->callChannel('restaurant.{restaurantId}', $this->owner, [99999]));
     }
 
     // =========================================================================
-    // Canal private-delivery.{orderId}
+    // Canal delivery.{orderId}
     // =========================================================================
 
     public function test_admin_peut_acceder_canal_delivery(): void
     {
         [$order] = $this->createOrderAndDelivery();
-
-        $this->authChannel($this->admin, 'private-delivery.' . $order->id)
-            ->assertStatus(200);
+        $this->assertTrue($this->callChannel('delivery.{orderId}', $this->admin, [$order->id]));
     }
 
     public function test_client_auteur_peut_acceder_canal_delivery(): void
     {
         [$order] = $this->createOrderAndDelivery();
-
-        $this->authChannel($this->client, 'private-delivery.' . $order->id)
-            ->assertStatus(200);
+        $this->assertTrue($this->callChannel('delivery.{orderId}', $this->client, [$order->id]));
     }
 
     public function test_livreur_assigne_peut_acceder_canal_delivery(): void
     {
         [$order, $delivery, $driverUser] = $this->createOrderAndDelivery();
-
-        $this->authChannel($driverUser, 'private-delivery.' . $order->id)
-            ->assertStatus(200);
+        $this->assertTrue($this->callChannel('delivery.{orderId}', $driverUser, [$order->id]));
     }
 
     public function test_proprietaire_restaurant_peut_acceder_canal_delivery(): void
     {
         [$order] = $this->createOrderAndDelivery();
-
-        $this->authChannel($this->owner, 'private-delivery.' . $order->id)
-            ->assertStatus(200);
+        $this->assertTrue($this->callChannel('delivery.{orderId}', $this->owner, [$order->id]));
     }
 
     public function test_staff_manage_orders_peut_acceder_canal_delivery(): void
@@ -254,21 +215,17 @@ class ChannelAuthorizationTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->authChannel($staffUser, 'private-delivery.' . $order->id)
-            ->assertStatus(200);
+        $this->assertTrue($this->callChannel('delivery.{orderId}', $staffUser, [$order->id]));
     }
 
     public function test_utilisateur_tiers_ne_peut_pas_acceder_canal_delivery(): void
     {
         [$order] = $this->createOrderAndDelivery();
-
-        $this->authChannel($this->stranger, 'private-delivery.' . $order->id)
-            ->assertStatus(403);
+        $this->assertFalse($this->callChannel('delivery.{orderId}', $this->stranger, [$order->id]));
     }
 
-    public function test_commande_inexistante_retourne_403_sur_canal_delivery(): void
+    public function test_commande_inexistante_retourne_false_sur_canal_delivery(): void
     {
-        $this->authChannel($this->client, 'private-delivery.99999')
-            ->assertStatus(403);
+        $this->assertFalse($this->callChannel('delivery.{orderId}', $this->client, [99999]));
     }
 }

@@ -53,6 +53,9 @@ class Order {
   final OrderType orderType;
 
   final String? table;
+  final String? deliveryAddress;
+  final double? deliveryLat;
+  final double? deliveryLng;
   final String? mobileMoneyProvider;
   final String? phoneNumber;
   final String? userId;
@@ -66,6 +69,9 @@ class Order {
     required this.paymentMethod,
     required this.orderType,
     this.table,
+    this.deliveryAddress,
+    this.deliveryLat,
+    this.deliveryLng,
     this.transactionId,
     this.mobileMoneyProvider,
     this.phoneNumber,
@@ -164,6 +170,9 @@ class Order {
       paymentMethod: json['payment_method'] ?? 'cash',
       orderType: parseOrderType(json['order_type']),
       table: json['table_number'] ?? json['table'],
+      deliveryAddress: json['delivery_address'],
+      deliveryLat: (json['delivery_lat'] as num?)?.toDouble(),
+      deliveryLng: (json['delivery_lng'] as num?)?.toDouble(),
       transactionId: json['transaction_id'],
       mobileMoneyProvider: json['mobile_money_provider'],
       phoneNumber: json['phone_number'],
@@ -195,6 +204,9 @@ class Order {
       'payment_method': paymentMethod,
       'order_type': orderTypeToString(),
       'table_number': table, // clé correcte pour le backend
+      'delivery_address': deliveryAddress,
+      'delivery_lat': deliveryLat,
+      'delivery_lng': deliveryLng,
       'transaction_id': transactionId,
       'mobile_money_provider': mobileMoneyProvider,
       'phone_number': phoneNumber,
@@ -210,7 +222,10 @@ class Order {
     DateTime? orderDate,
     String? paymentMethod,
     OrderType? orderType,
-    String? table, // ✅ Corrigé : int? → String?
+    String? table,
+    String? deliveryAddress,
+    double? deliveryLat,
+    double? deliveryLng,
     String? transactionId,
     String? mobileMoneyProvider,
     String? phoneNumber,
@@ -225,6 +240,9 @@ class Order {
       paymentMethod: paymentMethod ?? this.paymentMethod,
       orderType: orderType ?? this.orderType,
       table: table ?? this.table,
+      deliveryAddress: deliveryAddress ?? this.deliveryAddress,
+      deliveryLat: deliveryLat ?? this.deliveryLat,
+      deliveryLng: deliveryLng ?? this.deliveryLng,
       transactionId: transactionId ?? this.transactionId,
       mobileMoneyProvider: mobileMoneyProvider ?? this.mobileMoneyProvider,
       phoneNumber: phoneNumber ?? this.phoneNumber,

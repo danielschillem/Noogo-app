@@ -11,6 +11,7 @@ import '../services/restaurant_provider.dart';
 import '../utils/app_colors.dart';
 import '../utils/app_text_styles.dart';
 import '../widgets/custom_app_bar.dart';
+import 'location_picker_screen.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -746,6 +747,8 @@ class _CartScreenState extends State<CartScreen>
 
     String? tableNumber;
     String? deliveryAddress;
+    double? deliveryLat;
+    double? deliveryLng;
 
     // Étape 2: Si "sur place", demander le numéro de table
     if (orderType == 'sur place') {
@@ -753,10 +756,18 @@ class _CartScreenState extends State<CartScreen>
       if (tableNumber == null) return;
     }
 
-    // Étape 2b: Si "livraison", demander l'adresse de livraison
+    // Étape 2b: Si "livraison", ouvrir le sélecteur de position GPS
     if (orderType == 'livraison') {
-      deliveryAddress = await _askDeliveryAddress();
-      if (deliveryAddress == null) return;
+      final location = await Navigator.push<DeliveryLocation>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const LocationPickerScreen(),
+        ),
+      );
+      if (location == null) return;
+      deliveryAddress = location.address;
+      deliveryLat = location.latitude;
+      deliveryLng = location.longitude;
     }
 
     // Étape 3: Demander le numéro de téléphone
@@ -814,6 +825,8 @@ class _CartScreenState extends State<CartScreen>
       orderType: orderType,
       tableNumber: tableNumber,
       deliveryAddress: deliveryAddress,
+      deliveryLat: deliveryLat,
+      deliveryLng: deliveryLng,
       phoneNumber: phoneNumber,
       paymentMethod: paymentMethod,
       mobileMoneyProvider: mobileMoneyProvider,
@@ -1513,6 +1526,8 @@ class _CartScreenState extends State<CartScreen>
     required String orderType,
     String? tableNumber,
     String? deliveryAddress,
+    double? deliveryLat,
+    double? deliveryLng,
     required String phoneNumber,
     required String paymentMethod,
     String? mobileMoneyProvider,
@@ -1548,6 +1563,8 @@ class _CartScreenState extends State<CartScreen>
         phoneNumber: phoneNumber,
         tableNumber: tableNumber,
         deliveryAddress: deliveryAddress,
+        deliveryLat: deliveryLat,
+        deliveryLng: deliveryLng,
         mobileMoneyProvider: mobileMoneyProvider,
       );
 

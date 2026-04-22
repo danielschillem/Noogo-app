@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect, useCallback } from 'react';
+import { useDebounce } from '../../hooks/useDebounce';
 import { useParams } from 'react-router-dom';
 import {
     Users, Plus, Trash2, Edit2, Check, X, ShieldCheck, ChefHat,
@@ -268,6 +269,7 @@ export default function StaffPage() {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editRole, setEditRole] = useState<StaffRole>('waiter');
     const [search, setSearch] = useState('');
+    const debouncedSearch = useDebounce(search, 250);
     const [viewMode, setViewMode] = useState<'table' | 'cards'>('cards');
     const [confirmModal, setConfirmModal] = useState<{ member: StaffMember } | null>(null);
     const [editModal, setEditModal] = useState<{ member: StaffMember } | null>(null);
@@ -322,8 +324,8 @@ export default function StaffPage() {
 
     const activeCount = staff.filter(s => s.is_active).length;
     const inactiveCount = staff.length - activeCount;
-    const filtered = search.trim()
-        ? staff.filter(s => s.name.toLowerCase().includes(search.toLowerCase()) || s.email.toLowerCase().includes(search.toLowerCase()) || s.role_label.toLowerCase().includes(search.toLowerCase()))
+    const filtered = debouncedSearch.trim()
+        ? staff.filter(s => s.name.toLowerCase().includes(debouncedSearch.toLowerCase()) || s.email.toLowerCase().includes(debouncedSearch.toLowerCase()) || s.role_label.toLowerCase().includes(debouncedSearch.toLowerCase()))
         : staff;
 
     return (
