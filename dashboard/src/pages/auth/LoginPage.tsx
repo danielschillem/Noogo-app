@@ -65,11 +65,7 @@ export default function LoginPage() {
         <div className="relative flex flex-col justify-between p-12 w-full z-10">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg,#f97316,#ea580c)' }}>
-              <span className="text-white font-black text-xl">N</span>
-            </div>
-            <span className="text-white font-bold text-xl">Noogo</span>
+            <img src="/noogo-logo.png" alt="Noogo" className="h-10 w-auto" />
           </div>
 
           {/* Center content */}
@@ -119,11 +115,7 @@ export default function LoginPage() {
 
           {/* Mobile logo */}
           <div className="flex items-center gap-2.5 mb-8 lg:hidden">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg,#f97316,#ea580c)' }}>
-              <span className="text-white font-black text-lg">N</span>
-            </div>
-            <span className="font-bold text-xl" style={{ color: '#0f172a' }}>Noogo</span>
+            <img src="/noogo-logo.png" alt="Noogo" className="h-9 w-auto" />
           </div>
 
           <div className="mb-8">
