@@ -74,6 +74,10 @@ php artisan route:cache  2>&1 | tail -1
 php artisan view:cache   2>&1 | tail -1
 php artisan storage:link 2>/dev/null || true
 
+# ── Répertoires temporaires nginx ──────────────────────────────
+mkdir -p /tmp/nginx_client_body
+chmod 777 /tmp/nginx_client_body
+
 # ── Migrations en arrière-plan ─────────────────────────────────
 # Attend que nginx soit démarré avant de toucher la DB
 (
