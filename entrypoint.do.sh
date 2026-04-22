@@ -40,6 +40,8 @@ fi
 [ -n "$DB_USERNAME" ]       && echo "DB_USERNAME=$DB_USERNAME"       >> "$ENV_FILE"
 [ -n "$DB_PASSWORD" ]       && echo "DB_PASSWORD=$DB_PASSWORD"       >> "$ENV_FILE"
 [ -n "$DB_SSLMODE" ]        && echo "DB_SSLMODE=$DB_SSLMODE"         >> "$ENV_FILE"
+# Use dedicated schema to avoid PostgreSQL 15 public schema permission restriction
+echo "DB_SCHEMA=app"                                                  >> "$ENV_FILE"
 
 # App
 [ -n "$FRONTEND_URL" ]      && echo "FRONTEND_URL=$FRONTEND_URL"     >> "$ENV_FILE"
@@ -123,13 +125,16 @@ php artisan storage:link 2>/dev/null || true
             echo \"current_user=\" . \$row['current_user'] . \", session_user=\" . \$row['session_user'] . \"\n\";
             // Utiliser le nom d'utilisateur EXPLICITE de l'URL (pas CURRENT_USER qui peut résoudre vers doadmin via PgBouncer)
             \$safeUser = str_replace('\"', '', \$user);
-            // GRANT CREATE sur le schéma public avec l'utilisateur explicite
-            try { \$pdo->exec(\"GRANT CREATE ON SCHEMA public TO \\\"\$safeUser\\\"\"); echo \"GRANT CREATE public OK for: \$safeUser\n\"; } catch(Exception \$e) { echo 'GRANT: ' . \$e->getMessage() . \"\n\"; }
-            // ALTER ROLE avec le nom explicite
-            try { \$pdo->exec(\"ALTER ROLE \\\"\$safeUser\\\" SET search_path TO public\"); echo \"ALTER ROLE search_path OK for: \$safeUser\n\"; } catch(Exception \$e) { echo 'ALTER ROLE: ' . \$e->getMessage() . \"\n\"; }
-            // Vérifier l'ACL du schéma public après le GRANT
-            \$acl = \$pdo->query(\"SELECT nspacl::text FROM pg_namespace WHERE nspname = 'public'\")->fetchColumn();
-            echo \"public schema ACL: \$acl\n\";
+            // Create a dedicated schema that noogo-db owns to bypass PG15 public schema restriction
+            // (noogo-db has CREATE ON DATABASE but not CREATE ON SCHEMA public in PG15)
+            try { \$pdo->exec('CREATE SCHEMA IF NOT EXISTS app'); echo \"CREATE SCHEMA app: OK\n\"; } catch(Exception \$e) { echo 'CREATE SCHEMA app: ' . \$e->getMessage() . \"\n\"; }
+            try { \$pdo->exec(\"GRANT ALL ON SCHEMA app TO \\\"\$safeUser\\\"\"); echo \"GRANT ALL ON SCHEMA app: OK\n\"; } catch(Exception \$e) { echo 'GRANT schema: ' . \$e->getMessage() . \"\n\"; }
+            try { \$pdo->exec(\"ALTER ROLE \\\"\$safeUser\\\" SET search_path TO app\"); echo \"ALTER ROLE search_path=app: OK\n\"; } catch(Exception \$e) { echo 'ALTER ROLE: ' . \$e->getMessage() . \"\n\"; }
+            // Also try granting on public as fallback
+            try { \$pdo->exec(\"GRANT CREATE ON SCHEMA public TO \\\"\$safeUser\\\"\"); echo \"GRANT CREATE public: OK\n\"; } catch(Exception \$e) { echo 'GRANT public: ' . \$e->getMessage() . \"\n\"; }
+            // Verify ACL
+            \$acl = \$pdo->query(\"SELECT nspacl::text FROM pg_namespace WHERE nspname = 'app'\")->fetchColumn();
+            echo \"app schema ACL: \$acl\n\";
             echo \"Connexion OK sur: \$dsn\n\";
             break;
         } catch(Exception \$e) {

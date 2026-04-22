@@ -95,7 +95,7 @@ return [
             'charset' => env('DB_CHARSET', 'utf8'),
             'prefix' => '',
             'prefix_indexes' => true,
-            'search_path' => 'public',
+            'search_path' => env('DB_SCHEMA', 'public'),
             // Neon.tech et la plupart des PostgreSQL cloud requièrent SSL
             'sslmode' => env('DB_SSLMODE', 'require'),
         ],
