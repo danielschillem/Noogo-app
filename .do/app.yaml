@@ -69,9 +69,8 @@ spec:
           value: "false"
           scope: RUN_TIME
 
-        # ⚠️ Remplacer par votre domaine DO après premier déploiement
         - key: APP_URL
-          value: https://noogo-app.ondigitalocean.app
+          value: https://noogo-e5ygx.ondigitalocean.app
           scope: RUN_TIME
 
         # Clé générée automatiquement au déploiement initial
@@ -96,7 +95,7 @@ spec:
 
         # FRONTEND_URL = même domaine (backend et frontend unifiés)
         - key: FRONTEND_URL
-          value: https://noogo-app.ondigitalocean.app
+          value: https://noogo-e5ygx.ondigitalocean.app
           scope: RUN_TIME
 
         - key: LOG_CHANNEL
