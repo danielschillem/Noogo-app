@@ -1,7 +1,7 @@
 ﻿import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Mail, Lock, Loader2, ShoppingBag, TrendingUp, Star, ArrowRight, AlertTriangle } from 'lucide-react';
+import { Loader2, ShoppingBag, TrendingUp, Star, ArrowRight, AlertTriangle } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -139,34 +139,23 @@ export default function LoginPage() {
               <label className="block text-sm font-semibold mb-1.5" style={{ color: '#374151' }}>
                 Adresse email
               </label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: '#94a3b8' }} />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                  placeholder="votre@email.com"
-                  className="input-pro pl-10"
-                />
-              </div>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                placeholder="votre@email.com"
+                className="input-pro"
+              />
             </div>
 
             {/* Password */}
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-sm font-semibold" style={{ color: '#374151' }}>
-                  Mot de passe
-                </label>
-                <Link to="/forgot-password"
-                  className="text-xs font-medium hover:underline"
-                  style={{ color: '#f97316' }}>
-                  Oublié ?
-                </Link>
-              </div>
+              <label className="block text-sm font-semibold mb-1.5" style={{ color: '#374151' }}>
+                Mot de passe
+              </label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: '#94a3b8' }} />
                 <input
                   type={showPw ? 'text' : 'password'}
                   value={password}
@@ -174,7 +163,7 @@ export default function LoginPage() {
                   required
                   autoComplete="current-password"
                   placeholder="••••••••"
-                  className="input-pro pl-10 pr-10"
+                  className="input-pro pr-14"
                 />
                 <button type="button" onClick={() => setShowPw(v => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium"
@@ -193,21 +182,18 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-center text-sm mt-6" style={{ color: '#64748b' }}>
+          <p className="text-center text-sm mt-4" style={{ color: '#64748b' }}>
+            <Link to="/forgot-password" className="text-xs font-medium hover:underline" style={{ color: '#f97316' }}>
+              Mot de passe oublié ?
+            </Link>
+          </p>
+
+          <p className="text-center text-sm mt-4" style={{ color: '#64748b' }}>
             Pas encore de compte ?{' '}
             <Link to="/register" className="font-semibold hover:underline" style={{ color: '#f97316' }}>
               Créer un compte
             </Link>
           </p>
-
-          {/* Demo hint */}
-          <div className="mt-6 px-4 py-3 rounded-xl text-center"
-            style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-            <p className="text-xs" style={{ color: '#64748b' }}>
-              <span className="font-semibold" style={{ color: '#374151' }}>Démo :</span>{' '}
-              owner@noogo.com / password
-            </p>
-          </div>
         </div>
       </div>
     </div>
