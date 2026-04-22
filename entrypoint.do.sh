@@ -100,9 +100,10 @@ php artisan storage:link 2>/dev/null || true
         sleep 2
     done
     echo "✅ [migration] DB prête, lancement des migrations..."
-    # ── Étape 1 : GRANT via doadmin si DB_ADMIN_URL est disponible ──────
+    # ── Étape 1 : Permissions via doadmin si DB_ADMIN_URL est disponible ──
     # DB_ADMIN_URL = credentials doadmin du cluster standalone DO
-    # Sans ce GRANT, noogo-db n'a pas CREATE ON SCHEMA public (PG15+)
+    # PG15+ : le schema public n'est plus ouvert par défaut.
+    # On transfère le ownership du schema à l'app user.
     php -r "
     \$adminUrl = getenv('DB_ADMIN_URL');
     if (!\$adminUrl) { echo \"DB_ADMIN_URL absent — GRANT ignoré\n\"; exit(0); }
@@ -115,19 +116,23 @@ php artisan storage:link 2>/dev/null || true
     \$dsn  = 'pgsql:host=' . \$host . ';port=' . \$port . ';dbname=' . \$db . ';sslmode=require';
     try {
         \$pdo = new PDO(\$dsn, \$user, \$pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-        echo \"Admin connecté: current_user=\" . \$pdo->query('SELECT current_user')->fetchColumn() . \"\n\";
+        \$cu = \$pdo->query('SELECT current_user')->fetchColumn();
+        echo \"Admin connecté: current_user=\$cu\n\";
         // Récupérer le nom de l'app user depuis DATABASE_URL
         \$appUrl  = getenv('DATABASE_URL') ?: getenv('DB_URL');
         \$appUser = parse_url(\$appUrl)['user'] ?? 'noogo-db';
         \$safe    = str_replace('\"', '', \$appUser);
+        // Transférer ownership du schema public à l'app user
+        \$pdo->exec(\"ALTER SCHEMA public OWNER TO \\\"\$safe\\\"\");
+        echo \"ALTER SCHEMA public OWNER TO \$safe : OK\n\";
+        // GRANTs supplémentaires
         \$pdo->exec(\"GRANT ALL PRIVILEGES ON DATABASE \\\"\$db\\\" TO \\\"\$safe\\\"\");
-        \$pdo->exec(\"GRANT CREATE ON SCHEMA public TO \\\"\$safe\\\"\");
-        \$pdo->exec(\"GRANT USAGE  ON SCHEMA public TO \\\"\$safe\\\"\");
+        \$pdo->exec(\"GRANT ALL ON SCHEMA public TO \\\"\$safe\\\"\");
         \$pdo->exec(\"ALTER ROLE \\\"\$safe\\\" SET search_path TO public\");
-        echo \"GRANT CREATE ON SCHEMA public → \$safe : OK\n\";
+        echo \"GRANT ALL ON SCHEMA public → \$safe : OK\n\";
     } catch (Exception \$e) { echo 'Admin GRANT failed: ' . \$e->getMessage() . \"\n\"; }
     " 2>&1
-    # ── Étape 2 : Migrations via le user applicatif (DATABASE_URL) ──────
+    # ── Étape 2 : Migrations ──────────────────────────────────────────
     php artisan config:clear 2>&1 | tail -1
     php artisan config:cache 2>&1 | tail -1
     php artisan migrate --force 2>&1 || echo "⚠️ [migration] Non-fatal"
