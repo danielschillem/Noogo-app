@@ -100,52 +100,34 @@ php artisan storage:link 2>/dev/null || true
         sleep 2
     done
     echo "✅ [migration] DB prête, lancement des migrations..."
-    # PostgreSQL 15 DO managed DB fix :
-    # Utilise le port direct 25061 (hors PgBouncer) pour les migrations
-    # PgBouncer (25060) fait DISCARD ALL entre transactions et peut resetter search_path
+    # ── Étape 1 : GRANT via doadmin si DB_ADMIN_URL est disponible ──────
+    # DB_ADMIN_URL = credentials doadmin du cluster standalone DO
+    # Sans ce GRANT, noogo-db n'a pas CREATE ON SCHEMA public (PG15+)
     php -r "
-    \$url  = getenv('DATABASE_URL') ?: getenv('DB_URL');
-    \$u    = parse_url(\$url);
-    \$db   = ltrim(\$u['path'] ?? '/postgres', '/');
-    \$user = \$u['user'] ?? '';
-    \$pass = \$u['pass'] ?? '';
-    \$host = \$u['host'];
-    \$ssl  = getenv('DB_SSLMODE') ?: 'require';
-    // Port 25061 = connexion directe PostgreSQL (pas PgBouncer)
-    \$dsn_direct = 'pgsql:host=' . \$host . ';port=25061;dbname=' . \$db . ';sslmode=' . \$ssl;
-    \$dsn_pooled = 'pgsql:host=' . \$host . ';port=' . (\$u['port'] ?? 5432) . ';dbname=' . \$db . ';sslmode=' . \$ssl;
-    \$opts = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION];
-    echo \"DB: \$db, user: \$user\n\";
-    foreach ([\$dsn_direct, \$dsn_pooled] as \$dsn) {
-        try {
-            \$pdo = new PDO(\$dsn, \$user, \$pass, \$opts);
-            // Diagnostic: vérifier le current_user réel côté PostgreSQL
-            \$row = \$pdo->query('SELECT current_user, session_user')->fetch(PDO::FETCH_ASSOC);
-            echo \"current_user=\" . \$row['current_user'] . \", session_user=\" . \$row['session_user'] . \"\n\";
-            // Utiliser le nom d'utilisateur EXPLICITE de l'URL (pas CURRENT_USER qui peut résoudre vers doadmin via PgBouncer)
-            \$safeUser = str_replace('\"', '', \$user);
-            // Fix regression: reset search_path back to public
-            try { \$pdo->exec(\"ALTER ROLE \\\"\$safeUser\\\" SET search_path TO public\"); echo \"ALTER ROLE search_path=public: OK\n\"; } catch(Exception \$e) { echo 'ALTER ROLE: ' . \$e->getMessage() . \"\n\"; }
-            // Deep diagnostics to understand exactly what noogo-db can do
-            \$rows = \$pdo->query(\"
-                SELECT 'db_owner'       AS k, pg_catalog.pg_get_userbyid(datdba)::text AS v FROM pg_database WHERE datname = current_database()
-                UNION ALL SELECT 'has_create_public', has_schema_privilege(current_user, 'public', 'CREATE')::text
-                UNION ALL SELECT 'is_pg_db_owner',   pg_has_role(current_user, 'pg_database_owner', 'MEMBER')::text
-                UNION ALL SELECT 'rolcreatedb',       (SELECT rolcreatedb::text FROM pg_roles WHERE rolname = current_user)
-                UNION ALL SELECT 'rolinherit',        (SELECT rolinherit::text FROM pg_roles WHERE rolname = current_user)
-            \")->fetchAll(PDO::FETCH_KEY_PAIR);
-            foreach (\$rows as \$k => \$v) { echo \"\$k=\$v\n\"; }
-            // List all schemas noogo-db can CREATE in
-            \$schemas = \$pdo->query(\"SELECT nspname FROM pg_namespace WHERE has_schema_privilege(current_user, nspname, 'CREATE')\")->fetchAll(PDO::FETCH_COLUMN);
-            echo 'schemas_with_create=' . implode(',', \$schemas) . \"\n\";
-            echo \"Connexion OK sur: \$dsn\n\";
-            break;
-        } catch(Exception \$e) {
-            echo 'Connexion failed (' . \$dsn . '): ' . \$e->getMessage() . \"\n\";
-        }
-    }
+    \$adminUrl = getenv('DB_ADMIN_URL');
+    if (!\$adminUrl) { echo \"DB_ADMIN_URL absent — GRANT ignoré\n\"; exit(0); }
+    \$a    = parse_url(\$adminUrl);
+    \$host = \$a['host'];
+    \$port = \$a['port'] ?? 5432;
+    \$db   = ltrim(\$a['path'] ?? '/defaultdb', '/');
+    \$user = \$a['user'] ?? '';
+    \$pass = \$a['pass'] ?? '';
+    \$dsn  = 'pgsql:host=' . \$host . ';port=' . \$port . ';dbname=' . \$db . ';sslmode=require';
+    try {
+        \$pdo = new PDO(\$dsn, \$user, \$pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+        echo \"Admin connecté: current_user=\" . \$pdo->query('SELECT current_user')->fetchColumn() . \"\n\";
+        // Récupérer le nom de l'app user depuis DATABASE_URL
+        \$appUrl  = getenv('DATABASE_URL') ?: getenv('DB_URL');
+        \$appUser = parse_url(\$appUrl)['user'] ?? 'noogo-db';
+        \$safe    = str_replace('\"', '', \$appUser);
+        \$pdo->exec(\"GRANT ALL PRIVILEGES ON DATABASE \\\"\$db\\\" TO \\\"\$safe\\\"\");
+        \$pdo->exec(\"GRANT CREATE ON SCHEMA public TO \\\"\$safe\\\"\");
+        \$pdo->exec(\"GRANT USAGE  ON SCHEMA public TO \\\"\$safe\\\"\");
+        \$pdo->exec(\"ALTER ROLE \\\"\$safe\\\" SET search_path TO public\");
+        echo \"GRANT CREATE ON SCHEMA public → \$safe : OK\n\";
+    } catch (Exception \$e) { echo 'Admin GRANT failed: ' . \$e->getMessage() . \"\n\"; }
     " 2>&1
-    # Clear le cache config pour forcer la relecture depuis .env
+    # ── Étape 2 : Migrations via le user applicatif (DATABASE_URL) ──────
     php artisan config:clear 2>&1 | tail -1
     php artisan config:cache 2>&1 | tail -1
     php artisan migrate --force 2>&1 || echo "⚠️ [migration] Non-fatal"

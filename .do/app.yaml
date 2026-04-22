@@ -79,12 +79,12 @@ spec:
           type: SECRET
           scope: RUN_TIME
 
-        # Base de données — DO injecte DATABASE_URL automatiquement
+        # Base de données — cluster standalone DO (DATABASE_URL et DB_ADMIN_URL injectés via API)
         - key: DB_CONNECTION
           value: pgsql
           scope: RUN_TIME
 
-        # Lien vers la BD managée (DO résout automatiquement la variable)
+        # DATABASE_URL = user applicatif noogo-db (injecté via API comme SECRET)
         - key: DATABASE_URL
           value: ${noogo-db.DATABASE_URL}
           scope: RUN_TIME
