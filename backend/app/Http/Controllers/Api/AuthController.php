@@ -311,8 +311,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Code de réinitialisation généré',
-            'data' => ['reset_token' => $token],
+            'message' => 'Si ce compte existe, un code de réinitialisation a été envoyé',
         ]);
     }
 

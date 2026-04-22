@@ -70,9 +70,9 @@ class DeliveryTrackingService {
   String? _currentChannelName;
   String? _authToken;
 
-  final StreamController<DriverLocation> _locationController =
+  StreamController<DriverLocation> _locationController =
       StreamController<DriverLocation>.broadcast();
-  final StreamController<DeliveryStatusEvent> _statusController =
+  StreamController<DeliveryStatusEvent> _statusController =
       StreamController<DeliveryStatusEvent>.broadcast();
 
   Stream<DriverLocation> get driverLocationStream => _locationController.stream;
@@ -83,6 +83,7 @@ class DeliveryTrackingService {
 
   /// Démarre le tracking d'une livraison
   Future<void> startTracking(int orderId, {String? authToken}) async {
+    _ensureControllersOpen();
     _authToken = authToken;
     final channelName = 'delivery.$orderId';
 
@@ -206,6 +207,16 @@ class DeliveryTrackingService {
       AppLogger.error('DeliveryTracking: impossible d\'obtenir la position',
           error: e);
       return null;
+    }
+  }
+
+  /// Recrée les StreamControllers si fermés (singleton safety)
+  void _ensureControllersOpen() {
+    if (_locationController.isClosed) {
+      _locationController = StreamController<DriverLocation>.broadcast();
+    }
+    if (_statusController.isClosed) {
+      _statusController = StreamController<DeliveryStatusEvent>.broadcast();
     }
   }
 
