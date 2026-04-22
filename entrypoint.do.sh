@@ -40,8 +40,6 @@ fi
 [ -n "$DB_USERNAME" ]       && echo "DB_USERNAME=$DB_USERNAME"       >> "$ENV_FILE"
 [ -n "$DB_PASSWORD" ]       && echo "DB_PASSWORD=$DB_PASSWORD"       >> "$ENV_FILE"
 [ -n "$DB_SSLMODE" ]        && echo "DB_SSLMODE=$DB_SSLMODE"         >> "$ENV_FILE"
-# Schéma dédié — évite le problème de permissions PostgreSQL 15 sur 'public'
-echo "DB_SCHEMA=noogo"                                                >> "$ENV_FILE"
 
 # App
 [ -n "$FRONTEND_URL" ]      && echo "FRONTEND_URL=$FRONTEND_URL"     >> "$ENV_FILE"
@@ -128,8 +126,7 @@ php artisan storage:link 2>/dev/null || true
         }
     }
     " 2>&1
-    # Recache la config avec le nouveau DB_SCHEMA
-    php artisan config:cache 2>&1 | tail -1
+
     php artisan migrate --force 2>&1 || echo "⚠️ [migration] Non-fatal"
     php artisan db:seed --class=AdminUsersSeeder --force 2>&1 || true
     echo "✅ [migration] Terminé"
