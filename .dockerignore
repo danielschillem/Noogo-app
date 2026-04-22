@@ -60,7 +60,6 @@ ROADMAP.md
 PROJECT_README.md
 composer.json
 composer.lock
-render.yaml
 render-deploy.ps1
 build_release.sh
 deploy.sh
