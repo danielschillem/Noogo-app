@@ -6,8 +6,8 @@ return [
     |--------------------------------------------------------------------------
     | Cross-Origin Resource Sharing (CORS)
     |--------------------------------------------------------------------------
-    | Autorise le dashboard Netlify et l'app Flutter à appeler l'API Render.
-    | Modifier FRONTEND_URL dans les variables d'environnement Render.
+    | Autorise le dashboard et l'app Flutter à appeler l'API Digital Ocean.
+    | Modifier FRONTEND_URL dans les variables d'environnement.
     */
 
     'paths' => ['api/*', 'sanctum/csrf-cookie'],
@@ -15,8 +15,8 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        env('FRONTEND_URL', 'https://noogo-app.netlify.app'),
-        'https://noogo-app.netlify.app',
+        env('FRONTEND_URL', 'https://dashboard-noogo.quickdev-it.com'),
+        'https://dashboard-noogo.quickdev-it.com',
         'http://localhost:5173',
         'http://localhost:3000',
         'http://localhost:8080',

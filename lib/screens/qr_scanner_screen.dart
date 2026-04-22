@@ -280,7 +280,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                                       final trimmed = val.trim();
                                       if (trimmed.isNotEmpty && mounted) {
                                         Navigator.of(context).pop(
-                                            'https://noogo-app.netlify.app/restaurant/$trimmed');
+                                            'https://dashboard-noogo.quickdev-it.com/restaurant/$trimmed');
                                       }
                                     },
                                   ),
@@ -298,7 +298,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                                         _manualController.text.trim();
                                     if (trimmed.isNotEmpty && mounted) {
                                       Navigator.of(context).pop(
-                                          'https://noogo-app.netlify.app/restaurant/$trimmed');
+                                          'https://dashboard-noogo.quickdev-it.com/restaurant/$trimmed');
                                     }
                                   },
                                   child: const Text('OK'),

@@ -47,17 +47,22 @@ export default function LoginPage() {
 
       {/* â”€â”€ Left panel â€” branding (hidden on mobile) â”€â”€ */}
       <div className="hidden lg:flex lg:w-[52%] relative overflow-hidden"
-        style={{ background: 'linear-gradient(145deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)' }}>
+        style={{
+          backgroundImage: 'url(/login-bg.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}>
+
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(145deg, rgba(15,23,42,0.75) 0%, rgba(30,27,75,0.65) 50%, rgba(15,23,42,0.80) 100%)' }} />
 
         {/* Decorative blobs */}
         <div className="absolute top-0 left-0 w-96 h-96 rounded-full opacity-20 blur-3xl"
           style={{ background: 'radial-gradient(circle,#f97316,transparent)', transform: 'translate(-30%,-30%)' }} />
         <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full opacity-15 blur-3xl"
           style={{ background: 'radial-gradient(circle,#8b5cf6,transparent)', transform: 'translate(30%,30%)' }} />
-        <div className="absolute top-1/2 left-1/2 w-64 h-64 rounded-full opacity-10 blur-2xl"
-          style={{ background: 'radial-gradient(circle,#3b82f6,transparent)', transform: 'translate(-50%,-50%)' }} />
 
-        <div className="relative flex flex-col justify-between p-12 w-full">
+        <div className="relative flex flex-col justify-between p-12 w-full z-10">
           {/* Logo */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center"

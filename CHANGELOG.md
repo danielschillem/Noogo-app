@@ -74,7 +74,7 @@ Versioning selon [Semantic Versioning](https://semver.org/).
 - **SEC-003** : Endpoint `storeMobile` sécurisé (validation regex téléphone/table, limite 50 plats, détection doublons)
 - **SEC-004** : Migration `email NOT NULL` → `nullable()` (crash silencieux en production)
 - **SEC-005** : Policies Laravel ownership (Restaurant, Dish, Category, FlashInfo)
-- **SEC-006** : CORS restreint au domaine Netlify exact via pattern regex
+- **SEC-006** : CORS restreint au domaine dashboard exact via pattern regex
 - **PERF-002** : Machine d'état `OrderSubmitState` (idle / submitting / success / error)
 - **PERF-003** : Logging images via `AppLogger` (remplacement des `debugPrint` bruts)
 - Fix `.env.testing` manquant → `file_get_contents` PHP warning sur tous les tests Laravel (exit code 1)
@@ -113,7 +113,7 @@ Versioning selon [Semantic Versioning](https://semver.org/).
 ### Ajouté
 - Application Flutter complète avec 11 écrans
 - Backend Laravel 11 avec API REST
-- Dashboard React (Netlify)
+- Dashboard React (Digital Ocean)
 - Intégration Pusher (Flutter)
 - Scanner QR pour identification restaurant
 - Panier + passage de commande (espèces / Mobile Money)
