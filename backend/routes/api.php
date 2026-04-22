@@ -143,6 +143,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Livraisons — accès protégé général
     Route::prefix('deliveries')->group(function () {
+        Route::get('/my-active', [DeliveryController::class, 'myActive']);
         Route::get('/my-history', [DeliveryController::class, 'myHistory']);
         Route::get('/{delivery}', [DeliveryController::class, 'show']);
         Route::post('/{delivery}/assign', [DeliveryController::class, 'assign']);
@@ -152,6 +153,12 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/{delivery}/driver-location', [DeliveryController::class, 'updateDriverLocation'])
                 ->middleware('throttle:60,1');
         });
+    });
+
+    // Livreur connecté — profil & disponibilité
+    Route::prefix('drivers')->group(function () {
+        Route::get('/me', [DeliveryController::class, 'myProfile']);
+        Route::put('/me/status', [DeliveryController::class, 'updateMyStatus']);
     });
 });
 

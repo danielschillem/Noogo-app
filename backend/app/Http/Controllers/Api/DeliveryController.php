@@ -46,27 +46,27 @@ class DeliveryController extends Controller
         }
 
         $validated = $request->validate([
-            'client_lat'     => 'nullable|numeric|between:-90,90',
-            'client_lng'     => 'nullable|numeric|between:-180,180',
+            'client_lat' => 'nullable|numeric|between:-90,90',
+            'client_lng' => 'nullable|numeric|between:-180,180',
             'client_address' => 'nullable|string|max:255',
-            'fee'            => 'nullable|numeric|min:0',
-            'notes'          => 'nullable|string|max:500',
+            'fee' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string|max:500',
         ]);
 
         $delivery = Delivery::create([
-            'order_id'       => $order->id,
-            'status'         => 'pending_assignment',
-            'client_lat'     => $validated['client_lat'] ?? null,
-            'client_lng'     => $validated['client_lng'] ?? null,
+            'order_id' => $order->id,
+            'status' => 'pending_assignment',
+            'client_lat' => $validated['client_lat'] ?? null,
+            'client_lng' => $validated['client_lng'] ?? null,
             'client_address' => $validated['client_address'] ?? null,
-            'fee'            => $validated['fee'] ?? 0,
-            'notes'          => $validated['notes'] ?? null,
+            'fee' => $validated['fee'] ?? 0,
+            'notes' => $validated['notes'] ?? null,
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Livraison créée, en attente d\'assignation.',
-            'data'    => $delivery->load('driver'),
+            'data' => $delivery->load('driver'),
         ], 201);
     }
 
@@ -104,8 +104,8 @@ class DeliveryController extends Controller
         DB::transaction(function () use ($delivery, $driver) {
             $delivery->update([
                 'delivery_driver_id' => $driver->id,
-                'status'             => 'assigned',
-                'assigned_at'        => now(),
+                'status' => 'assigned',
+                'assigned_at' => now(),
             ]);
             $driver->markBusy();
         });
@@ -127,7 +127,7 @@ class DeliveryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Livreur assigné avec succès.',
-            'data'    => $delivery,
+            'data' => $delivery,
         ]);
     }
 
@@ -141,7 +141,7 @@ class DeliveryController extends Controller
         $this->authorize('updateStatus', $delivery);
 
         $validated = $request->validate([
-            'status'         => 'required|string|in:picked_up,on_way,delivered,failed',
+            'status' => 'required|string|in:picked_up,on_way,delivered,failed',
             'failure_reason' => 'required_if:status,failed|nullable|string|max:500',
         ]);
 
@@ -176,7 +176,7 @@ class DeliveryController extends Controller
             $clientUser = $delivery->order?->user;
             if ($clientUser?->fcm_token) {
                 $messages = [
-                    'on_way'    => ['Le livreur est en route !', 'Votre commande arrive bientôt.'],
+                    'on_way' => ['Le livreur est en route !', 'Votre commande arrive bientôt.'],
                     'delivered' => ['Commande livrée !', 'Votre commande a été livrée avec succès. Bon appétit !'],
                 ];
                 [$title, $body] = $messages[$newStatus];
@@ -192,7 +192,7 @@ class DeliveryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Statut mis à jour.',
-            'data'    => $delivery,
+            'data' => $delivery,
         ]);
     }
 
@@ -218,8 +218,8 @@ class DeliveryController extends Controller
         ]);
 
         $delivery->update([
-            'driver_lat'         => $validated['lat'],
-            'driver_lng'         => $validated['lng'],
+            'driver_lat' => $validated['lat'],
+            'driver_lng' => $validated['lng'],
             'driver_location_at' => now(),
         ]);
 
@@ -251,7 +251,7 @@ class DeliveryController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $query->paginate(20),
+            'data' => $query->paginate(20),
         ]);
     }
 
@@ -264,7 +264,7 @@ class DeliveryController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $delivery->load(['order.items.dish', 'order.restaurant', 'driver']),
+            'data' => $delivery->load(['order.items.dish', 'order.restaurant', 'driver']),
         ]);
     }
 
@@ -281,7 +281,7 @@ class DeliveryController extends Controller
             ->when($request->search, fn($q) => $q->where(function ($q) use ($request) {
                 $search = '%' . $request->search . '%';
                 $q->where('name', 'like', $search)
-                  ->orWhere('phone', 'like', $search);
+                    ->orWhere('phone', 'like', $search);
             }))
             ->latest()
             ->paginate(20);
@@ -295,9 +295,9 @@ class DeliveryController extends Controller
     public function storeDriver(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'name'    => 'required|string|max:100',
-            'phone'   => 'required|string|max:20',
-            'zone'    => 'nullable|string|max:100',
+            'name' => 'required|string|max:100',
+            'phone' => 'required|string|max:20',
+            'zone' => 'nullable|string|max:100',
             'user_id' => 'nullable|exists:users,id',
         ]);
 
@@ -306,7 +306,7 @@ class DeliveryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Livreur créé avec succès.',
-            'data'    => $driver,
+            'data' => $driver,
         ], 201);
     }
 
@@ -316,9 +316,9 @@ class DeliveryController extends Controller
     public function updateDriver(Request $request, DeliveryDriver $driver): JsonResponse
     {
         $validated = $request->validate([
-            'name'   => 'sometimes|string|max:100',
-            'phone'  => 'sometimes|string|max:20',
-            'zone'   => 'nullable|string|max:100',
+            'name' => 'sometimes|string|max:100',
+            'phone' => 'sometimes|string|max:20',
+            'zone' => 'nullable|string|max:100',
             'status' => 'sometimes|in:available,busy,offline',
         ]);
 
@@ -335,6 +335,31 @@ class DeliveryController extends Controller
         $driver->delete();
 
         return response()->json(['success' => true, 'message' => 'Livreur supprimé.']);
+    }
+
+    // ─── Livraisons actives du livreur connecté ────────────────────────────
+
+    /**
+     * GET /api/deliveries/my-active
+     *
+     * Retourne les livraisons en cours du livreur (non terminées).
+     */
+    public function myActive(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $driver = DeliveryDriver::where('user_id', $user->id)->first();
+
+        if (!$driver) {
+            return response()->json(['success' => true, 'data' => []]);
+        }
+
+        $deliveries = Delivery::with(['order.restaurant', 'order.items.dish'])
+            ->where('delivery_driver_id', $driver->id)
+            ->whereNotIn('status', ['delivered', 'failed'])
+            ->latest()
+            ->get();
+
+        return response()->json(['success' => true, 'data' => $deliveries]);
     }
 
     // ─── Historique livreur (livreur connecté) ───────────────────────────────
@@ -358,5 +383,63 @@ class DeliveryController extends Controller
             ->paginate(20);
 
         return response()->json(['success' => true, 'data' => $deliveries]);
+    }
+
+    // ─── Profil & statut du livreur connecté ────────────────────────────────
+
+    /**
+     * GET /api/drivers/me
+     */
+    public function myProfile(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $driver = DeliveryDriver::where('user_id', $user->id)->first();
+
+        if (!$driver) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Aucun profil livreur trouvé.',
+            ], 404);
+        }
+
+        return response()->json(['success' => true, 'data' => $driver]);
+    }
+
+    /**
+     * PUT /api/drivers/me/status
+     */
+    public function updateMyStatus(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $driver = DeliveryDriver::where('user_id', $user->id)->first();
+
+        if (!$driver) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Aucun profil livreur trouvé.',
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'status' => 'required|in:available,offline',
+        ]);
+
+        // Ne pas passer offline si livraison en cours
+        if ($validated['status'] === 'offline') {
+            $hasActive = Delivery::where('delivery_driver_id', $driver->id)
+                ->whereNotIn('status', ['delivered', 'failed'])
+                ->exists();
+
+            if ($hasActive) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Impossible de passer hors ligne avec une livraison en cours.',
+                ], 422);
+            }
+        }
+
+        $driver->update(['status' => $validated['status']]);
+
+        return response()->json(['success' => true, 'data' => $driver]);
     }
 }

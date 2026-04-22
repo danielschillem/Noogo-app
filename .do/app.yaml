@@ -1,0 +1,154 @@
+# =============================================================
+# DigitalOcean App Platform — Noogo
+# Backend Laravel (PHP-FPM) + Frontend React servis dans le même
+# conteneur Docker → un seul webservice, un seul domaine.
+#
+# Documentation : https://docs.digitalocean.com/products/app-platform/
+# Déploiement   : doctl apps create --spec .do/app.yaml
+#              ou : DO Console > Apps > New > GitHub > (auto-détecté)
+# =============================================================
+
+# App ID DO : 1c0cd0a8-ee73-4efd-aa41-5906cf04644d
+# Console   : https://cloud.digitalocean.com/apps/1c0cd0a8-ee73-4efd-aa41-5906cf04644d
+spec:
+  name: noogo
+  region: fra           # Frankfurt
+
+  # ── Base de données managée PostgreSQL ──────────────────────
+  databases:
+    - name: noogo-db
+      engine: PG
+      version: "16"
+      # dev-database = plan gratuit (partagé, non-production)
+      # Pour la production : remplacer par db-s-1vcpu-1gb
+      size: db-s-dev-database
+      num_nodes: 1
+
+  # ── Service web unique (backend + frontend) ─────────────────
+  services:
+    - name: noogo-app
+      # Dockerfile à la racine du dépôt
+      dockerfile_path: Dockerfile
+      source_dir: /
+
+      # ── Source GitHub ──────────────────────────────────────
+      github:
+        repo: danielschillem/Noogo-app
+        branch: develop
+        deploy_on_push: true
+
+      # ── Ressources ────────────────────────────────────────
+      # apps-s-1vcpu-0.5gb = Basic (512 MB RAM, 1 vCPU) — dev
+      # apps-s-1vcpu-1gb   = Basic (1 GB RAM, 1 vCPU) — prod
+      instance_size_slug: apps-s-1vcpu-0.5gb
+      instance_count: 1
+
+      # ── Réseau ────────────────────────────────────────────
+      http_port: 8080
+
+      # ── Health check ──────────────────────────────────────
+      health_check:
+        http_path: /healthcheck
+        initial_delay_seconds: 30
+        period_seconds: 30
+        timeout_seconds: 10
+        success_threshold: 1
+        failure_threshold: 3
+
+      # ── Variables d'environnement ──────────────────────────
+      envs:
+        - key: APP_NAME
+          value: Noogo
+          scope: RUN_TIME
+
+        - key: APP_ENV
+          value: production
+          scope: RUN_TIME
+
+        - key: APP_DEBUG
+          value: "false"
+          scope: RUN_TIME
+
+        # ⚠️ Remplacer par votre domaine DO après premier déploiement
+        - key: APP_URL
+          value: https://noogo-app.ondigitalocean.app
+          scope: RUN_TIME
+
+        # Clé générée automatiquement au déploiement initial
+        - key: APP_KEY
+          value: base64:Sa+WzC3jRM9FlvjIg8OgSCvaZ6MGBcitznNj9AS4U3A=
+          type: SECRET
+          scope: RUN_TIME
+
+        # Base de données — DO injecte DATABASE_URL automatiquement
+        - key: DB_CONNECTION
+          value: pgsql
+          scope: RUN_TIME
+
+        # Lien vers la BD managée (DO résout automatiquement la variable)
+        - key: DATABASE_URL
+          value: ${noogo-db.DATABASE_URL}
+          scope: RUN_TIME
+
+        - key: DB_SSLMODE
+          value: require
+          scope: RUN_TIME
+
+        # FRONTEND_URL = même domaine (backend et frontend unifiés)
+        - key: FRONTEND_URL
+          value: https://noogo-app.ondigitalocean.app
+          scope: RUN_TIME
+
+        - key: LOG_CHANNEL
+          value: stderr
+          scope: RUN_TIME
+
+        - key: SESSION_DRIVER
+          value: cookie
+          scope: RUN_TIME
+
+        - key: CACHE_STORE
+          value: file
+          scope: RUN_TIME
+
+        # ── Pusher (optionnel — temps réel) ─────────────────
+        # Décommenter si vous utilisez Pusher
+        # - key: PUSHER_APP_ID
+        #   value: VOTRE_PUSHER_APP_ID
+        #   type: SECRET
+        #   scope: RUN_TIME
+        # - key: PUSHER_APP_KEY
+        #   value: VOTRE_PUSHER_APP_KEY
+        #   scope: RUN_TIME
+        # - key: PUSHER_APP_SECRET
+        #   value: VOTRE_PUSHER_APP_SECRET
+        #   type: SECRET
+        #   scope: RUN_TIME
+        # - key: PUSHER_APP_CLUSTER
+        #   value: eu
+        #   scope: RUN_TIME
+        # - key: BROADCAST_CONNECTION
+        #   value: pusher
+        #   scope: RUN_TIME
+
+        # ── Mail (optionnel) ─────────────────────────────────
+        # - key: MAIL_MAILER
+        #   value: smtp
+        #   scope: RUN_TIME
+        # - key: MAIL_HOST
+        #   value: smtp.mailgun.org
+        #   scope: RUN_TIME
+        # - key: MAIL_PORT
+        #   value: "587"
+        #   scope: RUN_TIME
+        # - key: MAIL_USERNAME
+        #   value: VOTRE_USERNAME
+        #   type: SECRET
+        #   scope: RUN_TIME
+        # - key: MAIL_PASSWORD
+        #   value: VOTRE_PASSWORD
+        #   type: SECRET
+        #   scope: RUN_TIME
+        # - key: MAIL_FROM_ADDRESS
+        #   value: noreply@noogo.app
+        #   scope: RUN_TIME

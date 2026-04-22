@@ -13,9 +13,10 @@ import {
   WifiOff,
   AlertCircle,
 } from 'lucide-react';
-import { ordersApi, restaurantsApi } from '../../services/api';
+import { ordersApi, restaurantsApi, myRestaurantsApi } from '../../services/api';
 import { usePusher } from '../../hooks/usePusher';
 import type { Order, OrderStatus, Restaurant } from '../../types';
+import { useAuth } from '../../context/AuthContext';
 
 /* ── Status config ── */
 const KDS_STATUSES: { status: string; label: string; color: string; bg: string; border: string; next?: OrderStatus }[] = [
@@ -181,11 +182,13 @@ export default function KitchenPage() {
   const { id, restaurantId: paramRestaurantId } = useParams<{ id?: string; restaurantId?: string }>();
   const restaurantId = id ?? paramRestaurantId;
   const rid = Number(restaurantId);
+  const { user } = useAuth();
 
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [accessDenied, setAccessDenied] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [pusherConnected, setPusherConnected] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(new Date());
@@ -232,22 +235,50 @@ export default function KitchenPage() {
     }
   }, [rid]);
 
-  /* ── Initial load ── */
+  /* ── Initial load + permission check (DEL-K03) ── */
   useEffect(() => {
     if (!rid) return;
-    Promise.all([
-      restaurantsApi.getById(rid),
-      ordersApi.getAll(rid, { status: KITCHEN_STATUSES.join(','), per_page: 100 }),
-    ])
-      .then(([rRes, oRes]) => {
+
+    const init = async () => {
+      try {
+        // DEL-K03 : Vérifier la permission kitchen_display pour les non-admins
+        if (!user?.is_admin) {
+          const myRestosResp = await myRestaurantsApi.get();
+          const myRestos: { id: number; permissions?: string[]; role?: string }[] = myRestosResp.data.data ?? [];
+          const match = myRestos.find(r => r.id === rid);
+          if (!match) {
+            setAccessDenied(true);
+            setLoading(false);
+            return;
+          }
+          // Owner/manager has implicit access, others need kitchen_display
+          if (match.role !== 'owner' && match.role !== 'manager') {
+            const hasKitchenPerm = match.permissions?.includes('kitchen_display') ?? false;
+            if (!hasKitchenPerm) {
+              setAccessDenied(true);
+              setLoading(false);
+              return;
+            }
+          }
+        }
+
+        const [rRes, oRes] = await Promise.all([
+          restaurantsApi.getById(rid),
+          ordersApi.getAll(rid, { status: KITCHEN_STATUSES.join(','), per_page: 100 }),
+        ]);
         setRestaurant(rRes.data);
         const data: Order[] = oRes.data?.data ?? oRes.data ?? [];
         setOrders(data.filter(o => KITCHEN_STATUSES.includes(o.status)));
         setLastRefresh(new Date());
-      })
-      .catch(() => setError('Erreur lors du chargement'))
-      .finally(() => setLoading(false));
-  }, [rid]);
+      } catch {
+        setError('Erreur lors du chargement');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    init();
+  }, [rid, user]);
 
   /* ── Polling 15s ── */
   useEffect(() => {
@@ -297,6 +328,27 @@ export default function KitchenPage() {
   }, {});
 
   /* ── Render ── */
+  if (accessDenied) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f172a' }}>
+        <div className="flex flex-col items-center gap-4 text-center px-6">
+          <AlertCircle className="h-16 w-16" style={{ color: '#dc2626' }} />
+          <h2 className="text-xl font-bold" style={{ color: '#f1f5f9' }}>Accès refusé</h2>
+          <p style={{ color: '#94a3b8' }}>
+            Vous n'avez pas la permission <strong>kitchen_display</strong> pour accéder à cet écran cuisine.
+          </p>
+          <Link
+            to={`/restaurants/${rid}`}
+            className="mt-4 px-6 py-2.5 rounded-xl text-sm font-medium"
+            style={{ background: '#f97316', color: 'white' }}
+          >
+            Retour au restaurant
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f172a' }}>
