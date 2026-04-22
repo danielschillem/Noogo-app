@@ -4,41 +4,95 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 /**
- * Service d'envoi de notifications push Firebase Cloud Messaging (v1 HTTP API).
+ * Service FCM v1 HTTP API avec OAuth2 (service account).
  *
- * Utilise le SDK HTTP de Laravel pour appeler l'API FCM v1.
- * Configuration dans .env :
- *   FCM_SERVER_KEY=<votre_server_key_legacy>   (simple, recommandé pour démarrer)
+ * Configuration .env :
+ *   FIREBASE_PROJECT_ID=noogo-568e6
+ *   FIREBASE_CREDENTIALS_JSON=<contenu JSON du service account encodé en base64>
  *   ou
- *   GOOGLE_APPLICATION_CREDENTIALS=<chemin_vers_service_account.json>  (v1 OAuth2)
- *
- * Pour commencer rapidement : utiliser la clé serveur legacy (console Firebase
- * → Paramètres du projet → Cloud Messaging → Clé du serveur).
+ *   GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
  */
 class FcmNotificationService
 {
-    private string $serverKey;
-    private string $fcmUrl = 'https://fcm.googleapis.com/fcm/send';
+    private string $projectId;
 
     public function __construct()
     {
-        $this->serverKey = config('services.fcm.server_key', env('FCM_SERVER_KEY', ''));
+        $this->projectId = config('services.fcm.project_id', env('FIREBASE_PROJECT_ID', ''));
+    }
+
+    /**
+     * Obtient un access token OAuth2 via le service account, mis en cache 50 min.
+     */
+    private function getAccessToken(): ?string
+    {
+        return Cache::remember('fcm_access_token', 3000, function () {
+            $credentials = $this->loadCredentials();
+            if (!$credentials)
+                return null;
+
+            try {
+                $now = time();
+                $header = $this->base64UrlEncode(json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
+                $payload = $this->base64UrlEncode(json_encode([
+                    'iss' => $credentials['client_email'],
+                    'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
+                    'aud' => 'https://oauth2.googleapis.com/token',
+                    'iat' => $now,
+                    'exp' => $now + 3600,
+                ]));
+
+                $key = openssl_pkey_get_private($credentials['private_key']);
+                openssl_sign("$header.$payload", $signature, $key, OPENSSL_ALGO_SHA256);
+                $jwt = "$header.$payload." . $this->base64UrlEncode($signature);
+
+                $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
+                    'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                    'assertion' => $jwt,
+                ]);
+
+                if ($response->successful()) {
+                    return $response->json('access_token');
+                }
+
+                Log::error('FCM OAuth2 token error', ['body' => $response->body()]);
+                return null;
+            } catch (\Throwable $e) {
+                Log::error('FCM OAuth2 exception: ' . $e->getMessage());
+                return null;
+            }
+        });
+    }
+
+    private function loadCredentials(): ?array
+    {
+        // Option 1: Base64-encoded JSON in env
+        $b64 = env('FIREBASE_CREDENTIALS_JSON');
+        if ($b64) {
+            $decoded = json_decode(base64_decode($b64), true);
+            if ($decoded)
+                return $decoded;
+        }
+
+        // Option 2: File path
+        $path = env('GOOGLE_APPLICATION_CREDENTIALS');
+        if ($path && file_exists($path)) {
+            return json_decode(file_get_contents($path), true);
+        }
+
+        return null;
+    }
+
+    private function base64UrlEncode(string $data): string
+    {
+        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
     }
 
     // ─── Envoi ciblé (token individuel) ─────────────────────────────────────
 
-    /**
-     * Envoie une notification à un appareil spécifique via son FCM token.
-     *
-     * @param string $token       FCM device token
-     * @param string $title       Titre de la notification
-     * @param string $body        Corps de la notification
-     * @param array  $data        Données supplémentaires (optionnel)
-     * @param string $sound       Son ('default' ou nom de fichier)
-     * @return bool
-     */
     public function sendToToken(
         string $token,
         string $title,
@@ -46,49 +100,65 @@ class FcmNotificationService
         array $data = [],
         string $sound = 'default'
     ): bool {
-        if (empty($this->serverKey)) {
-            Log::warning('FCM: FCM_SERVER_KEY non configuré — notification ignorée');
+        if (empty($this->projectId)) {
+            Log::warning('FCM: FIREBASE_PROJECT_ID non configuré — notification ignorée');
             return false;
         }
 
-        if (empty($token)) {
+        if (empty($token))
+            return false;
+
+        $accessToken = $this->getAccessToken();
+        if (!$accessToken) {
+            Log::warning('FCM: impossible d\'obtenir un access token OAuth2');
             return false;
         }
 
         try {
             $payload = [
-                'to' => $token,
-                'notification' => [
-                    'title' => $title,
-                    'body' => $body,
-                    'sound' => $sound,
-                    'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
+                'message' => [
+                    'token' => $token,
+                    'notification' => [
+                        'title' => $title,
+                        'body' => $body,
+                    ],
+                    'android' => [
+                        'priority' => 'high',
+                        'notification' => [
+                            'sound' => $sound,
+                            'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
+                        ],
+                    ],
+                    'data' => array_map('strval', $data),
                 ],
-                'data' => $data,
-                'priority' => 'high',
-                'content_available' => true,
             ];
 
-            $response = Http::withHeaders([
-                'Authorization' => 'key=' . $this->serverKey,
-                'Content-Type' => 'application/json',
-            ])->post($this->fcmUrl, $payload);
+            $url = "https://fcm.googleapis.com/v1/projects/{$this->projectId}/messages:send";
+            $response = Http::withToken($accessToken)->post($url, $payload);
 
-            if ($response->successful()) {
-                $json = $response->json();
-                if (($json['failure'] ?? 0) > 0) {
-                    Log::warning('FCM token invalide ou expiré', [
-                        'token' => substr($token, 0, 20) . '...',
-                        'result' => $json['results'][0] ?? [],
-                    ]);
-                    return false;
-                }
+            if ($response->successful())
                 return true;
+
+            if ($response->status() === 404 || $response->status() === 400) {
+                Log::warning('FCM token invalide ou expiré', [
+                    'token' => substr($token, 0, 20) . '...',
+                    'error' => $response->json('error.message') ?? $response->body(),
+                ]);
+                return false;
             }
 
-            Log::error('FCM HTTP error', ['status' => $response->status(), 'body' => $response->body()]);
-            return false;
+            // Token OAuth expiré — invalider le cache et réessayer une fois
+            if ($response->status() === 401) {
+                Cache::forget('fcm_access_token');
+                $accessToken = $this->getAccessToken();
+                if ($accessToken) {
+                    $retry = Http::withToken($accessToken)->post($url, $payload);
+                    return $retry->successful();
+                }
+            }
 
+            Log::error('FCM v1 HTTP error', ['status' => $response->status(), 'body' => $response->body()]);
+            return false;
         } catch (\Throwable $e) {
             Log::error('FCM exception: ' . $e->getMessage());
             return false;
@@ -97,43 +167,44 @@ class FcmNotificationService
 
     // ─── Envoi par topic ─────────────────────────────────────────────────────
 
-    /**
-     * Envoie une notification à tous les abonnés d'un topic.
-     * Ex: topic = "restaurant_12" pour tous les staff du restaurant 12.
-     *
-     * @param string $topic  Nom du topic (sans le préfixe /topics/)
-     */
     public function sendToTopic(
         string $topic,
         string $title,
         string $body,
         array $data = []
     ): bool {
-        if (empty($this->serverKey)) {
-            Log::warning('FCM: FCM_SERVER_KEY non configuré — topic notification ignorée');
+        if (empty($this->projectId)) {
+            Log::warning('FCM: FIREBASE_PROJECT_ID non configuré — topic notification ignorée');
             return false;
         }
 
+        $accessToken = $this->getAccessToken();
+        if (!$accessToken)
+            return false;
+
         try {
             $payload = [
-                'to' => '/topics/' . $topic,
-                'notification' => [
-                    'title' => $title,
-                    'body' => $body,
-                    'sound' => 'default',
-                    'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
+                'message' => [
+                    'topic' => $topic,
+                    'notification' => [
+                        'title' => $title,
+                        'body' => $body,
+                    ],
+                    'android' => [
+                        'priority' => 'high',
+                        'notification' => [
+                            'sound' => 'default',
+                            'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
+                        ],
+                    ],
+                    'data' => array_map('strval', $data),
                 ],
-                'data' => $data,
-                'priority' => 'high',
             ];
 
-            $response = Http::withHeaders([
-                'Authorization' => 'key=' . $this->serverKey,
-                'Content-Type' => 'application/json',
-            ])->post($this->fcmUrl, $payload);
+            $url = "https://fcm.googleapis.com/v1/projects/{$this->projectId}/messages:send";
+            $response = Http::withToken($accessToken)->post($url, $payload);
 
             return $response->successful();
-
         } catch (\Throwable $e) {
             Log::error('FCM topic exception: ' . $e->getMessage());
             return false;

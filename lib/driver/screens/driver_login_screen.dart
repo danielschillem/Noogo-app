@@ -207,6 +207,15 @@ class _DriverLoginScreenState extends State<DriverLoginScreen> {
                             ),
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () =>
+                        Navigator.of(context).pushNamed('/driver-register'),
+                    child: const Text(
+                      'Pas encore de compte ? S\'inscrire',
+                      style: TextStyle(color: AppColors.primary, fontSize: 14),
+                    ),
+                  ),
                 ],
               ),
             ),

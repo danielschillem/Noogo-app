@@ -18,6 +18,7 @@ class Delivery {
   final String? restaurantPhone;
   final double? totalAmount;
   final DateTime? assignedAt;
+  final DateTime? acceptedAt;
   final DateTime? pickedUpAt;
   final DateTime? deliveredAt;
   final DateTime createdAt;
@@ -41,6 +42,7 @@ class Delivery {
     this.restaurantPhone,
     this.totalAmount,
     this.assignedAt,
+    this.acceptedAt,
     this.pickedUpAt,
     this.deliveredAt,
     required this.createdAt,
@@ -58,6 +60,7 @@ class Delivery {
   bool get isActive => ['assigned', 'picked_up', 'on_way'].contains(status);
   bool get isCompleted => status == 'delivered';
   bool get isFailed => status == 'failed';
+  bool get needsAcceptance => status == 'assigned' && acceptedAt == null;
 
   String get statusLabel {
     switch (status) {
@@ -130,6 +133,7 @@ class Delivery {
       totalAmount:
           _toDouble(json['total_amount'] ?? json['order']?['total_amount']),
       assignedAt: _toDate(json['assigned_at']),
+      acceptedAt: _toDate(json['accepted_at']),
       pickedUpAt: _toDate(json['picked_up_at']),
       deliveredAt: _toDate(json['delivered_at']),
       createdAt: _toDate(json['created_at']) ?? DateTime.now(),

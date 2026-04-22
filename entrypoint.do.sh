@@ -64,6 +64,13 @@ fi
 [ -n "$MAIL_FROM_ADDRESS" ] && echo "MAIL_FROM_ADDRESS=$MAIL_FROM_ADDRESS"   >> "$ENV_FILE"
 [ -n "$MAIL_FROM_NAME" ]    && echo "MAIL_FROM_NAME=\"$MAIL_FROM_NAME\""     >> "$ENV_FILE"
 
+# FCM v1 (Firebase)
+[ -n "$FIREBASE_PROJECT_ID" ]       && echo "FIREBASE_PROJECT_ID=$FIREBASE_PROJECT_ID"       >> "$ENV_FILE"
+[ -n "$FIREBASE_CREDENTIALS_JSON" ] && echo "FIREBASE_CREDENTIALS_JSON=$FIREBASE_CREDENTIALS_JSON" >> "$ENV_FILE"
+
+# Queue
+echo "QUEUE_CONNECTION=database" >> "$ENV_FILE"
+
 echo "✅ .env écrit ($(wc -l < "$ENV_FILE") variables)"
 
 # ── Optimisations Laravel ──────────────────────────────────────
@@ -147,6 +154,27 @@ chmod 777 /tmp/nginx_client_body
 # ── Démarrer PHP-FPM en arrière-plan ─────────────────────────
 echo "🚀 Démarrage PHP-FPM..."
 /usr/local/sbin/php-fpm -F &
+
+# ── Queue Worker en arrière-plan ─────────────────────────────
+echo "⚙️  Démarrage Queue Worker..."
+(
+    sleep 20
+    cd /var/www/html
+    while true; do
+        php artisan queue:work database --sleep=3 --tries=3 --max-time=3600 2>&1 || sleep 5
+    done
+) &
+
+# ── Scheduler en arrière-plan ────────────────────────────────
+echo "⏰ Démarrage Scheduler..."
+(
+    sleep 25
+    cd /var/www/html
+    while true; do
+        php artisan schedule:run --no-interaction 2>&1 || true
+        sleep 60
+    done
+) &
 
 # ── Nginx en foreground (PID 1) ───────────────────────────────
 echo "🌐 Démarrage Nginx sur :8080..."

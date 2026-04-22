@@ -63,6 +63,30 @@ class DeliveryController extends Controller
             'notes' => $validated['notes'] ?? null,
         ]);
 
+        // Auto-assignation : trouver un livreur disponible
+        $availableDriver = DeliveryDriver::where('status', 'available')->first();
+        if ($availableDriver) {
+            DB::transaction(function () use ($delivery, $availableDriver) {
+                $delivery->update([
+                    'delivery_driver_id' => $availableDriver->id,
+                    'status' => 'assigned',
+                    'assigned_at' => now(),
+                ]);
+                $availableDriver->markBusy();
+            });
+
+            broadcast(new DeliveryStatusChanged($delivery->fresh()->load('driver'), 'delivery.assigned'));
+
+            if ($availableDriver->fcm_token) {
+                $this->fcm->sendToToken(
+                    $availableDriver->fcm_token,
+                    'Nouvelle livraison assignée',
+                    "Commande #{$order->id} — {$order->customer_name}",
+                    ['type' => 'delivery.assigned', 'delivery_id' => (string) $delivery->id],
+                );
+            }
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Livraison créée, en attente d\'assignation.',
@@ -338,6 +362,67 @@ class DeliveryController extends Controller
     }
 
     // ─── Livraisons actives du livreur connecté ────────────────────────────
+
+    /**
+     * POST /api/deliveries/{delivery}/accept
+     * Le livreur accepte la livraison assignée.
+     */
+    public function acceptDelivery(Delivery $delivery): JsonResponse
+    {
+        $user = request()->user();
+        $driver = DeliveryDriver::where('user_id', $user->id)->first();
+
+        if (!$driver || $delivery->delivery_driver_id !== $driver->id) {
+            return response()->json(['success' => false, 'message' => 'Non autorisé.'], 403);
+        }
+
+        if ($delivery->status !== 'assigned') {
+            return response()->json(['success' => false, 'message' => 'La livraison n\'est pas en attente d\'acceptation.'], 422);
+        }
+
+        $delivery->update(['accepted_at' => now()]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Livraison acceptée.',
+            'data' => $delivery->load('driver'),
+        ]);
+    }
+
+    /**
+     * POST /api/deliveries/{delivery}/reject
+     * Le livreur refuse la livraison — retour en pending_assignment.
+     */
+    public function rejectDelivery(Request $request, Delivery $delivery): JsonResponse
+    {
+        $user = $request->user();
+        $driver = DeliveryDriver::where('user_id', $user->id)->first();
+
+        if (!$driver || $delivery->delivery_driver_id !== $driver->id) {
+            return response()->json(['success' => false, 'message' => 'Non autorisé.'], 403);
+        }
+
+        if ($delivery->status !== 'assigned') {
+            return response()->json(['success' => false, 'message' => 'La livraison n\'est pas en attente d\'acceptation.'], 422);
+        }
+
+        DB::transaction(function () use ($delivery, $driver) {
+            $delivery->update([
+                'delivery_driver_id' => null,
+                'status' => 'pending_assignment',
+                'assigned_at' => null,
+            ]);
+            $driver->markAvailable();
+        });
+
+        broadcast(new DeliveryStatusChanged($delivery->fresh()->load('driver'), 'delivery.rejected'));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Livraison refusée, remise en attente.',
+            'data' => $delivery->fresh(),
+        ]);
+    }
 
     /**
      * GET /api/deliveries/my-active

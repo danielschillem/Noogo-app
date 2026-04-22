@@ -29,40 +29,42 @@ class Delivery extends Model
         'fee',
         'notes',
         'failure_reason',
+        'accepted_at',
     ];
 
     protected $casts = [
-        'assigned_at'        => 'datetime',
-        'picked_up_at'       => 'datetime',
-        'on_way_at'          => 'datetime',
-        'delivered_at'       => 'datetime',
+        'assigned_at' => 'datetime',
+        'picked_up_at' => 'datetime',
+        'on_way_at' => 'datetime',
+        'delivered_at' => 'datetime',
         'driver_location_at' => 'datetime',
-        'driver_lat'         => 'float',
-        'driver_lng'         => 'float',
-        'client_lat'         => 'float',
-        'client_lng'         => 'float',
-        'distance_km'        => 'float',
-        'fee'                => 'decimal:2',
+        'accepted_at' => 'datetime',
+        'driver_lat' => 'float',
+        'driver_lng' => 'float',
+        'client_lat' => 'float',
+        'client_lng' => 'float',
+        'distance_km' => 'float',
+        'fee' => 'decimal:2',
     ];
 
     // Progression statuts (ordre)
     const STATUSES = [
         'pending_assignment' => 'En attente d\'assignation',
-        'assigned'           => 'Assignée',
-        'picked_up'          => 'Commande récupérée',
-        'on_way'             => 'En route',
-        'delivered'          => 'Livrée',
-        'failed'             => 'Échec',
+        'assigned' => 'Assignée',
+        'picked_up' => 'Commande récupérée',
+        'on_way' => 'En route',
+        'delivered' => 'Livrée',
+        'failed' => 'Échec',
     ];
 
     // Transitions autorisées (statut actuel → statuts suivants valides)
     const TRANSITIONS = [
         'pending_assignment' => ['assigned', 'failed'],
-        'assigned'           => ['picked_up', 'failed'],
-        'picked_up'          => ['on_way', 'failed'],
-        'on_way'             => ['delivered', 'failed'],
-        'delivered'          => [],
-        'failed'             => [],
+        'assigned' => ['picked_up', 'failed'],
+        'picked_up' => ['on_way', 'failed'],
+        'on_way' => ['delivered', 'failed'],
+        'delivered' => [],
+        'failed' => [],
     ];
 
     // ── Relations ────────────────────────────────────────────────────────────
@@ -92,11 +94,11 @@ class Delivery extends Model
     public function applyStatusTimestamp(string $status): void
     {
         match ($status) {
-            'assigned'  => $this->assigned_at   = now(),
-            'picked_up' => $this->picked_up_at  = now(),
-            'on_way'    => $this->on_way_at      = now(),
-            'delivered' => $this->delivered_at   = now(),
-            default     => null,
+            'assigned' => $this->assigned_at = now(),
+            'picked_up' => $this->picked_up_at = now(),
+            'on_way' => $this->on_way_at = now(),
+            'delivered' => $this->delivered_at = now(),
+            default => null,
         };
     }
 }

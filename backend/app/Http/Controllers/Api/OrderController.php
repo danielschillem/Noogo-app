@@ -52,6 +52,22 @@ class OrderController extends Controller
     }
 
     /**
+     * Historique des commandes du client connecté
+     */
+    public function myOrders(Request $request): JsonResponse
+    {
+        $orders = Order::where('user_id', $request->user()->id)
+            ->with(['items.dish:id,nom,prix,image', 'restaurant:id,nom,logo'])
+            ->latest('order_date')
+            ->paginate($request->get('per_page', 20));
+
+        return response()->json([
+            'success' => true,
+            'data' => $orders,
+        ]);
+    }
+
+    /**
      * Store a new order
      */
     public function store(Request $request, Restaurant $restaurant): JsonResponse

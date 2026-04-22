@@ -123,6 +123,38 @@ class DriverApiService {
     throw Exception('Erreur profil: ${resp.statusCode}');
   }
 
+  /// POST accept assigned delivery
+  Future<Delivery> acceptDelivery(int deliveryId) async {
+    final resp = await http
+        .post(
+          Uri.parse('$_baseUrl/deliveries/$deliveryId/accept'),
+          headers: await _headers(),
+        )
+        .timeout(const Duration(seconds: 15));
+
+    if (resp.statusCode == 200) {
+      final data = jsonDecode(resp.body);
+      return Delivery.fromJson(data['data'] as Map<String, dynamic>);
+    }
+    final errBody = jsonDecode(resp.body);
+    throw Exception(errBody['message'] ?? 'Erreur acceptation');
+  }
+
+  /// POST reject assigned delivery
+  Future<void> rejectDelivery(int deliveryId) async {
+    final resp = await http
+        .post(
+          Uri.parse('$_baseUrl/deliveries/$deliveryId/reject'),
+          headers: await _headers(),
+        )
+        .timeout(const Duration(seconds: 15));
+
+    if (resp.statusCode != 200) {
+      final errBody = jsonDecode(resp.body);
+      throw Exception(errBody['message'] ?? 'Erreur refus');
+    }
+  }
+
   /// POST register FCM token for driver
   Future<void> registerDeviceToken(String token) async {
     await http

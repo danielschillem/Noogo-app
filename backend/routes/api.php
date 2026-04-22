@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\RatingController;
 // Authentication — limitées à 10 tentatives par minute pour contrer le brute-force
 Route::middleware('throttle:10,1')->prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/register-driver', [AuthController::class, 'registerDriver']);
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
@@ -40,6 +41,9 @@ Route::middleware('throttle:10,1')->prefix('auth')->group(function () {
 Route::prefix('restaurant')->group(function () {
     Route::get('/{restaurantId}/menu', [RestaurantController::class, 'menu']);
 });
+
+// Recherche publique de restaurants (Flutter client)
+Route::get('/restaurants/search', [RestaurantController::class, 'publicSearch']);
 
 // Offres actives (endpoint public pour Flutter)
 Route::get('/offres/actives/{restaurantId}', [FlashInfoController::class, 'actives']);
@@ -66,6 +70,9 @@ Route::middleware('throttle:30,1')->group(function () {
 // ============================================================================
 Route::middleware('throttle:order-mobile')->post('/commandes', [OrderController::class, 'storeMobile']);
 
+// Validation de coupon (app mobile Flutter)
+Route::post('/coupons/validate', [\App\Http\Controllers\Api\CouponController::class, 'validate']);
+
 
 // ============================================================================
 // ROUTES PROTÉGÉES (authentification requise)
@@ -85,6 +92,8 @@ Route::middleware('auth:sanctum')->group(function () {
         // Token FCM : enregistrement au login, suppression au logout
         Route::post('/device-token', [DeviceTokenController::class, 'store']);
         Route::delete('/device-token', [DeviceTokenController::class, 'destroy']);
+        // Historique de commandes du client connecté
+        Route::get('/my-orders', [OrderController::class, 'myOrders']);
     });
 
     // Dashboard — limité à 120 requêtes/minute (protection contre scraping / boucles)
@@ -150,6 +159,8 @@ Route::middleware('auth:sanctum')->group(function () {
         // C4 : réservé aux livreurs enregistrés
         Route::middleware('driver')->group(function () {
             Route::patch('/{delivery}/status', [DeliveryController::class, 'updateStatus']);
+            Route::post('/{delivery}/accept', [DeliveryController::class, 'acceptDelivery']);
+            Route::post('/{delivery}/reject', [DeliveryController::class, 'rejectDelivery']);
             Route::post('/{delivery}/driver-location', [DeliveryController::class, 'updateDriverLocation'])
                 ->middleware('throttle:60,1');
         });

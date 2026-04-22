@@ -247,72 +247,146 @@ class _DriverDeliveryScreenState extends State<DriverDeliveryScreen> {
           ),
 
           // Bottom action buttons
-          bottomNavigationBar: delivery.nextStatus != null
-              ? SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        // Fail button
-                        SizedBox(
-                          height: 52,
-                          child: OutlinedButton(
-                            onPressed: () => _markFailed(provider),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.error,
-                              side: const BorderSide(color: AppColors.error),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+          bottomNavigationBar: delivery.needsAcceptance
+              ? _buildAcceptRejectBar(provider, delivery)
+              : delivery.nextStatus != null
+                  ? SafeArea(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            // Fail button
+                            SizedBox(
+                              height: 52,
+                              child: OutlinedButton(
+                                onPressed: () => _markFailed(provider),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppColors.error,
+                                  side:
+                                      const BorderSide(color: AppColors.error),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: const Icon(Icons.close),
                               ),
                             ),
-                            child: const Icon(Icons.close),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
+                            const SizedBox(width: 12),
 
-                        // Advance button
-                        Expanded(
-                          child: SizedBox(
-                            height: 52,
-                            child: ElevatedButton.icon(
-                              onPressed: _isAdvancing
-                                  ? null
-                                  : () => _advanceStatus(provider),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              icon: _isAdvancing
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Icon(Icons.arrow_forward,
-                                      color: Colors.white),
-                              label: Text(
-                                delivery.nextStatusLabel ?? '',
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
+                            // Advance button
+                            Expanded(
+                              child: SizedBox(
+                                height: 52,
+                                child: ElevatedButton.icon(
+                                  onPressed: _isAdvancing
+                                      ? null
+                                      : () => _advanceStatus(provider),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  icon: _isAdvancing
+                                      ? const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : const Icon(Icons.arrow_forward,
+                                          color: Colors.white),
+                                  label: Text(
+                                    delivery.nextStatusLabel ?? '',
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
-                )
-              : null,
+                      ),
+                    )
+                  : null,
         );
       },
+    );
+  }
+
+  Widget _buildAcceptRejectBar(DriverProvider provider, Delivery delivery) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Expanded(
+              child: SizedBox(
+                height: 52,
+                child: OutlinedButton.icon(
+                  onPressed: _isAdvancing
+                      ? null
+                      : () async {
+                          setState(() => _isAdvancing = true);
+                          final ok = await provider.rejectDelivery();
+                          if (mounted) setState(() => _isAdvancing = false);
+                          if (ok && mounted) Navigator.of(context).pop();
+                        },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.error,
+                    side: const BorderSide(color: AppColors.error),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.close),
+                  label: const Text('Refuser',
+                      style:
+                          TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: SizedBox(
+                height: 52,
+                child: ElevatedButton.icon(
+                  onPressed: _isAdvancing
+                      ? null
+                      : () async {
+                          setState(() => _isAdvancing = true);
+                          await provider.acceptDelivery();
+                          if (mounted) setState(() => _isAdvancing = false);
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.success,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: _isAdvancing
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
+                      : const Icon(Icons.check, color: Colors.white),
+                  label: const Text('Accepter',
+                      style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

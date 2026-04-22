@@ -98,6 +98,39 @@ class DriverProvider extends ChangeNotifier {
     }
   }
 
+  /// Accept assigned delivery
+  Future<bool> acceptDelivery() async {
+    if (_currentDelivery == null) return false;
+    try {
+      final updated = await _api.acceptDelivery(_currentDelivery!.id);
+      _currentDelivery = updated;
+      final idx = _activeDeliveries.indexWhere((d) => d.id == updated.id);
+      if (idx >= 0) _activeDeliveries[idx] = updated;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Reject assigned delivery
+  Future<bool> rejectDelivery() async {
+    if (_currentDelivery == null) return false;
+    try {
+      await _api.rejectDelivery(_currentDelivery!.id);
+      _activeDeliveries.removeWhere((d) => d.id == _currentDelivery!.id);
+      _currentDelivery = null;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   /// Mark delivery as failed
   Future<bool> markFailed() async {
     if (_currentDelivery == null) return false;

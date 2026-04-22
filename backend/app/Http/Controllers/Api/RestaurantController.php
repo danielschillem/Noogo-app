@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class RestaurantController extends Controller
 {
@@ -50,6 +49,32 @@ class RestaurantController extends Controller
         return response()->json([
             'success' => true,
             'data' => $restaurants
+        ]);
+    }
+
+    /**
+     * Recherche publique de restaurants (pour l'app Flutter client).
+     * GET /api/restaurants/search?q=term&lat=12.3&lng=-1.5
+     */
+    public function publicSearch(Request $request): JsonResponse
+    {
+        $query = Restaurant::where('is_active', true)
+            ->select('id', 'nom', 'adresse', 'telephone', 'logo', 'latitude', 'longitude', 'is_open_override')
+            ->withCount('dishes');
+
+        if ($request->filled('q')) {
+            $search = $request->q;
+            $query->where(function ($q) use ($search) {
+                $q->where('nom', 'ilike', "%{$search}%")
+                    ->orWhere('adresse', 'ilike', "%{$search}%");
+            });
+        }
+
+        $restaurants = $query->latest()->limit(50)->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $restaurants,
         ]);
     }
 
@@ -318,17 +343,17 @@ class RestaurantController extends Controller
     }
 
     /**
-     * Simple QR code SVG generator
+     * Simple QR code SVG generator using chillerlan/php-qrcode
      */
     private function generateSimpleQrSvg(string $content): string
     {
-        // Placeholder SVG - in production, use a proper QR library
-        $encoded = htmlspecialchars($content);
-        return <<<SVG
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-    <rect width="200" height="200" fill="white"/>
-    <text x="100" y="100" text-anchor="middle" font-size="10">QR: {$encoded}</text>
-</svg>
-SVG;
+        $options = new \chillerlan\QRCode\QROptions([
+            'outputInterface' => \chillerlan\QRCode\Output\QRMarkupSVG::class,
+            'eccLevel' => \chillerlan\QRCode\Common\EccLevel::L,
+            'addQuietzone' => true,
+            'outputBase64' => false,
+        ]);
+
+        return (new \chillerlan\QRCode\QRCode($options))->render($content);
     }
 }

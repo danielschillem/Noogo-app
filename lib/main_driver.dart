@@ -15,6 +15,7 @@ import 'utils/app_colors.dart';
 import 'utils/app_text_styles.dart';
 import 'driver/screens/driver_login_screen.dart';
 import 'driver/screens/driver_home_screen.dart';
+import 'driver/screens/driver_register_screen.dart';
 import 'driver/services/driver_provider.dart';
 
 Future<void> main() async {
@@ -23,6 +24,7 @@ Future<void> main() async {
 
   try {
     await Firebase.initializeApp();
+    await FCMService.init();
   } catch (e) {
     debugPrint('Firebase non configuré: $e');
   }
@@ -94,6 +96,8 @@ class NoogoDriverApp extends StatelessWidget {
     switch (settings.name) {
       case '/driver-login':
         page = const DriverLoginScreen();
+      case '/driver-register':
+        page = const DriverRegisterScreen();
       case '/driver-home':
         page = const DriverHomeScreen();
     }
