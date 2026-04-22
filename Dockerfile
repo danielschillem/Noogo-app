@@ -33,7 +33,6 @@ FROM php:8.4-fpm-alpine
 # Packages système
 RUN apk add --no-cache \
     nginx \
-    supervisor \
     postgresql-dev \
     libpng-dev \
     freetype-dev \
@@ -91,8 +90,7 @@ RUN mkdir -p storage/logs storage/framework/cache \
     && chmod -R 775 storage bootstrap/cache
 
 # Configurations
-COPY nginx.do.conf     /etc/nginx/nginx.conf
-COPY supervisord.do.conf /etc/supervisord.conf
+COPY nginx.do.conf /etc/nginx/nginx.conf
 
 # Script de démarrage
 COPY entrypoint.do.sh /entrypoint.sh

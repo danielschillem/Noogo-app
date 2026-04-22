@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # =============================================================
 # Noogo — Entrypoint DigitalOcean
 # 1. Génère APP_KEY si absent
@@ -104,6 +104,10 @@ php artisan storage:link 2>/dev/null || true
     echo "✅ [migration] Terminé"
 ) &
 
-# ── Démarrer nginx + php-fpm ──────────────────────────────────
-echo "🌐 Démarrage supervisord (nginx + php-fpm)..."
-exec supervisord -c /etc/supervisord.conf
+# ── Démarrer PHP-FPM en arrière-plan ─────────────────────────
+echo "🚀 Démarrage PHP-FPM..."
+/usr/local/sbin/php-fpm -F &
+
+# ── Nginx en foreground (PID 1) ───────────────────────────────
+echo "🌐 Démarrage Nginx sur :8080..."
+exec nginx -g "daemon off;"
