@@ -14,8 +14,9 @@ use Illuminate\Queue\SerializesModels;
  * Événement broadcasté via Pusher à chaque changement de statut de commande,
  * ou lors de la création d'une nouvelle commande.
  *
- * Canal privé : private-restaurant.{restaurantId}
- * (authentification requise — voir routes/channels.php)
+ * Canaux :
+ *   - private-restaurant.{restaurantId}  → dashboard / staff
+ *   - order.{orderId}                    → app client Flutter (public)
  * Événements :
  *   - order.created  → nouvelle commande (status = pending)
  *   - order.updated  → changement de statut
@@ -30,9 +31,17 @@ class OrderStatusChanged implements ShouldBroadcastNow
     ) {
     }
 
-    public function broadcastOn(): PrivateChannel
+    /**
+     * Broadcast sur 2 canaux :
+     *  - private-restaurant.{id} → dashboard (existant)
+     *  - order.{orderId}         → client Flutter (nouveau, public)
+     */
+    public function broadcastOn(): array
     {
-        return new PrivateChannel("restaurant.{$this->order->restaurant_id}");
+        return [
+            new PrivateChannel("restaurant.{$this->order->restaurant_id}"),
+            new Channel("order.{$this->order->id}"),
+        ];
     }
 
     public function broadcastAs(): string

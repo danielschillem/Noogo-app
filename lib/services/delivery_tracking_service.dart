@@ -85,9 +85,10 @@ class DeliveryTrackingService {
   Future<void> startTracking(int orderId, {String? authToken}) async {
     _ensureControllersOpen();
     _authToken = authToken;
-    final channelName = 'delivery.$orderId';
+    final deliveryChannel = 'delivery.$orderId';
+    final orderChannel = 'order.$orderId';
 
-    if (_currentChannelName == channelName) return; // déjà abonné
+    if (_currentChannelName == deliveryChannel) return; // déjà abonné
 
     await stopTracking(); // nettoyer l'abonnement précédent
 
@@ -105,12 +106,22 @@ class DeliveryTrackingService {
         },
       );
       await _pusher!.connect();
+
+      // Canal delivery.{orderId} — GPS livreur + statuts livraison
       await _pusher!.subscribe(
-        channelName: channelName,
+        channelName: deliveryChannel,
         onEvent: _handleEvent,
       );
-      _currentChannelName = channelName;
-      AppLogger.info('DeliveryTracking: abonné à $channelName');
+
+      // Canal order.{orderId} — statuts commande (confirmed, preparing, ready)
+      await _pusher!.subscribe(
+        channelName: orderChannel,
+        onEvent: _handleEvent,
+      );
+
+      _currentChannelName = deliveryChannel;
+      AppLogger.info(
+          'DeliveryTracking: abonné à $deliveryChannel + $orderChannel');
     } catch (e) {
       AppLogger.error('DeliveryTracking: erreur abonnement', error: e);
     }
@@ -121,6 +132,9 @@ class DeliveryTrackingService {
     if (_currentChannelName != null && _pusher != null) {
       try {
         await _pusher!.unsubscribe(channelName: _currentChannelName!);
+        // Also unsubscribe from order channel
+        final orderId = _currentChannelName!.replaceFirst('delivery.', '');
+        await _pusher!.unsubscribe(channelName: 'order.$orderId');
         await _pusher!.disconnect();
       } catch (_) {}
       _currentChannelName = null;
@@ -130,17 +144,24 @@ class DeliveryTrackingService {
   void _handleEvent(PusherEvent event) {
     try {
       final data = jsonDecode(event.data ?? '{}') as Map<String, dynamic>;
-      switch (event.eventName) {
-        case 'driver.location':
-          final loc = DriverLocation.fromJson(data);
-          _locationController.add(loc);
-          break;
-        case 'delivery.status':
+      final eventName = event.eventName;
+
+      if (eventName == 'driver.location') {
+        final loc = DriverLocation.fromJson(data);
+        _locationController.add(loc);
+      } else if (eventName.startsWith('delivery.') ||
+          eventName == 'order.updated') {
+        // Handle all delivery status events:
+        // delivery.assigned, delivery.picked_up, delivery.on_way,
+        // delivery.delivered, delivery.failed, delivery.rejected,
+        // delivery.status, order.updated
+        final statusStr = data['status']?.toString() ?? '';
+        if (statusStr.isNotEmpty) {
           final status = DeliveryStatusEvent.fromJson(data);
           _statusController.add(status);
-          break;
-        default:
-          break;
+          AppLogger.info(
+              'DeliveryTracking: status event $eventName → $statusStr');
+        }
       }
     } catch (e) {
       AppLogger.error('DeliveryTracking: erreur parsing event', error: e);

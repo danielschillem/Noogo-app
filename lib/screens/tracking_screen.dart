@@ -2,9 +2,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/order.dart';
 import '../services/delivery_tracking_service.dart';
+import '../services/restaurant_provider.dart';
 import '../utils/app_colors.dart';
 
 /// Étapes de la progression de livraison (DEL-T06)
@@ -58,6 +60,7 @@ class _TrackingScreenState extends State<TrackingScreen>
   // Subscriptions
   StreamSubscription<DriverLocation>? _locationSub;
   StreamSubscription<DeliveryStatusEvent>? _statusSub;
+  Timer? _statusPollTimer;
 
   // Map controller
   final MapController _mapController = MapController();
@@ -81,6 +84,24 @@ class _TrackingScreenState extends State<TrackingScreen>
 
     _initTracking();
     _initClientPosition();
+    _startStatusPolling();
+  }
+
+  /// Polling fallback: recharge l'état commande toutes les 15s
+  void _startStatusPolling() {
+    _statusPollTimer = Timer.periodic(const Duration(seconds: 15), (_) async {
+      if (!mounted) return;
+      final provider = Provider.of<RestaurantProvider>(context, listen: false);
+      await provider.loadOrders();
+      final updated =
+          provider.orders.where((o) => o.id == widget.order.id).firstOrNull;
+      if (updated != null && mounted) {
+        final newStatus = updated.status.toString().split('.').last;
+        if (newStatus != _deliveryStatus) {
+          setState(() => _deliveryStatus = newStatus);
+        }
+      }
+    });
   }
 
   Future<void> _initTracking() async {
@@ -157,6 +178,7 @@ class _TrackingScreenState extends State<TrackingScreen>
     _locationSub?.cancel();
     _statusSub?.cancel();
     _locationShareTimer?.cancel();
+    _statusPollTimer?.cancel();
     _trackingService.stopTracking();
     _markerAnimCtrl.dispose();
     super.dispose();

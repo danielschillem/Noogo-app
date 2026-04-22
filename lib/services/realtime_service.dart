@@ -212,6 +212,9 @@ class RealtimeService {
       return;
     }
 
+    // Note: le canal private-user.{id}.orders n'existe pas côté backend.
+    // On garde la souscription pour compatibilité future,
+    // mais les vrais updates passent par order.{orderId} (public) — voir subscribeToOrder().
     try {
       final channelName = 'private-user.$userId.orders';
       await _pusher!.subscribe(
@@ -220,8 +223,43 @@ class RealtimeService {
       );
       if (kDebugMode) debugPrint('✅ Pusher subscribed: $channelName');
     } catch (e) {
-      if (kDebugMode) debugPrint('❌ Pusher subscribe error (orders): $e');
-      rethrow;
+      if (kDebugMode)
+        debugPrint('⚠️ Pusher subscribe user orders fallback: $e');
+    }
+  }
+
+  /// S'abonner au canal d'une commande spécifique (canal public)
+  /// Le backend broadcast `order.updated` sur `order.{orderId}` à chaque changement de statut.
+  Future<void> subscribeToOrder(int orderId) async {
+    if (!_isInitialized || _pusher == null) {
+      if (kDebugMode) debugPrint('❌ RealtimeService non initialisé');
+      return;
+    }
+
+    try {
+      final channelName = 'order.$orderId';
+      if (_subscribedChannels.contains(channelName)) return;
+      await _pusher!.subscribe(
+        channelName: channelName,
+        onEvent: (event) => _handleEvent(event),
+      );
+      if (kDebugMode) debugPrint('✅ Pusher subscribed: $channelName');
+    } catch (e) {
+      if (kDebugMode)
+        debugPrint('❌ Pusher subscribe error (order.$orderId): $e');
+    }
+  }
+
+  /// Se désabonner du canal d'une commande
+  Future<void> unsubscribeFromOrder(int orderId) async {
+    final channelName = 'order.$orderId';
+    await unsubscribe(channelName);
+  }
+
+  /// S'abonner aux canaux de toutes les commandes actives
+  Future<void> subscribeToActiveOrders(List<int> orderIds) async {
+    for (final orderId in orderIds) {
+      await subscribeToOrder(orderId);
     }
   }
 
