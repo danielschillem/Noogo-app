@@ -148,6 +148,7 @@ chmod 777 /tmp/nginx_client_body
     php artisan config:cache 2>&1 | tail -1
     php artisan migrate --force 2>&1 || echo "⚠️ [migration] Non-fatal"
     php artisan db:seed --class=AdminUsersSeeder --force 2>&1 || true
+    php artisan db:seed --class=NoogoDeliceMenuSeeder --force 2>&1 || true
     echo "✅ [migration] Terminé"
     touch /tmp/migrations_done
 ) &
