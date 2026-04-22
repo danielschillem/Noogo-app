@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\DeliveryDriver;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -37,20 +38,30 @@ class AdminUsersSeeder extends Seeder
         );
 
         // Livreur de test
-        User::updateOrCreate(
+        $livreurUser = User::updateOrCreate(
             ['phone' => '+22670000010'],
             [
                 'name' => 'Livreur Test',
                 'email' => 'livreur@noogo.com',
                 'password' => Hash::make('password123'),
                 'is_admin' => false,
-                'role' => 'user',
+                'role' => 'driver',
                 'email_verified_at' => now(),
+            ]
+        );
+
+        DeliveryDriver::updateOrCreate(
+            ['user_id' => $livreurUser->id],
+            [
+                'name' => 'Livreur Test',
+                'phone' => '+22670000010',
+                'zone' => 'Ouagadougou',
+                'status' => 'offline',
             ]
         );
 
         $this->command->info('✓ super-user@noogo.com (super_admin) créé/mis à jour');
         $this->command->info('✓ daniel@noogo.com (admin) créé/mis à jour');
-        $this->command->info('✓ +22670000010 (user) créé/mis à jour');
+        $this->command->info('✓ livreur@noogo.com / +22670000010 (driver) créé/mis à jour');
     }
 }
