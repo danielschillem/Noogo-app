@@ -235,10 +235,24 @@ class OrderController extends Controller
 
         $order->updateStatus('cancelled');
 
+        // Broadcast temps réel (même comportement que updateStatus)
+        try {
+            broadcast(new OrderStatusChanged($order->fresh(), 'order.updated'));
+        } catch (\Exception $broadcastEx) {
+            \Illuminate\Support\Facades\Log::warning('Broadcast cancel failed: ' . $broadcastEx->getMessage());
+        }
+
+        // Notification FCM au client
+        try {
+            (new FcmNotificationService())->notifyOrderStatusChanged($order->fresh()->load('user'), 'cancelled');
+        } catch (\Exception $fcmEx) {
+            \Illuminate\Support\Facades\Log::warning('FCM cancel failed: ' . $fcmEx->getMessage());
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Commande annulée',
-            'data' => $order
+            'data' => $order->fresh()
         ]);
     }
 
