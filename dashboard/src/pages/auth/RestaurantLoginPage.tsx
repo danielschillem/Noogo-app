@@ -95,11 +95,7 @@ export default function RestaurantLoginPage() {
 
                 {/* Logo Noogo */}
                 <div className="flex items-center gap-3 relative">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                        style={{ background: 'linear-gradient(135deg,#f97316,#ea580c)' }}>
-                        <span className="text-white font-black text-xl">N</span>
-                    </div>
-                    <span className="text-white font-bold text-xl">Noogo</span>
+                    <img src="/noogo-logo.png" alt="Noogo" className="h-10 w-auto" />
                 </div>
 
                 {/* Restaurant card */}

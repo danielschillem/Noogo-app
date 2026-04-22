@@ -92,10 +92,7 @@ export default function Sidebar({ restaurantId }: { restaurantId?: number }) {
       {/* â”€â”€ Logo â”€â”€ */}
       <div className="flex items-center gap-3 px-5 h-16 border-b shrink-0"
         style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-          style={{ background: 'linear-gradient(135deg,#f97316,#ea580c)' }}>
-          <span className="text-white font-black text-lg leading-none">N</span>
-        </div>
+        <img src="/noogo-icon.png" alt="Noogo" className="w-9 h-9 shrink-0" />
         <div>
           <p className="text-white font-bold text-base leading-tight">Noogo</p>
           <p className="text-xs leading-tight" style={{ color: '#64748b' }}>
