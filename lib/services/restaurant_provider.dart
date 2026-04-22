@@ -489,6 +489,23 @@ class RestaurantProvider with ChangeNotifier {
     }
   }
 
+  /// Souscrire aux canaux Pusher de chaque commande active (non terminale)
+  void _subscribeToActiveOrderChannels() {
+    if (!_isRealtimeConnected) return;
+    final activeIds = _orders
+        .where((o) =>
+            o.status != OrderStatus.delivered &&
+            o.status != OrderStatus.completed &&
+            o.status != OrderStatus.cancelled)
+        .map((o) => o.id)
+        .toList();
+    if (activeIds.isEmpty) return;
+    _realtimeService.subscribeToActiveOrders(activeIds);
+    if (kDebugMode) {
+      debugPrint('📡 Pusher: souscrit aux commandes actives: $activeIds');
+    }
+  }
+
   /// ✅ Gérer les nouvelles notifications depuis Pusher
   Future<void> _handleNewNotification(Map<String, dynamic> data) async {
     try {
@@ -1158,6 +1175,9 @@ class RestaurantProvider with ChangeNotifier {
 
           await _saveOrdersLocally(_orders);
           _clearError();
+
+          // Souscrire aux canaux Pusher des commandes actives
+          _subscribeToActiveOrderChannels();
         }
       }
     } catch (e) {
@@ -1357,6 +1377,32 @@ class RestaurantProvider with ChangeNotifier {
       _orderSubmitError = e.toString();
       notifyListeners();
       rethrow;
+    }
+  }
+
+  /// Annule une commande via l'API (statut pending ou confirmed uniquement)
+  Future<void> cancelOrder(int orderId, int restaurantId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    final url = Uri.parse(
+        '${ApiConfig.baseUrl}/restaurants/$restaurantId/orders/$orderId/cancel');
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      final idx = _orders.indexWhere((o) => o.id == orderId);
+      if (idx != -1) {
+        _orders[idx] = _orders[idx].copyWith(status: OrderStatus.cancelled);
+        notifyListeners();
+      }
+    } else {
+      final body = jsonDecode(response.body);
+      throw Exception(body['message'] ?? 'Erreur ${response.statusCode}');
     }
   }
 

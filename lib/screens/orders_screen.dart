@@ -653,15 +653,34 @@ class _OrdersScreenState extends State<OrdersScreen>
             child: const Text('Non'),
           ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () async {
               Navigator.pop(context);
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Commande annulée avec succès !'),
-                    backgroundColor: AppColors.success,
-                  ),
+              try {
+                await provider.cancelOrder(
+                  order.id,
+                  order.restaurantId ?? provider.restaurant?.id ?? 0,
                 );
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Commande annulée avec succès'),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Erreur : $e'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
               }
             },
             child: const Text('Oui, annuler'),
