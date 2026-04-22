@@ -11,6 +11,7 @@ import {
     Download,
     Map as MapIcon,
     List,
+    X,
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -464,7 +465,7 @@ export default function DeliveriesPage() {
                                                         className="px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50"
                                                         style={{ background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0' }}
                                                     >
-                                                        Livrée ✓
+                                                        <CheckCircle2 className="h-3 w-3 inline mr-0.5" />Livrée
                                                     </button>
                                                 )}
                                                 {['assigned', 'picked_up', 'on_way'].includes(d.status) && (
@@ -477,7 +478,7 @@ export default function DeliveriesPage() {
                                                         className="px-2 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50"
                                                         style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}
                                                     >
-                                                        ✕
+                                                        <X className="h-3 w-3" />
                                                     </button>
                                                 )}
                                             </div>

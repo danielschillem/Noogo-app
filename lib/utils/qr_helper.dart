@@ -55,8 +55,9 @@ class QRHelper {
       // Fallback: si c'est un simple numéro, c'est un ID direct
       final directId = int.tryParse(qrData.trim());
       if (directId != null) {
-        if (kDebugMode)
+        if (kDebugMode) {
           debugPrint('🔍 Parse Restaurant ID: ID direct = $directId');
+        }
         return directId;
       }
 

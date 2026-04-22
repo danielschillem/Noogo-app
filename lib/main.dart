@@ -107,7 +107,7 @@ class _NooqoAppState extends State<NooqoApp> {
       _navigatorKey.currentState
           ?.pushNamedAndRemoveUntil('/home', (route) => false);
     }).catchError((_) {
-      // Restaurant invalide — on reste sur l'écran courant
+      // Restaurant invalide - on reste sur l'écran courant
     });
   }
 
@@ -419,7 +419,7 @@ class _NooqoAppState extends State<NooqoApp> {
         ),
       ),
       sliderTheme: const SliderThemeData(
-        showValueIndicator: ShowValueIndicator.always,
+        showValueIndicator: ShowValueIndicator.onDrag,
         thumbColor: Colors.white,
         activeTrackColor: AppColors.primary,
       ),
@@ -754,15 +754,15 @@ class _SplashCheckerState extends State<SplashChecker> {
                   String message = 'Chargement...';
 
                   if (provider.isRealtimeConnected) {
-                    message = '✅ Connecté en temps réel';
+                    message = 'Connecté en temps réel';
                   }
 
                   if (provider.isLoading) {
-                    message = '📡 Chargement des données...';
+                    message = 'Chargement des données...';
                   }
 
                   if (provider.restaurant != null && !provider.isLoading) {
-                    message = '✅ ${provider.restaurant!.nom}';
+                    message = provider.restaurant!.nom;
                   }
 
                   return Column(

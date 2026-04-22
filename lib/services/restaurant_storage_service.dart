@@ -13,7 +13,7 @@ class RestaurantStorageService {
   static const String _keyLastRestaurantId = 'last_restaurant_id';
 
   // =========================================================================
-  // API LEGACY — utilisée par SplashChecker (lecture seule désormais)
+  // API LEGACY - utilisée par SplashChecker (lecture seule désormais)
   // =========================================================================
 
   /// Vérifier si au moins un restaurant est sauvegardé
@@ -58,7 +58,7 @@ class RestaurantStorageService {
     await prefs.setBool(_keyIsScanned, true);
   }
 
-  /// Efface TOUT (déconnexion complète — retire aussi de la liste multi)
+  /// Efface TOUT (déconnexion complète - retire aussi de la liste multi)
   static Future<void> clearRestaurantData() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_keyRestaurantData);

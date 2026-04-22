@@ -137,7 +137,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                         ),
                         value: provider.isOnline,
                         onChanged: (_) => provider.toggleOnline(),
-                        activeColor: AppColors.success,
+                        activeThumbColor: AppColors.success,
                       ),
                     );
                   },
@@ -161,7 +161,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                         title: const Text('Mode sombre'),
                         value: themeProvider.themeMode == ThemeMode.dark,
                         onChanged: (_) => themeProvider.toggle(),
-                        activeColor: AppColors.secondary,
+                        activeThumbColor: AppColors.secondary,
                       ),
                     );
                   },

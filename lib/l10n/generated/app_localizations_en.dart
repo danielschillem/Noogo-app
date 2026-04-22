@@ -21,7 +21,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get error_loading => 'Loading error';
 
   @override
-  String get no_internet => 'Server unreachable — showing local data';
+  String get no_internet => 'Server unreachable - showing local data';
 
   @override
   String get scan_qr => 'Scan QR Code';
@@ -368,7 +368,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get offline_mode => 'Offline mode';
 
   @override
-  String get offline_subtitle => 'Limited connection — showing local data';
+  String get offline_subtitle => 'Limited connection - showing local data';
 
   @override
   String get connection_error => 'Connection error';

@@ -15,7 +15,7 @@
   "error_loading": "Erreur de chargement",
   "@error_loading": { "description": "Titre d'erreur générique" },
 
-  "no_internet": "Connexion au serveur impossible — affichage des données locales",
+  "no_internet": "Connexion au serveur impossible - affichage des données locales",
   "@no_internet": { "description": "Bannière hors-ligne" },
 
   "scan_qr": "Scanner le QR Code",
@@ -363,7 +363,7 @@
   "offline_mode": "Mode hors-ligne",
   "@offline_mode": { "description": "Bannière hors-ligne" },
 
-  "offline_subtitle": "Connexion limitée — données locales affichées",
+  "offline_subtitle": "Connexion limitée - données locales affichées",
   "@offline_subtitle": { "description": "Sous-titre hors-ligne" },
 
   "connection_error": "Erreur de connexion",

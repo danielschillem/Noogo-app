@@ -12,6 +12,8 @@ import {
   Wifi,
   WifiOff,
   AlertCircle,
+  AlertTriangle,
+  Rocket,
 } from 'lucide-react';
 import { ordersApi, restaurantsApi, myRestaurantsApi } from '../../services/api';
 import { usePusher } from '../../hooks/usePusher';
@@ -97,8 +99,8 @@ function OrderTicket({
                 {item.dish?.nom ?? `Plat #${item.dish_id}`}
               </p>
               {(item.notes ?? item.special_instructions) && (
-                <p className="text-xs mt-0.5 truncate" style={{ color: '#f97316' }}>
-                  ⚠ {item.notes ?? item.special_instructions}
+                <p className="text-xs mt-0.5 truncate flex items-center gap-1" style={{ color: '#f97316' }}>
+                  <AlertTriangle className="h-3 w-3 flex-shrink-0" /> {item.notes ?? item.special_instructions}
                 </p>
               )}
             </div>
@@ -117,10 +119,10 @@ function OrderTicket({
             className="w-full py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-90 active:scale-95"
             style={{ background: cfg.color, color: 'white' }}
           >
-            {cfg.next === 'confirmed' && '✓ Confirmer'}
-            {cfg.next === 'preparing' && '👨‍🍳 En préparation'}
-            {cfg.next === 'ready' && '✅ Prêt à servir'}
-            {cfg.next === 'delivered' && '🚀 Servi / Livré'}
+            {cfg.next === 'confirmed' && <span className="flex items-center justify-center gap-1.5"><CheckCircle className="h-4 w-4" /> Confirmer</span>}
+            {cfg.next === 'preparing' && <span className="flex items-center justify-center gap-1.5"><ChefHat className="h-4 w-4" /> En préparation</span>}
+            {cfg.next === 'ready' && <span className="flex items-center justify-center gap-1.5"><CheckCircle className="h-4 w-4" /> Prêt à servir</span>}
+            {cfg.next === 'delivered' && <span className="flex items-center justify-center gap-1.5"><Rocket className="h-4 w-4" /> Servi / Livré</span>}
           </button>
         </div>
       )}

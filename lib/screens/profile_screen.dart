@@ -377,7 +377,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   trailing: Switch(
                     value: themeProvider.isDarkMode,
                     onChanged: (_) => themeProvider.toggle(),
-                    activeColor: AppColors.primary,
+                    activeThumbColor: AppColors.primary,
                   ),
                   onTap: () => themeProvider.toggle(),
                 ),
@@ -1250,7 +1250,7 @@ class _NotificationSettingsDialogState
             title: const Text('Mises à jour commandes'),
             subtitle: const Text('Statut de vos commandes en temps réel'),
             value: _orderUpdates,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
             onChanged: (v) {
               setState(() => _orderUpdates = v);
               _saveSetting('orders', v);
@@ -1260,7 +1260,7 @@ class _NotificationSettingsDialogState
             title: const Text('Promotions'),
             subtitle: const Text('Offres et réductions'),
             value: _promotions,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
             onChanged: (v) {
               setState(() => _promotions = v);
               _saveSetting('promos', v);
@@ -1270,7 +1270,7 @@ class _NotificationSettingsDialogState
             title: const Text('Alertes livraison'),
             subtitle: const Text('Position du livreur et arrivée'),
             value: _deliveryAlerts,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
             onChanged: (v) {
               setState(() => _deliveryAlerts = v);
               _saveSetting('delivery', v);

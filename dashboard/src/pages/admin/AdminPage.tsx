@@ -315,7 +315,7 @@ function RestaurantRow({ restaurant, onToggle }: { restaurant: AdminRestaurant; 
                     style={restaurant.is_active
                         ? { background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0' }
                         : { background: '#f8fafc', color: '#94a3b8', border: '1px solid #e2e8f0' }}>
-                    {restaurant.is_active ? '✓ Actif' : 'Inactif'}
+                    {restaurant.is_active ? <><Check size={12} className="inline mr-0.5" />Actif</> : 'Inactif'}
                 </button>
             </td>
             <td className="px-5 py-3.5 text-xs" style={{ color: '#94a3b8' }}>

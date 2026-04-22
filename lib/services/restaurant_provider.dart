@@ -874,7 +874,7 @@ class RestaurantProvider with ChangeNotifier {
 // ===== MÉTHODES DE CHARGEMENT EN ARRIÈRE-PLAN =====
 
   // ===================================================================
-  // FEAT-001 — CACHE MENU HORS-LIGNE
+  // FEAT-001 - CACHE MENU HORS-LIGNE
   // ===================================================================
 
   void _saveMenuCache(int restaurantId, dynamic menuData) async {
@@ -931,7 +931,7 @@ class RestaurantProvider with ChangeNotifier {
   }
 
   // ===================================================================
-  // FEAT-004 — FAVORIS
+  // FEAT-004 - FAVORIS
   // ===================================================================
 
   Future<void> toggleFavoriteDish(int dishId) async {
@@ -1321,7 +1321,7 @@ class RestaurantProvider with ChangeNotifier {
         _orderSubmitState = OrderSubmitState.success;
         notifyListeners();
 
-        // Analytics — MON-001
+        // Analytics - MON-001
         unawaited(AnalyticsService.orderPlaced(
           orderId: newOrder.id,
           totalAmount: totalAmount,

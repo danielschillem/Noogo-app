@@ -91,7 +91,7 @@ class _DeliveriesTab extends StatelessWidget {
                     Switch(
                       value: provider.isOnline,
                       onChanged: (_) => provider.toggleOnline(),
-                      activeColor: AppColors.success,
+                      activeThumbColor: AppColors.success,
                     ),
                   ],
                 ),

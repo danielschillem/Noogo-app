@@ -1,7 +1,7 @@
 ﻿import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Mail, Lock, Loader2, ShoppingBag, TrendingUp, Star, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Loader2, ShoppingBag, TrendingUp, Star, ArrowRight, AlertTriangle } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -122,7 +122,7 @@ export default function LoginPage() {
           </div>
 
           <div className="mb-8">
-            <h2 className="text-2xl font-bold mb-1.5" style={{ color: '#0f172a' }}>Bon retour 👋</h2>
+            <h2 className="text-2xl font-bold mb-1.5" style={{ color: '#0f172a' }}>Bon retour</h2>
             <p className="text-sm" style={{ color: '#64748b' }}>
               Connectez-vous à votre espace de gestion
             </p>
@@ -132,7 +132,7 @@ export default function LoginPage() {
             {error && (
               <div className="flex items-start gap-3 px-4 py-3 rounded-xl text-sm"
                 style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}>
-                <span className="mt-0.5">⚠</span>
+                <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
                 <span>{error}</span>
               </div>
             )}

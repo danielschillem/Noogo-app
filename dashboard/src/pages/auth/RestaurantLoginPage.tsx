@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { restaurantsApi } from '../../services/api';
-import { Mail, Lock, Loader2, Store, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Loader2, Store, ArrowRight, AlertTriangle } from 'lucide-react';
 import type { Restaurant } from '../../types';
 
 export default function RestaurantLoginPage() {
@@ -175,7 +175,7 @@ export default function RestaurantLoginPage() {
                         {error && (
                             <div className="flex items-start gap-3 px-4 py-3 rounded-xl text-sm"
                                 style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}>
-                                <span className="mt-0.5">⚠</span>
+                                <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
                                 <span>{error}</span>
                             </div>
                         )}

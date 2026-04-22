@@ -22,7 +22,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get no_internet =>
-      'Connexion au serveur impossible — affichage des données locales';
+      'Connexion au serveur impossible - affichage des données locales';
 
   @override
   String get scan_qr => 'Scanner le QR Code';
@@ -372,7 +372,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get offline_subtitle =>
-      'Connexion limitée — données locales affichées';
+      'Connexion limitée - données locales affichées';
 
   @override
   String get connection_error => 'Erreur de connexion';
