@@ -149,6 +149,7 @@ chmod 777 /tmp/nginx_client_body
     php artisan migrate --force 2>&1 || echo "⚠️ [migration] Non-fatal"
     php artisan db:seed --class=AdminUsersSeeder --force 2>&1 || true
     echo "✅ [migration] Terminé"
+    touch /tmp/migrations_done
 ) &
 
 # ── Démarrer PHP-FPM en arrière-plan ─────────────────────────
@@ -168,7 +169,14 @@ echo "⚙️  Démarrage Queue Worker..."
 # ── Scheduler en arrière-plan ────────────────────────────────
 echo "⏰ Démarrage Scheduler..."
 (
-    sleep 25
+    sleep 30
+    # Attendre la fin des migrations avant de démarrer le scheduler
+    WAIT=0
+    until [ -f /tmp/migrations_done ] || [ $WAIT -ge 180 ]; do
+        sleep 5
+        WAIT=$((WAIT + 5))
+    done
+    [ -f /tmp/migrations_done ] && echo "⏰ Migrations OK — scheduler démarré" || echo "⚠️ Scheduler démarré sans confirmation migrations (timeout 180s)"
     cd /var/www/html
     while true; do
         php artisan schedule:run --no-interaction 2>&1 || true

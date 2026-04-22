@@ -23,6 +23,10 @@ Schedule::call(function () {
 
 // Fermer auto les restaurants qui dépassent l'heure de fermeture
 Schedule::call(function () {
+    // Guard: colonne ajoutée par migration 2026_04_22_210000 — ignorer si absente
+    if (!\Illuminate\Support\Facades\Schema::hasColumn('restaurants', 'horaire_fermeture')) {
+        return;
+    }
     $count = \App\Models\Restaurant::where('is_active', true)
         ->whereNotNull('horaire_fermeture')
         ->whereRaw("horaire_fermeture <= ?", [now()->format('H:i')])
