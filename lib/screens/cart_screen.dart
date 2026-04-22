@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../config/api_config.dart';
 import '../models/order.dart';
 import '../screens/payment_screen.dart';
 import '../services/client_prefs_service.dart';
@@ -31,6 +34,12 @@ class _CartScreenState extends State<CartScreen>
   // Form keys pour validation inline
   final _phoneFormKey = GlobalKey<FormState>();
   final _mobileMoneyFormKey = GlobalKey<FormState>();
+
+  // Coupon
+  final _couponController = TextEditingController();
+  double _couponDiscount = 0;
+  String? _couponMessage;
+  bool _couponLoading = false;
 
   @override
   void initState() {
@@ -67,7 +76,55 @@ class _CartScreenState extends State<CartScreen>
     _tableNumberController.dispose();
     _phoneNumberController.dispose();
     _mobileMoneyNumberController.dispose();
+    _couponController.dispose();
     super.dispose();
+  }
+
+  Future<void> _validateCoupon(RestaurantProvider provider) async {
+    final code = _couponController.text.trim();
+    if (code.isEmpty) return;
+    final restaurantId = provider.restaurant?.id;
+    if (restaurantId == null) return;
+
+    setState(() {
+      _couponLoading = true;
+      _couponMessage = null;
+    });
+
+    try {
+      final resp = await http
+          .post(
+            Uri.parse('${ApiConfig.baseUrl}/coupons/validate'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: jsonEncode({
+              'code': code,
+              'restaurant_id': restaurantId,
+              'order_total': provider.cartTotal,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      final data = jsonDecode(resp.body);
+      if (resp.statusCode == 200 && data['success'] == true) {
+        setState(() {
+          _couponDiscount = (data['data']['discount'] as num).toDouble();
+          _couponMessage = '✅ -${_couponDiscount.toStringAsFixed(0)} FCFA';
+        });
+      } else {
+        setState(() {
+          _couponDiscount = 0;
+          _couponMessage = data['message'] ?? 'Code invalide';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _couponMessage = 'Erreur de connexion';
+      });
+    }
+    if (mounted) setState(() => _couponLoading = false);
   }
 
   Widget _buildImage(String imageUrl,
@@ -454,6 +511,59 @@ class _CartScreenState extends State<CartScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Coupon input
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _couponController,
+                    decoration: InputDecoration(
+                      hintText: 'Code promo',
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                    ),
+                    textCapitalization: TextCapitalization.characters,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SizedBox(
+                  height: 40,
+                  child: ElevatedButton(
+                    onPressed:
+                        _couponLoading ? null : () => _validateCoupon(provider),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.secondary,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: _couponLoading
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white))
+                        : const Text('Appliquer',
+                            style:
+                                TextStyle(color: Colors.white, fontSize: 13)),
+                  ),
+                ),
+              ],
+            ),
+            if (_couponMessage != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(_couponMessage!,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: _couponDiscount > 0
+                          ? AppColors.success
+                          : AppColors.error,
+                    )),
+              ),
+            const SizedBox(height: 12),
             _buildCostSummary(provider.cartTotal, 0.0),
             const SizedBox(height: 20),
             _buildOrderButton(provider),
@@ -464,7 +574,7 @@ class _CartScreenState extends State<CartScreen>
   }
 
   Widget _buildCostSummary(double subtotal, double deliveryFee) {
-    final total = subtotal + deliveryFee;
+    final total = subtotal + deliveryFee - _couponDiscount;
     return Column(
       children: [
         Row(
@@ -478,6 +588,20 @@ class _CartScreenState extends State<CartScreen>
           ],
         ),
         const SizedBox(height: 8),
+        if (_couponDiscount > 0) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Réduction', style: AppTextStyles.bodyMedium),
+              Text(
+                '-${_couponDiscount.toStringAsFixed(0)} FCFA',
+                style:
+                    AppTextStyles.bodyMedium.copyWith(color: AppColors.success),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [

@@ -1,6 +1,6 @@
 ﻿import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Loader2, ArrowLeft, Copy, Check } from 'lucide-react';
+import { Mail, Loader2, ArrowLeft, Copy, Check, CheckCircle } from 'lucide-react';
 import { authApi } from '../../services/api';
 
 export default function ForgotPasswordPage() {
@@ -96,8 +96,8 @@ export default function ForgotPasswordPage() {
                     ) : (
                         <div className="space-y-6">
                             <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                                <p className="text-sm text-green-700 font-medium mb-2">
-                                    ✅ Code généré avec succès
+                                <p className="text-sm text-green-700 font-medium mb-2 flex items-center gap-1.5">
+                                    <CheckCircle className="h-4 w-4" /> Code généré avec succès
                                 </p>
                                 <p className="text-xs text-green-600">
                                     Copiez ce code et utilisez-le pour réinitialiser votre mot de passe. Il expire dans 60 minutes.

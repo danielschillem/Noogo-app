@@ -1,0 +1,64 @@
+# =============================================================
+# .dockerignore — Noogo (contexte build = racine du dépôt)
+# Exclut tout ce qui n'est pas nécessaire au build Docker
+# (Flutter, tests, artefacts locaux) pour accélérer le transfert
+# =============================================================
+
+# ── Git ───────────────────────────────────────────────────────
+.git/
+.gitignore
+.gitattributes
+
+# ── Flutter / Dart (pas dans l'image Docker) ──────────────────
+lib/
+test/
+android/
+ios/
+linux/
+macos/
+windows/
+build/
+coverage/
+*.iml
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec.yaml
+pubspec.lock
+analysis_options.yaml
+devtools_options.yaml
+l10n.yaml
+assets/
+fastlane/
+
+# ── Backend : vendor + runtime (reconstruits dans Docker) ─────
+backend/vendor/
+backend/storage/framework/cache/
+backend/storage/framework/sessions/
+backend/storage/framework/views/
+backend/storage/logs/
+backend/bootstrap/cache/
+backend/.env
+backend/node_modules/
+
+# ── Dashboard : node_modules + ancien dist ────────────────────
+dashboard/node_modules/
+dashboard/dist/
+dashboard/.env.local
+
+# ── Divers ────────────────────────────────────────────────────
+node_modules/
+vendor/
+*.log
+.DS_Store
+Thumbs.db
+
+# ── Docs & CI locaux (pas utiles dans l'image) ────────────────
+README.md
+CHANGELOG.md
+ROADMAP.md
+PROJECT_README.md
+composer.json
+composer.lock
+build_release.sh
+deploy.sh

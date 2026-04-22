@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
-        android:label="noogo"
+        android:label="@string/app_name"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -36,12 +36,12 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="noogo" android:host="restaurant" />
             </intent-filter>
-            <!-- Deep link HTTPS : https://noogo-app.netlify.app/restaurant/42 -->
+            <!-- Deep link HTTPS : https://dashboard-noogo.quickdev-it.com/restaurant/42 -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="noogo-app.netlify.app" android:pathPrefix="/restaurant" />
+                <data android:scheme="https" android:host="dashboard-noogo.quickdev-it.com" android:pathPrefix="/restaurant" />
             </intent-filter>
 
         </activity>

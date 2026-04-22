@@ -147,7 +147,8 @@ class _TrackingScreenState extends State<TrackingScreen>
     if (_clientPosition == null) return;
     final lat = _clientPosition!.latitude;
     final lng = _clientPosition!.longitude;
-    final uri = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng');
+    final uri = Uri.parse(
+        'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng');
     if (await canLaunchUrl(uri)) await launchUrl(uri);
   }
 
@@ -204,8 +205,8 @@ class _TrackingScreenState extends State<TrackingScreen>
                 color: const Color(0xFF334155),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.arrow_back,
-                  color: Colors.white70, size: 20),
+              child:
+                  const Icon(Icons.arrow_back, color: Colors.white70, size: 20),
             ),
           ),
           const SizedBox(width: 12),
@@ -226,8 +227,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                       ? '✅ Commande livrée !'
                       : 'Suivi en temps réel',
                   style: TextStyle(
-                    color:
-                        _isDelivered() ? AppColors.success : Colors.white54,
+                    color: _isDelivered() ? AppColors.success : Colors.white54,
                     fontSize: 12,
                   ),
                 ),
@@ -236,13 +236,12 @@ class _TrackingScreenState extends State<TrackingScreen>
           ),
           if (_etaMinutes != null && !_isDelivered())
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: AppColors.secondary.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(20),
-                border:
-                    Border.all(color: AppColors.secondary.withValues(alpha: 0.5)),
+                border: Border.all(
+                    color: AppColors.secondary.withValues(alpha: 0.5)),
               ),
               child: Row(
                 children: [
@@ -295,7 +294,8 @@ class _TrackingScreenState extends State<TrackingScreen>
                         boxShadow: isCurrent
                             ? [
                                 BoxShadow(
-                                  color: AppColors.secondary.withValues(alpha: 0.5),
+                                  color: AppColors.secondary
+                                      .withValues(alpha: 0.5),
                                   blurRadius: 8,
                                   spreadRadius: 2,
                                 )
@@ -314,9 +314,8 @@ class _TrackingScreenState extends State<TrackingScreen>
                       style: TextStyle(
                         color: isActive ? Colors.white70 : Colors.white24,
                         fontSize: 9,
-                        fontWeight: isCurrent
-                            ? FontWeight.bold
-                            : FontWeight.normal,
+                        fontWeight:
+                            isCurrent ? FontWeight.bold : FontWeight.normal,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -390,7 +389,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                     scale: _markerAnim.value,
                     child: child,
                   ),
-                  child: Container(
+                  child: DecoratedBox(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: AppColors.secondary,
@@ -416,7 +415,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                 point: _clientPosition!,
                 width: 44,
                 height: 44,
-                child: Container(
+                child: DecoratedBox(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: AppColors.primary,
@@ -469,8 +468,8 @@ class _TrackingScreenState extends State<TrackingScreen>
               decoration: BoxDecoration(
                 color: AppColors.success.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                    color: AppColors.success.withValues(alpha: 0.4)),
+                border:
+                    Border.all(color: AppColors.success.withValues(alpha: 0.4)),
               ),
               child: Row(
                 children: [
@@ -539,13 +538,11 @@ class _TrackingScreenState extends State<TrackingScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text('Temps estimé',
-                            style: TextStyle(
-                                color: Colors.white54, fontSize: 11)),
+                            style:
+                                TextStyle(color: Colors.white54, fontSize: 11)),
                         const SizedBox(height: 4),
                         Text(
-                          _etaMinutes != null
-                              ? '~$_etaMinutes min'
-                              : '— min',
+                          _etaMinutes != null ? '~$_etaMinutes min' : '— min',
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -570,8 +567,8 @@ class _TrackingScreenState extends State<TrackingScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text('Statut',
-                            style: TextStyle(
-                                color: Colors.white54, fontSize: 11)),
+                            style:
+                                TextStyle(color: Colors.white54, fontSize: 11)),
                         const SizedBox(height: 4),
                         Text(
                           _kSteps
@@ -603,9 +600,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                   child: ElevatedButton.icon(
                     onPressed: _toggleLocationSharing,
                     icon: Icon(
-                      _sharingLocation
-                          ? Icons.location_on
-                          : Icons.location_off,
+                      _sharingLocation ? Icons.location_on : Icons.location_off,
                       size: 16,
                     ),
                     label: Text(
@@ -676,20 +671,18 @@ class TrackingMiniCard extends StatelessWidget {
             ],
           ),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-              color: AppColors.secondary.withValues(alpha: 0.4)),
+          border: Border.all(color: AppColors.secondary.withValues(alpha: 0.4)),
         ),
-        child: Row(
+        child: const Row(
           children: [
-            const Icon(Icons.delivery_dining,
-                color: AppColors.secondary, size: 22),
-            const SizedBox(width: 10),
-            const Expanded(
+            Icon(Icons.delivery_dining, color: AppColors.secondary, size: 22),
+            SizedBox(width: 10),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '🚴 Livreur en route',
+                    'Livreur en route',
                     style: TextStyle(
                       color: AppColors.secondary,
                       fontWeight: FontWeight.bold,
@@ -698,14 +691,13 @@ class TrackingMiniCard extends StatelessWidget {
                   ),
                   Text(
                     'Appuyer pour suivre en temps réel',
-                    style: TextStyle(
-                        color: AppColors.textSecondary, fontSize: 11),
+                    style:
+                        TextStyle(color: AppColors.textSecondary, fontSize: 11),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right,
-                color: AppColors.textSecondary, size: 18),
+            Icon(Icons.chevron_right, color: AppColors.textSecondary, size: 18),
           ],
         ),
       ),

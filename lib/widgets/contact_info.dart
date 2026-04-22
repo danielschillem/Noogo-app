@@ -132,7 +132,7 @@ class _ContactInfoState extends State<ContactInfo> {
         },
       );
 
-      // Fermer loader EN PREMIER (avant !mounted) — le ContactInfo peut être
+      // Fermer loader EN PREMIER (avant !mounted) - le ContactInfo peut être
       // disposed pendant validateRestaurantQRCode (notifyListeners() quand
       // _restaurant == null), mais le NavigatorState reste valide.
       if (navigator.canPop()) {

@@ -125,7 +125,7 @@ abstract class AppLocalizations {
   /// Bannière hors-ligne
   ///
   /// In fr, this message translates to:
-  /// **'Connexion au serveur impossible — affichage des données locales'**
+  /// **'Connexion au serveur impossible - affichage des données locales'**
   String get no_internet;
 
   /// Bouton ou titre scan QR
@@ -779,7 +779,7 @@ abstract class AppLocalizations {
   /// Sous-titre hors-ligne
   ///
   /// In fr, this message translates to:
-  /// **'Connexion limitée — données locales affichées'**
+  /// **'Connexion limitée - données locales affichées'**
   String get offline_subtitle;
 
   /// Message erreur réseau

@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 class QRHelper {
   /// URLs acceptées comme sources de QR codes valides
   static const List<String> _validBaseUrls = [
-    'https://noogo-app.netlify.app',
     'https://dashboard-noogo.quickdev-it.com',
     'http://localhost',
     'http://127.0.0.1',
@@ -55,8 +54,9 @@ class QRHelper {
       // Fallback: si c'est un simple numéro, c'est un ID direct
       final directId = int.tryParse(qrData.trim());
       if (directId != null) {
-        if (kDebugMode)
+        if (kDebugMode) {
           debugPrint('🔍 Parse Restaurant ID: ID direct = $directId');
+        }
         return directId;
       }
 

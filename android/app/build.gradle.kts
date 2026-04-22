@@ -38,10 +38,24 @@ android {
 
     defaultConfig {
         applicationId = "com.quickdevit.noogo"
-        minSdk = 23
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+    }
+
+    flavorDimensions += "app"
+    productFlavors {
+        create("client") {
+            dimension = "app"
+            applicationId = "com.quickdevit.noogo"
+            resValue("string", "app_name", "Noogo")
+        }
+        create("driver") {
+            dimension = "app"
+            applicationId = "com.quickdevit.noogo.driver"
+            resValue("string", "app_name", "Noogo Livreur")
+        }
     }
 
     signingConfigs {

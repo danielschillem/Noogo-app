@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Affiche des étoiles de notation (1–5).
+/// Affiche des étoiles de notation (1-5).
 /// [rating] peut être un double (ex : 4.3 → 4 étoiles pleines).
 class ReviewStars extends StatelessWidget {
   const ReviewStars({

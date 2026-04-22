@@ -34,7 +34,6 @@
 *.hprof
 
 # Scripts avec credentials (cles API, mots de passe)
-render-deploy.ps1
 
 # Environment variables
 .env
@@ -48,5 +47,4 @@ build/debug-info/
 !android/app/google-services.json
 !**/google-services.json
 
-# Local Netlify folder
-.netlify
+

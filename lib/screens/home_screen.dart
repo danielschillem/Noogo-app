@@ -18,6 +18,7 @@ import 'profile_screen.dart';
 import '../utils/qr_helper.dart';
 import '../models/category.dart';
 import '../models/dish.dart';
+import 'restaurant_search_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -213,6 +214,22 @@ class _HomePage extends StatelessWidget {
                     ),
                   ),
             actions: [
+              IconButton(
+                icon: const Icon(Icons.search),
+                color: AppColors.textPrimary,
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => RestaurantSearchScreen(
+                      onRestaurantSelected: (id) {
+                        context
+                            .read<RestaurantProvider>()
+                            .loadAllInitialData(restaurantId: id);
+                      },
+                    ),
+                  ));
+                },
+                tooltip: 'Rechercher',
+              ),
               IconButton(
                 icon: const Icon(Icons.shopping_cart_outlined),
                 color: AppColors.textPrimary,

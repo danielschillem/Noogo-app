@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import {
     Users, Plus, Trash2, Edit2, Check, X, ShieldCheck, ChefHat,
     CreditCard, UtensilsCrossed, Search, UserCheck, UserX,
-    LayoutGrid, List,
+    LayoutGrid, List, CheckCircle,
 } from 'lucide-react';
 import { staffApi } from '../../services/api';
 import type { StaffMember, StaffRole } from '../../types';
@@ -163,7 +163,7 @@ function StaffCardGrid({ staff, onToggleActive, onEdit, onRemove }: {
                             <button onClick={() => onToggleActive(member)}
                                 className="flex-1 text-xs py-1.5 rounded-lg font-semibold transition-colors"
                                 style={member.is_active ? { background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0' } : { background: '#f8fafc', color: '#94a3b8', border: '1px solid #e2e8f0' }}>
-                                {member.is_active ? '✓ Actif' : 'Inactif'}
+                                {member.is_active ? <><CheckCircle size={12} className="inline mr-0.5" />Actif</> : 'Inactif'}
                             </button>
                             {member.role !== 'owner' && (
                                 <>
@@ -448,7 +448,7 @@ export default function StaffPage() {
                                         <td className="px-5 py-4">
                                             <button onClick={() => handleToggleActive(member)} className="text-xs px-2.5 py-1 rounded-lg font-semibold transition-colors"
                                                 style={member.is_active ? { background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0' } : { background: '#f8fafc', color: '#94a3b8', border: '1px solid #e2e8f0' }}>
-                                                {member.is_active ? '✓ Actif' : 'Inactif'}
+                                                {member.is_active ? <><CheckCircle size={12} className="inline mr-0.5" />Actif</> : 'Inactif'}
                                             </button>
                                         </td>
                                         <td className="px-5 py-4 text-right">

@@ -14,6 +14,9 @@ import {
   Activity,
   X,
   Timer,
+  CreditCard,
+  Phone,
+  Truck,
 } from 'lucide-react';
 import { ordersApi, restaurantsApi, deliveryApi } from '../../services/api';
 import { usePusher } from '../../hooks/usePusher';
@@ -103,11 +106,11 @@ function OrderDetailPanel({ order, onClose, onUpdateStatus, onCancel, onRequestD
           <div className="rounded-xl p-4 space-y-1.5" style={{ background: '#f8fafc', border: '1px solid #f1f5f9' }}>
             <p className="text-[10px] font-bold tracking-wider mb-2" style={{ color: '#94a3b8' }}>CLIENT</p>
             <p className="font-semibold text-sm" style={{ color: '#0f172a' }}>{order.customer_name || 'Client anonyme'}</p>
-            {order.customer_phone && <p className="text-xs" style={{ color: '#64748b' }}>📞 {order.customer_phone}</p>}
+            {order.customer_phone && <p className="text-xs flex items-center gap-1" style={{ color: '#64748b' }}><Phone className="h-3 w-3" /> {order.customer_phone}</p>}
             <p className="text-xs" style={{ color: '#64748b' }}>
               {order.order_type_text}{order.table_number ? ` · Table ${order.table_number}` : ''}
             </p>
-            <p className="text-xs" style={{ color: '#64748b' }}>💳 {order.payment_method}</p>
+            <p className="text-xs flex items-center gap-1" style={{ color: '#64748b' }}><CreditCard className="h-3 w-3" /> {order.payment_method}</p>
           </div>
           {/* Items */}
           {order.items && order.items.length > 0 && (
@@ -150,10 +153,10 @@ function OrderDetailPanel({ order, onClose, onUpdateStatus, onCancel, onRequestD
               <button onClick={() => { onUpdateStatus(order.id, nextStatus); onClose(); }}
                 className="flex-1 py-2.5 rounded-xl font-semibold text-sm text-white transition-opacity hover:opacity-90"
                 style={{ background: st.color }}>
-                {nextStatus === 'confirmed' ? '✓ Confirmer' :
-                  nextStatus === 'preparing' ? '🍳 Préparer' :
-                    nextStatus === 'ready' ? '✅ Prête' :
-                      nextStatus === 'delivered' ? '🛥️ Livrée' : 'Avancer'}
+                {nextStatus === 'confirmed' ? <><CheckCircle className="h-3.5 w-3.5 inline mr-1" />Confirmer</> :
+                  nextStatus === 'preparing' ? <><ChefHat className="h-3.5 w-3.5 inline mr-1" />Préparer</> :
+                    nextStatus === 'ready' ? <><CheckCircle className="h-3.5 w-3.5 inline mr-1" />Prête</> :
+                      nextStatus === 'delivered' ? <><Package className="h-3.5 w-3.5 inline mr-1" />Livrée</> : 'Avancer'}
               </button>
             )}
             {['pending', 'confirmed'].includes(order.status) && (
@@ -167,7 +170,7 @@ function OrderDetailPanel({ order, onClose, onUpdateStatus, onCancel, onRequestD
               <button onClick={() => { onRequestDelivery(order); onClose(); }}
                 className="px-4 py-2.5 rounded-xl font-semibold text-sm text-white transition-colors"
                 style={{ background: '#7c3aed' }}>
-                🚚 Demander livraison
+                <Truck className="h-3.5 w-3.5 inline mr-1" />Demander livraison
               </button>
             )}
           </div>
@@ -644,14 +647,14 @@ function KanbanCard({ order, col, isDragging, onDragStart, onDragEnd, onAdvance,
           <button onClick={onCancel}
             className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-opacity hover:opacity-90"
             style={{ background: '#fef2f2', color: '#dc2626' }}>
-            âœ•
+            <X className="h-3 w-3" />
           </button>
         )}
         {onRequestDelivery && (
           <button onClick={e => { e.stopPropagation(); onRequestDelivery(); }}
             className="flex-1 py-1.5 rounded-lg text-[11px] font-semibold text-white transition-opacity hover:opacity-90"
             style={{ background: '#7c3aed' }}>
-            🚚 Livraison
+            <Truck className="h-3 w-3 inline mr-0.5" />Livraison
           </button>
         )}
       </div>
@@ -735,7 +738,7 @@ function ListOrderCard({ order, onUpdateStatus, onCancel, onRequestDelivery }: {
               {order.order_type === 'livraison' && onRequestDelivery && (
                 <button onClick={() => onRequestDelivery(order)}
                   className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white"
-                  style={{ background: '#7c3aed' }}>🚚 Livraison</button>
+                  style={{ background: '#7c3aed' }}><Truck className="h-3 w-3 inline mr-0.5" />Livraison</button>
               )}
             </>)}
           </div>

@@ -19,7 +19,13 @@ echo "APP_KEY=$APP_KEY" >> "$ENV_FILE"
 [ -n "$APP_DEBUG" ]     && echo "APP_DEBUG=$APP_DEBUG" >> "$ENV_FILE"
 [ -n "$APP_URL" ]       && echo "APP_URL=$APP_URL" >> "$ENV_FILE"
 [ -n "$DB_CONNECTION" ] && echo "DB_CONNECTION=$DB_CONNECTION" >> "$ENV_FILE"
+
+# DO fournit DATABASE_URL, Laravel attend DB_URL
+if [ -z "$DB_URL" ] && [ -n "$DATABASE_URL" ]; then
+    DB_URL="$DATABASE_URL"
+fi
 [ -n "$DB_URL" ]        && echo "DB_URL=$DB_URL" >> "$ENV_FILE"
+
 [ -n "$DB_SSLMODE" ]    && echo "DB_SSLMODE=$DB_SSLMODE" >> "$ENV_FILE"
 [ -n "$FRONTEND_URL" ]  && echo "FRONTEND_URL=$FRONTEND_URL" >> "$ENV_FILE"
 [ -n "$LOG_CHANNEL" ]   && echo "LOG_CHANNEL=$LOG_CHANNEL" >> "$ENV_FILE"
@@ -30,6 +36,8 @@ echo "✅ .env écrit avec $(wc -l < "$ENV_FILE") variables"
 # Propager APP_KEY dans l'environnement s6 (si le dossier existe déjà)
 if [ -d "/run/s6/container_environment" ]; then
     printf '%s' "$APP_KEY" > /run/s6/container_environment/APP_KEY
+    # DB_URL doit être visible par le s6 oneshot noogo-db-init
+    [ -n "$DB_URL" ] && printf '%s' "$DB_URL" > /run/s6/container_environment/DB_URL
 fi
 
 # ── PORT → NGINX_HTTP_PORT ───────────────────────────────────

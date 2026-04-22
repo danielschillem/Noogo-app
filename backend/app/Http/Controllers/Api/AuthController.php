@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use App\Models\User;
+use App\Models\DeliveryDriver;
 
 class AuthController extends Controller
 {
@@ -51,6 +52,60 @@ class AuthController extends Controller
                 'token' => $token,
                 'token_type' => 'Bearer',
             ]
+        ], 201);
+    }
+
+    /**
+     * Inscription livreur
+     * POST /api/auth/register-driver
+     */
+    public function registerDriver(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'telephone' => 'required|string|max:20|unique:users,phone',
+            'password' => 'required|string|min:6|confirmed',
+            'zone' => 'nullable|string|max:100',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur de validation',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $result = DB::transaction(function () use ($request) {
+            $user = User::create([
+                'name' => $request->name,
+                'phone' => $request->telephone,
+                'password' => Hash::make($request->password),
+                'role' => 'driver',
+            ]);
+
+            $driver = DeliveryDriver::create([
+                'user_id' => $user->id,
+                'name' => $request->name,
+                'phone' => $request->telephone,
+                'zone' => $request->zone,
+                'status' => 'offline',
+            ]);
+
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return compact('user', 'driver', 'token');
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Compte livreur créé avec succès',
+            'data' => [
+                'user' => $result['user'],
+                'driver' => $result['driver'],
+                'token' => $result['token'],
+                'token_type' => 'Bearer',
+            ],
         ], 201);
     }
 
@@ -239,10 +294,24 @@ class AuthController extends Controller
             ['token' => $token, 'created_at' => now()]
         );
 
+        // Envoi email si l'utilisateur a un email configuré
+        if ($user->email) {
+            try {
+                \Illuminate\Support\Facades\Mail::raw(
+                    "Bonjour {$user->name},\n\nVotre code de réinitialisation Noogo : {$token}\n\nCe code expire dans 60 minutes.\n\nSi vous n'avez pas demandé cette réinitialisation, ignorez ce message.",
+                    function ($message) use ($user) {
+                        $message->to($user->email)
+                            ->subject('Réinitialisation de mot de passe Noogo');
+                    }
+                );
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Email reset non envoyé: ' . $e->getMessage());
+            }
+        }
+
         return response()->json([
             'success' => true,
-            'message' => 'Code de réinitialisation généré',
-            'data' => ['reset_token' => $token],
+            'message' => 'Si ce compte existe, un code de réinitialisation a été envoyé',
         ]);
     }
 

@@ -174,10 +174,10 @@
     - Enregistré dans `AppServiceProvider` via `Gate::policy()`
     - `$this->authorize('update', $restaurant)` ajouté dans `store/update/destroy` de `DishController`, `CategoryController`, `FlashInfoController`
 
-- [x] **SEC-006** : Restreindre CORS au domaine Netlify exact
+- [x] **SEC-006** : Restreindre CORS au domaine dashboard exact
   - ✅ Corrigé le 12/04/2026 :
-    - `backend/config/cors.php` : pattern `#^https://noogo-dashboard\.netlify\.app$#` via `NETLIFY_SUBDOMAIN` env var
-    - Ajouter `NETLIFY_SUBDOMAIN=noogo-dashboard` dans les variables d'environnement Render
+    - `backend/config/cors.php` : `dashboard-noogo.quickdev-it.com` via `FRONTEND_URL` env var
+    - Configuré dans les variables d'environnement Digital Ocean
 
 ### Tests
 
@@ -581,7 +581,7 @@ ENVIRONMENT=development
 - ✅ Throttle 120/min routes dashboard (SEC-007)
 - ✅ Cache menu hors-ligne (FEAT-001)
 - ✅ Favoris plats avec onglet ❤️ dans MenuScreen (FEAT-004)
-- ✅ CORS restreint au domaine Netlify exact
+- ✅ CORS restreint au domaine dashboard exact
 - ✅ Policies Laravel ownership (Restaurant, Dish, Category, FlashInfo)
 - ✅ Retry exponentiel PaymentService + 8 classes d'exceptions typées
 
@@ -604,7 +604,7 @@ ENVIRONMENT=development
 - Flutter 301 tests, 0 issues (`dart analyze`), coverage global ~56.5%
 - Laravel 61 tests, 130+ assertions (40 tests de la suite principale)
 - Les plugins Pusher et Mobile Scanner ne fonctionnent pas sur Windows/Web (normal)
-- Dashboard React déployable sur Netlify, backend Laravel sur Render
+- Dashboard React et backend Laravel déployés sur Digital Ocean
 - Prochaine étape : intégration Orange Money (BL-009 — credentials à fournir)
 
 ---

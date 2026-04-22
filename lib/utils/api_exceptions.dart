@@ -14,7 +14,7 @@
 // }
 // ```
 
-/// Exception de base — toutes les erreurs API héritent de celle-ci.
+/// Exception de base - toutes les erreurs API héritent de celle-ci.
 class ApiException implements Exception {
   final String message;
   final int? statusCode;
@@ -88,7 +88,7 @@ class NetworkException extends ApiException {
   String toString() => 'NetworkException: $message';
 }
 
-/// 401 — Non authentifié.
+/// 401 - Non authentifié.
 class AuthException extends ApiException {
   const AuthException(super.message) : super(statusCode: 401);
 
@@ -96,7 +96,7 @@ class AuthException extends ApiException {
   String toString() => 'AuthException: $message';
 }
 
-/// 403 — Accès interdit (ressource appartenant à un autre utilisateur).
+/// 403 - Accès interdit (ressource appartenant à un autre utilisateur).
 class ForbiddenException extends ApiException {
   const ForbiddenException(super.message) : super(statusCode: 403);
 
@@ -104,7 +104,7 @@ class ForbiddenException extends ApiException {
   String toString() => 'ForbiddenException: $message';
 }
 
-/// 404 — Ressource introuvable.
+/// 404 - Ressource introuvable.
 class NotFoundException extends ApiException {
   const NotFoundException(super.message) : super(statusCode: 404);
 
@@ -112,7 +112,7 @@ class NotFoundException extends ApiException {
   String toString() => 'NotFoundException: $message';
 }
 
-/// 422 — Erreur de validation Laravel.
+/// 422 - Erreur de validation Laravel.
 class ValidationException extends ApiException {
   const ValidationException(super.message, {super.statusCode = 422});
 
@@ -120,7 +120,7 @@ class ValidationException extends ApiException {
   String toString() => 'ValidationException: $message';
 }
 
-/// 429 — Rate limit dépassé.
+/// 429 - Rate limit dépassé.
 class RateLimitException extends ApiException {
   const RateLimitException(super.message) : super(statusCode: 429);
 
@@ -128,7 +128,7 @@ class RateLimitException extends ApiException {
   String toString() => 'RateLimitException: $message';
 }
 
-/// 5xx — Erreur serveur.
+/// 5xx - Erreur serveur.
 class ServerException extends ApiException {
   const ServerException(super.message, {super.statusCode});
 
