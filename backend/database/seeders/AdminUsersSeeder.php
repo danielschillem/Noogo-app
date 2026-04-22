@@ -44,13 +44,13 @@ class AdminUsersSeeder extends Seeder
                 'email' => 'livreur@noogo.com',
                 'password' => Hash::make('password123'),
                 'is_admin' => false,
-                'role' => 'driver',
+                'role' => 'user',
                 'email_verified_at' => now(),
             ]
         );
 
         $this->command->info('✓ super-user@noogo.com (super_admin) créé/mis à jour');
         $this->command->info('✓ daniel@noogo.com (admin) créé/mis à jour');
-        $this->command->info('✓ +22670000010 (driver) créé/mis à jour');
+        $this->command->info('✓ +22670000010 (user) créé/mis à jour');
     }
 }
