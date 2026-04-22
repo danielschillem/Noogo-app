@@ -13,10 +13,12 @@ import 'package:provider/provider.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'utils/app_colors.dart';
 import 'utils/app_text_styles.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'driver/screens/driver_login_screen.dart';
 import 'driver/screens/driver_home_screen.dart';
 import 'driver/screens/driver_register_screen.dart';
 import 'driver/services/driver_provider.dart';
+import 'driver/services/driver_notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,8 +27,22 @@ Future<void> main() async {
   try {
     await Firebase.initializeApp();
     await FCMService.init();
+
+    // Init notifications livreur (son + Pusher canal privé)
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    final userId =
+        prefs.getString('user_id') ?? prefs.getInt('user_id')?.toString();
+    if (token != null && userId != null) {
+      await DriverNotificationService.instance.init(
+        userId: userId,
+        authToken: token,
+      );
+    } else {
+      await DriverNotificationService.instance.initFcmOnly();
+    }
   } catch (e) {
-    debugPrint('Firebase non configuré: $e');
+    debugPrint('Firebase/DriverNotif non configuré: $e');
   }
 
   final themeProvider = ThemeProvider();

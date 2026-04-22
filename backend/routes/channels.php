@@ -74,3 +74,16 @@ Broadcast::channel('delivery.{orderId}', function ($user, int $orderId): bool {
 
     return $staff?->canManageOrders() ?? false;
 });
+
+/**
+ * Canal private-driver.{userId} :
+ *   - Le livreur lui-même (son user_id correspond)
+ *   - Admin Noogo
+ * Utilisé pour envoyer les événements delivery.assigned en temps réel.
+ */
+Broadcast::channel('driver.{userId}', function ($user, int $userId): bool {
+    if ($user->is_admin) {
+        return true;
+    }
+    return $user->id === $userId;
+});

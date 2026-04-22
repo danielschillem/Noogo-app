@@ -233,6 +233,7 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_userKey, jsonEncode(user.toJson()));
     await prefs.setString(_tokenKey, token);
+    await prefs.setString('user_id', user.id.toString());
   }
 
   static Future<void> _disableGuestMode() async {

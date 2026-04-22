@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/auth_service.dart';
 import '../../utils/app_colors.dart';
+import '../services/driver_notification_service.dart';
 
 class DriverLoginScreen extends StatefulWidget {
   const DriverLoginScreen({super.key});
@@ -41,6 +43,17 @@ class _DriverLoginScreenState extends State<DriverLoginScreen> {
       if (!mounted) return;
 
       if (result['success'] == true) {
+        // Init les notifications livreur avec userId + token
+        final prefs = await SharedPreferences.getInstance();
+        final token = prefs.getString('auth_token');
+        final userId = prefs.getString('user_id');
+        if (token != null && userId != null) {
+          await DriverNotificationService.instance.init(
+            userId: userId,
+            authToken: token,
+          );
+        }
+        if (!mounted) return;
         Navigator.of(context).pushReplacementNamed('/driver-home');
       } else {
         setState(() {

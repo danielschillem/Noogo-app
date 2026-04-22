@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Events\DeliveryStatusChanged;
+use App\Events\DriverDeliveryAssigned;
 use App\Events\DriverLocationUpdated;
 use App\Http\Controllers\Controller;
 use App\Models\Delivery;
@@ -77,6 +78,11 @@ class DeliveryController extends Controller
 
             broadcast(new DeliveryStatusChanged($delivery->fresh()->load('driver'), 'delivery.assigned'));
 
+            // Notifier le livreur sur son canal privé (déclenche son+dialog dans l'app)
+            if ($availableDriver->user_id) {
+                broadcast(new DriverDeliveryAssigned($delivery->fresh(), $availableDriver->user_id));
+            }
+
             if ($availableDriver->fcm_token) {
                 $this->fcm->sendToToken(
                     $availableDriver->fcm_token,
@@ -136,6 +142,11 @@ class DeliveryController extends Controller
 
         $delivery->load('driver');
         broadcast(new DeliveryStatusChanged($delivery, 'delivery.assigned'));
+
+        // Notifier le livreur sur son canal privé (déclenche son+dialog dans l'app)
+        if ($driver->user_id) {
+            broadcast(new DriverDeliveryAssigned($delivery->fresh(), $driver->user_id));
+        }
 
         // DEL-B11 : FCM au livreur — nouvelle commande assignée
         if ($driver->fcm_token) {

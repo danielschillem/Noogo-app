@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../utils/app_colors.dart';
 import '../services/driver_provider.dart';
+import '../services/driver_notification_service.dart';
 import '../models/delivery.dart';
 import 'driver_delivery_screen.dart';
 import 'driver_history_screen.dart';
@@ -16,13 +19,116 @@ class DriverHomeScreen extends StatefulWidget {
 
 class _DriverHomeScreenState extends State<DriverHomeScreen> {
   int _currentIndex = 0;
+  StreamSubscription<NewDeliveryEvent>? _deliverySub;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DriverProvider>().loadActiveDeliveries();
+      _subscribeToNewDeliveries();
     });
+  }
+
+  void _subscribeToNewDeliveries() {
+    _deliverySub = DriverNotificationService.instance.newDeliveryStream.listen(
+      (event) {
+        if (!mounted) return;
+        // Rafraîchir la liste
+        context.read<DriverProvider>().loadActiveDeliveries();
+        // Afficher le dialog d'alerte
+        _showNewDeliveryDialog(event);
+      },
+    );
+  }
+
+  void _showNewDeliveryDialog(NewDeliveryEvent event) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.success.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.delivery_dining,
+                  color: AppColors.success, size: 28),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text('Nouvelle livraison !',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Commande #${event.orderId}',
+              style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary),
+            ),
+            if (event.customerName != null) ...[
+              const SizedBox(height: 8),
+              Row(children: [
+                const Icon(Icons.person,
+                    size: 16, color: AppColors.textSecondary),
+                const SizedBox(width: 6),
+                Text(event.customerName!,
+                    style: const TextStyle(color: AppColors.textSecondary)),
+              ]),
+            ],
+            if (event.address != null) ...[
+              const SizedBox(height: 6),
+              Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Icon(Icons.location_on, size: 16, color: AppColors.error),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(event.address!,
+                      style: const TextStyle(color: AppColors.textSecondary)),
+                ),
+              ]),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Plus tard',
+                style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.success,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            icon: const Icon(Icons.check_circle_outline),
+            label: const Text('Voir la livraison'),
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              setState(() => _currentIndex = 0);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _deliverySub?.cancel();
+    super.dispose();
   }
 
   @override
