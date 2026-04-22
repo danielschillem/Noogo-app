@@ -40,6 +40,8 @@ fi
 [ -n "$DB_USERNAME" ]       && echo "DB_USERNAME=$DB_USERNAME"       >> "$ENV_FILE"
 [ -n "$DB_PASSWORD" ]       && echo "DB_PASSWORD=$DB_PASSWORD"       >> "$ENV_FILE"
 [ -n "$DB_SSLMODE" ]        && echo "DB_SSLMODE=$DB_SSLMODE"         >> "$ENV_FILE"
+# Schéma dédié — évite le problème de permissions PostgreSQL 15 sur 'public'
+echo "DB_SCHEMA=noogo"                                                >> "$ENV_FILE"
 
 # App
 [ -n "$FRONTEND_URL" ]      && echo "FRONTEND_URL=$FRONTEND_URL"     >> "$ENV_FILE"
@@ -99,21 +101,35 @@ php artisan storage:link 2>/dev/null || true
         sleep 2
     done
     echo "✅ [migration] DB prête, lancement des migrations..."
-    # Fix PostgreSQL 15+ : GRANT CREATE sur le schéma public au user courant
+    # PostgreSQL 15 : créer un schéma 'noogo' dont l'app user est propriétaire
+    # (évite le problème de permissions sur le schéma 'public' PG15)
     php -r "
-    \$url = getenv('DATABASE_URL') ?: getenv('DB_URL');
-    \$u   = parse_url(\$url);
-    \$db  = ltrim(\$u['path'] ?? '/postgres', '/');
-    \$ssl = getenv('DB_SSLMODE') ?: 'require';
-    \$dsn = 'pgsql:host=' . \$u['host'] . ';port=' . (\$u['port'] ?? 5432)
-         . ';dbname=' . \$db . ';sslmode=' . \$ssl;
+    \$url  = getenv('DATABASE_URL') ?: getenv('DB_URL');
+    \$u    = parse_url(\$url);
+    \$db   = ltrim(\$u['path'] ?? '/postgres', '/');
+    \$user = \$u['user'] ?? '';
+    \$ssl  = getenv('DB_SSLMODE') ?: 'require';
+    \$dsn  = 'pgsql:host=' . \$u['host'] . ';port=' . (\$u['port'] ?? 5432)
+          . ';dbname=' . \$db . ';sslmode=' . \$ssl;
+    echo \"DB user: \$user, DB: \$db\n\";
     try {
-        \$pdo = new PDO(\$dsn, \$u['user'] ?? '', \$u['pass'] ?? '');
-        \$pdo->exec('GRANT ALL ON SCHEMA public TO CURRENT_USER');
-        \$pdo->exec('ALTER DATABASE \"' . \$db . '\" SET search_path = public');
-        echo \"Schema public : permissions OK\n\";
-    } catch(Exception \$e) { echo 'Schema grant skip: ' . \$e->getMessage() . \"\n\"; }
+        \$pdo = new PDO(\$dsn, \$user, \$u['pass'] ?? '');
+        \$pdo->exec('CREATE SCHEMA IF NOT EXISTS noogo AUTHORIZATION CURRENT_USER');
+        echo \"Schema noogo: créé/vérifié OK\n\";
+    } catch(Exception \$e) {
+        echo 'Schema noogo create failed: ' . \$e->getMessage() . \"\n\";
+        // Fallback : tenter un GRANT direct sur public
+        try {
+            \$pdo2 = new PDO(\$dsn, \$user, \$u['pass'] ?? '');
+            \$pdo2->exec(\"GRANT CREATE ON SCHEMA public TO \\\"\$user\\\"\");
+            echo \"GRANT CREATE on public: OK\n\";
+        } catch(Exception \$e2) {
+            echo 'GRANT fallback failed: ' . \$e2->getMessage() . \"\n\";
+        }
+    }
     " 2>&1
+    # Recache la config avec le nouveau DB_SCHEMA
+    php artisan config:cache 2>&1 | tail -1
     php artisan migrate --force 2>&1 || echo "⚠️ [migration] Non-fatal"
     php artisan db:seed --class=AdminUsersSeeder --force 2>&1 || true
     echo "✅ [migration] Terminé"
