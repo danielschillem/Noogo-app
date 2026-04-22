@@ -99,34 +99,39 @@ php artisan storage:link 2>/dev/null || true
         sleep 2
     done
     echo "✅ [migration] DB prête, lancement des migrations..."
-    # PostgreSQL 15 : créer un schéma 'noogo' dont l'app user est propriétaire
-    # (évite le problème de permissions sur le schéma 'public' PG15)
+    # PostgreSQL 15 DO managed DB fix :
+    # Utilise le port direct 25061 (hors PgBouncer) pour les migrations
+    # PgBouncer (25060) fait DISCARD ALL entre transactions et peut resetter search_path
     php -r "
     \$url  = getenv('DATABASE_URL') ?: getenv('DB_URL');
     \$u    = parse_url(\$url);
     \$db   = ltrim(\$u['path'] ?? '/postgres', '/');
     \$user = \$u['user'] ?? '';
+    \$pass = \$u['pass'] ?? '';
+    \$host = \$u['host'];
     \$ssl  = getenv('DB_SSLMODE') ?: 'require';
-    \$dsn  = 'pgsql:host=' . \$u['host'] . ';port=' . (\$u['port'] ?? 5432)
-          . ';dbname=' . \$db . ';sslmode=' . \$ssl;
-    echo \"DB user: \$user, DB: \$db\n\";
-    try {
-        \$pdo = new PDO(\$dsn, \$user, \$u['pass'] ?? '');
-        \$pdo->exec('CREATE SCHEMA IF NOT EXISTS noogo AUTHORIZATION CURRENT_USER');
-        echo \"Schema noogo: créé/vérifié OK\n\";
-    } catch(Exception \$e) {
-        echo 'Schema noogo create failed: ' . \$e->getMessage() . \"\n\";
-        // Fallback : tenter un GRANT direct sur public
+    // Port 25061 = connexion directe PostgreSQL (pas PgBouncer)
+    \$dsn_direct = 'pgsql:host=' . \$host . ';port=25061;dbname=' . \$db . ';sslmode=' . \$ssl;
+    \$dsn_pooled = 'pgsql:host=' . \$host . ';port=' . (\$u['port'] ?? 5432) . ';dbname=' . \$db . ';sslmode=' . \$ssl;
+    \$opts = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION];
+    echo \"DB: \$db, user: \$user\n\";
+    foreach ([\$dsn_direct, \$dsn_pooled] as \$dsn) {
         try {
-            \$pdo2 = new PDO(\$dsn, \$user, \$u['pass'] ?? '');
-            \$pdo2->exec(\"GRANT CREATE ON SCHEMA public TO \\\"\$user\\\"\");
-            echo \"GRANT CREATE on public: OK\n\";
-        } catch(Exception \$e2) {
-            echo 'GRANT fallback failed: ' . \$e2->getMessage() . \"\n\";
+            \$pdo = new PDO(\$dsn, \$user, \$pass, \$opts);
+            // Fixer le search_path au niveau du rôle (persistant, survit à DISCARD ALL)
+            try { \$pdo->exec(\"ALTER ROLE CURRENT_USER SET search_path TO public\"); echo \"ALTER ROLE search_path: OK\n\"; } catch(Exception \$e) { echo 'ALTER ROLE: ' . \$e->getMessage() . \"\n\"; }
+            // GRANT CREATE sur le schéma public
+            try { \$pdo->exec('GRANT CREATE ON SCHEMA public TO CURRENT_USER'); echo \"GRANT CREATE public: OK\n\"; } catch(Exception \$e) { echo 'GRANT: ' . \$e->getMessage() . \"\n\"; }
+            echo \"Connexion OK sur: \$dsn\n\";
+            break;
+        } catch(Exception \$e) {
+            echo 'Connexion failed (' . \$dsn . '): ' . \$e->getMessage() . \"\n\";
         }
     }
     " 2>&1
-
+    # Clear le cache config pour forcer la relecture depuis .env
+    php artisan config:clear 2>&1 | tail -1
+    php artisan config:cache 2>&1 | tail -1
     php artisan migrate --force 2>&1 || echo "⚠️ [migration] Non-fatal"
     php artisan db:seed --class=AdminUsersSeeder --force 2>&1 || true
     echo "✅ [migration] Terminé"
