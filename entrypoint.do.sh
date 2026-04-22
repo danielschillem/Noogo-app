@@ -125,13 +125,19 @@ php artisan storage:link 2>/dev/null || true
             // Utiliser le nom d'utilisateur EXPLICITE de l'URL (pas CURRENT_USER qui peut résoudre vers doadmin via PgBouncer)
             \$safeUser = str_replace('\"', '', \$user);
             // Fix regression: reset search_path back to public
-            // (a previous deploy set search_path=app on the role, which broke migrations)
             try { \$pdo->exec(\"ALTER ROLE \\\"\$safeUser\\\" SET search_path TO public\"); echo \"ALTER ROLE search_path=public: OK\n\"; } catch(Exception \$e) { echo 'ALTER ROLE: ' . \$e->getMessage() . \"\n\"; }
-            // Diagnostic: show public schema ACL
-            // If migrations fail with 'permission denied for schema public', run in DO console:
-            //   GRANT CREATE ON SCHEMA public TO \"noogo-db\";
-            \$acl = \$pdo->query(\"SELECT nspacl::text FROM pg_namespace WHERE nspname = 'public'\")->fetchColumn();
-            echo \"public schema ACL: \$acl\n\";
+            // Deep diagnostics to understand exactly what noogo-db can do
+            \$rows = \$pdo->query(\"
+                SELECT 'db_owner'       AS k, pg_catalog.pg_get_userbyid(datdba)::text AS v FROM pg_database WHERE datname = current_database()
+                UNION ALL SELECT 'has_create_public', has_schema_privilege(current_user, 'public', 'CREATE')::text
+                UNION ALL SELECT 'is_pg_db_owner',   pg_has_role(current_user, 'pg_database_owner', 'MEMBER')::text
+                UNION ALL SELECT 'rolcreatedb',       (SELECT rolcreatedb::text FROM pg_roles WHERE rolname = current_user)
+                UNION ALL SELECT 'rolinherit',        (SELECT rolinherit::text FROM pg_roles WHERE rolname = current_user)
+            \")->fetchAll(PDO::FETCH_KEY_PAIR);
+            foreach (\$rows as \$k => \$v) { echo \"\$k=\$v\n\"; }
+            // List all schemas noogo-db can CREATE in
+            \$schemas = \$pdo->query(\"SELECT nspname FROM pg_namespace WHERE has_schema_privilege(current_user, nspname, 'CREATE')\")->fetchAll(PDO::FETCH_COLUMN);
+            echo 'schemas_with_create=' . implode(',', \$schemas) . \"\n\";
             echo \"Connexion OK sur: \$dsn\n\";
             break;
         } catch(Exception \$e) {
