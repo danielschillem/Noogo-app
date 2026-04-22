@@ -770,13 +770,13 @@ class _CartScreenState extends State<CartScreen>
       deliveryLng = location.longitude;
     }
 
-    // Étape 3: Demander le numéro de téléphone
-    final phoneNumber = await _askPhoneNumber();
-    if (phoneNumber == null) return;
-
-    // Étape 4: Demander le mode de paiement
+    // Étape 3: Demander le mode de paiement
     final paymentMethod = await _askPaymentMethod();
     if (paymentMethod == null) return;
+
+    // Étape 4: Demander le numéro de téléphone (unique saisie)
+    final phoneNumber = await _askPhoneNumber();
+    if (phoneNumber == null) return;
 
     String? mobileMoneyProvider;
 
@@ -785,15 +785,10 @@ class _CartScreenState extends State<CartScreen>
       mobileMoneyProvider = await _askMobileMoneyProvider();
       if (mobileMoneyProvider == null) return;
 
-      // Étape 5.1: Demander le numéro Mobile Money
-      final mobileMoneyNumber =
-          await _askMobileMoneyNumber(mobileMoneyProvider);
-      if (mobileMoneyNumber == null) return;
-
-      // Étape 5.2: Paiement Mobile Money via PaymentScreen
+      // Étape 5.1: Paiement Mobile Money via PaymentScreen (même numéro)
       final otpConfirmed = await _processOTPPayment(
         mobileMoneyProvider: mobileMoneyProvider,
-        phoneNumber: mobileMoneyNumber,
+        phoneNumber: phoneNumber,
         amount: provider.cartTotal,
         provider: provider,
       );
@@ -801,7 +796,7 @@ class _CartScreenState extends State<CartScreen>
 
       // Mémoriser le numéro Mobile Money pour la prochaine fois
       await ClientPrefsService.saveMobileMoneyPrefs(
-        phone: mobileMoneyNumber,
+        phone: phoneNumber,
         provider: mobileMoneyProvider,
       );
     }

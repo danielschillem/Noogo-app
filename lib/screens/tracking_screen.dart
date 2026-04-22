@@ -176,7 +176,7 @@ class _TrackingScreenState extends State<TrackingScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f172a),
+      backgroundColor: Colors.grey[50],
       body: SafeArea(
         child: Column(
           children: [
@@ -194,7 +194,7 @@ class _TrackingScreenState extends State<TrackingScreen>
   Widget _buildTopBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      color: const Color(0xFF1e293b),
+      color: Colors.white,
       child: Row(
         children: [
           GestureDetector(
@@ -202,11 +202,10 @@ class _TrackingScreenState extends State<TrackingScreen>
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF334155),
+                color: Colors.grey[100],
                 borderRadius: BorderRadius.circular(10),
               ),
-              child:
-                  const Icon(Icons.arrow_back, color: Colors.white70, size: 20),
+              child: Icon(Icons.arrow_back, color: Colors.grey[700], size: 20),
             ),
           ),
           const SizedBox(width: 12),
@@ -217,7 +216,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                 Text(
                   'Livraison — Commande #${widget.order.id}',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textPrimary,
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),
@@ -227,7 +226,9 @@ class _TrackingScreenState extends State<TrackingScreen>
                       ? '✅ Commande livrée !'
                       : 'Suivi en temps réel',
                   style: TextStyle(
-                    color: _isDelivered() ? AppColors.success : Colors.white54,
+                    color: _isDelivered()
+                        ? AppColors.success
+                        : AppColors.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -268,7 +269,7 @@ class _TrackingScreenState extends State<TrackingScreen>
   Widget _buildStatusBar() {
     final step = _currentStepIndex;
     return Container(
-      color: const Color(0xFF1e293b),
+      color: Colors.white,
       padding: const EdgeInsets.fromLTRB(12, 4, 12, 14),
       child: Row(
         children: List.generate(_kSteps.length, (i) {
@@ -290,7 +291,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                             ? (isCurrent
                                 ? AppColors.secondary
                                 : AppColors.success)
-                            : const Color(0xFF334155),
+                            : Colors.grey[300],
                         boxShadow: isCurrent
                             ? [
                                 BoxShadow(
@@ -304,7 +305,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                       ),
                       child: Icon(
                         _kSteps[i].icon,
-                        color: isActive ? Colors.white : Colors.white30,
+                        color: isActive ? Colors.white : Colors.grey[500],
                         size: isCurrent ? 16 : 14,
                       ),
                     ),
@@ -312,7 +313,8 @@ class _TrackingScreenState extends State<TrackingScreen>
                     Text(
                       _kSteps[i].label,
                       style: TextStyle(
-                        color: isActive ? Colors.white70 : Colors.white24,
+                        color:
+                            isActive ? AppColors.textPrimary : Colors.grey[400],
                         fontSize: 9,
                         fontWeight:
                             isCurrent ? FontWeight.bold : FontWeight.normal,
@@ -327,9 +329,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                       duration: const Duration(milliseconds: 300),
                       height: 2,
                       margin: const EdgeInsets.only(bottom: 18),
-                      color: i < step
-                          ? AppColors.success
-                          : const Color(0xFF334155),
+                      color: i < step ? AppColors.success : Colors.grey[300],
                     ),
                   ),
               ],
@@ -445,9 +445,15 @@ class _TrackingScreenState extends State<TrackingScreen>
   Widget _buildBottomPanel() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
-        color: Color(0xFF1e293b),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 10,
+              offset: const Offset(0, -2)),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -455,7 +461,7 @@ class _TrackingScreenState extends State<TrackingScreen>
           // Drag handle
           DecoratedBox(
             decoration: BoxDecoration(
-              color: const Color(0xFF475569),
+              color: Colors.grey[300],
               borderRadius: BorderRadius.circular(2),
             ),
             child: const SizedBox(width: 40, height: 4),
@@ -491,14 +497,15 @@ class _TrackingScreenState extends State<TrackingScreen>
                         Text(
                           'Livraison effectuée !',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: AppColors.textPrimary,
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
                           ),
                         ),
                         Text(
                           'Merci d\'avoir choisi Noogo 🎉',
-                          style: TextStyle(color: Colors.white60, fontSize: 12),
+                          style: TextStyle(
+                              color: AppColors.textSecondary, fontSize: 12),
                         ),
                       ],
                     ),
@@ -512,8 +519,8 @@ class _TrackingScreenState extends State<TrackingScreen>
               child: OutlinedButton(
                 onPressed: () => Navigator.pop(context),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white70,
-                  side: const BorderSide(color: Color(0xFF475569)),
+                  foregroundColor: AppColors.textSecondary,
+                  side: BorderSide(color: Colors.grey[300]!),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
@@ -531,20 +538,21 @@ class _TrackingScreenState extends State<TrackingScreen>
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0f172a),
+                      color: Colors.grey[50],
                       borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[200]!),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Temps estimé',
-                            style:
-                                TextStyle(color: Colors.white54, fontSize: 11)),
+                        Text('Temps estimé',
+                            style: TextStyle(
+                                color: Colors.grey[500], fontSize: 11)),
                         const SizedBox(height: 4),
                         Text(
                           _etaMinutes != null ? '~$_etaMinutes min' : '— min',
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: AppColors.textPrimary,
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
                           ),
@@ -560,15 +568,16 @@ class _TrackingScreenState extends State<TrackingScreen>
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0f172a),
+                      color: Colors.grey[50],
                       borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[200]!),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Statut',
-                            style:
-                                TextStyle(color: Colors.white54, fontSize: 11)),
+                        Text('Statut',
+                            style: TextStyle(
+                                color: Colors.grey[500], fontSize: 11)),
                         const SizedBox(height: 4),
                         Text(
                           _kSteps
@@ -578,7 +587,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                               )
                               .label,
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: AppColors.textPrimary,
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
                           ),
@@ -610,8 +619,10 @@ class _TrackingScreenState extends State<TrackingScreen>
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _sharingLocation
                           ? AppColors.success
-                          : const Color(0xFF334155),
-                      foregroundColor: Colors.white,
+                          : Colors.grey[200],
+                      foregroundColor: _sharingLocation
+                          ? Colors.white
+                          : AppColors.textPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
@@ -628,7 +639,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                     label: const Text('Google Maps',
                         style: TextStyle(fontSize: 12)),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1d4ed8),
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(

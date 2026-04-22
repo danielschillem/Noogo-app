@@ -20,6 +20,9 @@ php artisan migrate --force
 echo "▶ Seeding admin users..."
 php artisan db:seed --class=AdminUsersSeeder --force
 
+echo "▶ Seeding demo menu (si vide)..."
+php artisan db:seed --class=NoogoDeliceMenuSeeder --force
+
 echo "▶ Caches Laravel..."
 php artisan config:cache
 php artisan route:cache
