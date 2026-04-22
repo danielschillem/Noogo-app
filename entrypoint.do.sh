@@ -118,10 +118,18 @@ php artisan storage:link 2>/dev/null || true
     foreach ([\$dsn_direct, \$dsn_pooled] as \$dsn) {
         try {
             \$pdo = new PDO(\$dsn, \$user, \$pass, \$opts);
-            // Fixer le search_path au niveau du rôle (persistant, survit à DISCARD ALL)
-            try { \$pdo->exec(\"ALTER ROLE CURRENT_USER SET search_path TO public\"); echo \"ALTER ROLE search_path: OK\n\"; } catch(Exception \$e) { echo 'ALTER ROLE: ' . \$e->getMessage() . \"\n\"; }
-            // GRANT CREATE sur le schéma public
-            try { \$pdo->exec('GRANT CREATE ON SCHEMA public TO CURRENT_USER'); echo \"GRANT CREATE public: OK\n\"; } catch(Exception \$e) { echo 'GRANT: ' . \$e->getMessage() . \"\n\"; }
+            // Diagnostic: vérifier le current_user réel côté PostgreSQL
+            \$row = \$pdo->query('SELECT current_user, session_user')->fetch(PDO::FETCH_ASSOC);
+            echo \"current_user=\" . \$row['current_user'] . \", session_user=\" . \$row['session_user'] . \"\n\";
+            // Utiliser le nom d'utilisateur EXPLICITE de l'URL (pas CURRENT_USER qui peut résoudre vers doadmin via PgBouncer)
+            \$safeUser = str_replace('\"', '', \$user);
+            // GRANT CREATE sur le schéma public avec l'utilisateur explicite
+            try { \$pdo->exec(\"GRANT CREATE ON SCHEMA public TO \\\"\$safeUser\\\"\"); echo \"GRANT CREATE public OK for: \$safeUser\n\"; } catch(Exception \$e) { echo 'GRANT: ' . \$e->getMessage() . \"\n\"; }
+            // ALTER ROLE avec le nom explicite
+            try { \$pdo->exec(\"ALTER ROLE \\\"\$safeUser\\\" SET search_path TO public\"); echo \"ALTER ROLE search_path OK for: \$safeUser\n\"; } catch(Exception \$e) { echo 'ALTER ROLE: ' . \$e->getMessage() . \"\n\"; }
+            // Vérifier l'ACL du schéma public après le GRANT
+            \$acl = \$pdo->query(\"SELECT nspacl::text FROM pg_namespace WHERE nspname = 'public'\")->fetchColumn();
+            echo \"public schema ACL: \$acl\n\";
             echo \"Connexion OK sur: \$dsn\n\";
             break;
         } catch(Exception \$e) {
