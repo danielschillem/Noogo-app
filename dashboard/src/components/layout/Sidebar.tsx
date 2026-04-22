@@ -90,14 +90,17 @@ export default function Sidebar({ restaurantId }: { restaurantId?: number }) {
     <div className="flex flex-col h-full">
 
       {/* â”€â”€ Logo â”€â”€ */}
-      <div className="flex items-center gap-3 px-5 h-16 border-b shrink-0"
+      <div className="flex items-center justify-center px-5 py-5 border-b shrink-0"
         style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-        <img src="/noogo-icon.png" alt="Noogo" className="w-11 h-11 shrink-0" />
-        <div>
-          <p className="text-white font-bold text-base leading-tight">Noogo</p>
-          <p className="text-xs leading-tight" style={{ color: '#64748b' }}>
-            {user?.is_admin ? 'Super Admin' : isLocked ? 'Espace restaurant' : 'Tableau de bord'}
-          </p>
+        <div className="flex flex-col items-center gap-2">
+          <img src="/noogo-icon.png" alt="Noogo" className="w-10 h-10" />
+          <div className="text-center">
+            <p className="text-white font-bold text-sm tracking-wide">NOOGO</p>
+            <p className="text-[10px] font-medium uppercase tracking-widest mt-0.5"
+              style={{ color: '#f97316' }}>
+              {user?.is_admin ? 'Super Admin' : isLocked ? 'Espace restaurant' : 'Tableau de bord'}
+            </p>
+          </div>
         </div>
       </div>
 
