@@ -95,7 +95,7 @@ export default function RestaurantLoginPage() {
 
                 {/* Logo Noogo */}
                 <div className="flex items-center gap-3 relative">
-                    <img src="/noogo-logo.png" alt="Noogo" className="h-10 w-auto" />
+                    <img src="/noogo-logo.png" alt="Noogo" className="h-16 w-auto" />
                 </div>
 
                 {/* Restaurant card */}

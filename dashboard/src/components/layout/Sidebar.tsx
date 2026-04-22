@@ -92,7 +92,7 @@ export default function Sidebar({ restaurantId }: { restaurantId?: number }) {
       {/* â”€â”€ Logo â”€â”€ */}
       <div className="flex items-center gap-3 px-5 h-16 border-b shrink-0"
         style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-        <img src="/noogo-icon.png" alt="Noogo" className="w-9 h-9 shrink-0" />
+        <img src="/noogo-icon.png" alt="Noogo" className="w-11 h-11 shrink-0" />
         <div>
           <p className="text-white font-bold text-base leading-tight">Noogo</p>
           <p className="text-xs leading-tight" style={{ color: '#64748b' }}>

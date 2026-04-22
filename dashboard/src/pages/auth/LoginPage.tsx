@@ -65,7 +65,7 @@ export default function LoginPage() {
         <div className="relative flex flex-col justify-between p-12 w-full z-10">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <img src="/noogo-logo.png" alt="Noogo" className="h-10 w-auto" />
+            <img src="/noogo-logo.png" alt="Noogo" className="h-16 w-auto" />
           </div>
 
           {/* Center content */}
@@ -115,7 +115,7 @@ export default function LoginPage() {
 
           {/* Mobile logo */}
           <div className="flex items-center gap-2.5 mb-8 lg:hidden">
-            <img src="/noogo-logo.png" alt="Noogo" className="h-9 w-auto" />
+            <img src="/noogo-logo.png" alt="Noogo" className="h-12 w-auto" />
           </div>
 
           <div className="mb-8">
