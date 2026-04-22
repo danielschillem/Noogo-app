@@ -99,6 +99,21 @@ php artisan storage:link 2>/dev/null || true
         sleep 2
     done
     echo "✅ [migration] DB prête, lancement des migrations..."
+    # Fix PostgreSQL 15+ : GRANT CREATE sur le schéma public au user courant
+    php -r "
+    \$url = getenv('DATABASE_URL') ?: getenv('DB_URL');
+    \$u   = parse_url(\$url);
+    \$db  = ltrim(\$u['path'] ?? '/postgres', '/');
+    \$ssl = getenv('DB_SSLMODE') ?: 'require';
+    \$dsn = 'pgsql:host=' . \$u['host'] . ';port=' . (\$u['port'] ?? 5432)
+         . ';dbname=' . \$db . ';sslmode=' . \$ssl;
+    try {
+        \$pdo = new PDO(\$dsn, \$u['user'] ?? '', \$u['pass'] ?? '');
+        \$pdo->exec('GRANT ALL ON SCHEMA public TO CURRENT_USER');
+        \$pdo->exec('ALTER DATABASE \"' . \$db . '\" SET search_path = public');
+        echo \"Schema public : permissions OK\n\";
+    } catch(Exception \$e) { echo 'Schema grant skip: ' . \$e->getMessage() . \"\n\"; }
+    " 2>&1
     php artisan migrate --force 2>&1 || echo "⚠️ [migration] Non-fatal"
     php artisan db:seed --class=AdminUsersSeeder --force 2>&1 || true
     echo "✅ [migration] Terminé"
