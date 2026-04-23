@@ -76,9 +76,17 @@ echo "✅ .env écrit ($(wc -l < "$ENV_FILE") variables)"
 # ── Optimisations Laravel ──────────────────────────────────────
 cd /var/www/html
 echo "⚙️  Cache Laravel..."
+
+# Supprimer les caches corrompus des déploiements précédents AVANT de recacher
+rm -f bootstrap/cache/config.php \
+      bootstrap/cache/routes-v7.php \
+      bootstrap/cache/routes.php \
+      bootstrap/cache/services.php \
+      bootstrap/cache/packages.php \
+      bootstrap/cache/compiled.php
+
 php artisan config:cache 2>&1 | tail -1
 php artisan route:cache  2>&1 | tail -1
-php artisan view:cache   2>&1 | tail -1
 php artisan storage:link 2>/dev/null || true
 
 # ── Permissions storage (artisan crée des fichiers en root) ────
