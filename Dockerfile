@@ -77,7 +77,9 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --no-script
 COPY backend/ .
 
 # Regénérer l'autoloader avec toutes les classes (seeders, etc.)
-RUN composer dump-autoload --optimize --no-dev --no-interaction
+# --no-scripts évite l'exécution de "artisan package:discover" au build
+# (pas de .env / APP_KEY disponible à ce stade)
+RUN composer dump-autoload --optimize --no-dev --no-interaction --no-scripts
 
 # Génération des helpers Eloquent, etc.
 RUN composer run-script post-autoload-dump 2>/dev/null || true
