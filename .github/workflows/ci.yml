@@ -21,10 +21,46 @@ concurrency:
   cancel-in-progress: true   # Annule les runs redondants sur la même branche
 
 jobs:
+  # ── 0. Préflight backend Laravel (fail-fast bootstrap) ─────────
+  backend-preflight:
+    name: Backend Preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          tools: composer:v2
+          coverage: none
+
+      - name: Install backend dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Prepare .env for CI
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
+
+      - name: Laravel bootstrap preflight
+        run: |
+          php artisan package:discover --ansi
+          php artisan config:cache --ansi
+          php artisan route:list --path=api/health --ansi > /dev/null
+
   # ── 1. Analyse + Tests ──────────────────────────────────────
   test:
     name: Analyze & Test
     runs-on: ubuntu-latest
+    needs: backend-preflight
     timeout-minutes: 20
 
     steps:
