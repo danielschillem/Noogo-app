@@ -81,6 +81,10 @@ php artisan route:cache  2>&1 | tail -1
 php artisan view:cache   2>&1 | tail -1
 php artisan storage:link 2>/dev/null || true
 
+# ── Permissions storage (artisan crée des fichiers en root) ────
+chown -R www-data:www-data storage bootstrap/cache
+chmod -R 775 storage bootstrap/cache
+
 # ── Répertoires temporaires nginx ──────────────────────────────
 mkdir -p /tmp/nginx_client_body
 chmod 777 /tmp/nginx_client_body
