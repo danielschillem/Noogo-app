@@ -12,6 +12,22 @@ class DriverApiService {
 
   static String get _baseUrl => ApiConfig.baseUrl;
 
+  /// Extrait la liste de livraisons depuis la réponse API.
+  /// Supporte soit `data: [ ... ]`, soit une pagination Laravel `data: { data: [ ... ] }`.
+  static List<dynamic> _deliveryListFromPayload(Map<String, dynamic> json) {
+    final dynamic root = json['data'];
+    if (root is List) {
+      return root;
+    }
+    if (root is Map<String, dynamic>) {
+      final inner = root['data'];
+      if (inner is List) {
+        return inner;
+      }
+    }
+    return const [];
+  }
+
   Future<Map<String, String>> _headers() async {
     final token = await AuthService.getToken();
     return {
@@ -46,8 +62,8 @@ class DriverApiService {
         .timeout(const Duration(seconds: 15));
 
     if (resp.statusCode == 200) {
-      final data = jsonDecode(resp.body);
-      final list = data['data'] is List ? data['data'] as List : [];
+      final data = jsonDecode(resp.body) as Map<String, dynamic>;
+      final list = _deliveryListFromPayload(data);
       return list
           .map((e) => Delivery.fromJson(e as Map<String, dynamic>))
           .toList();
