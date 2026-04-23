@@ -84,10 +84,12 @@ RUN composer dump-autoload --optimize --no-dev --no-interaction --no-scripts
 # Dashboard React (fichiers statiques servis par Nginx)
 COPY --from=dashboard-builder /app/dist ./public/dashboard
 
-# Permissions Laravel
+# Permissions Laravel + symlink public/storage (sans artisan - pas d'APP_KEY au build)
 RUN mkdir -p storage/logs storage/framework/cache \
     storage/framework/sessions storage/framework/views \
+    storage/app/public \
     bootstrap/cache \
+    && ln -sf /var/www/html/storage/app/public /var/www/html/public/storage \
     && chown -R www-data:www-data storage bootstrap/cache public/dashboard \
     && chmod -R 775 storage bootstrap/cache
 

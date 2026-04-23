@@ -87,12 +87,9 @@ rm -f bootstrap/cache/config.php \
       bootstrap/cache/compiled.php \
       bootstrap/cache/events.php
 
-# NE PAS regénérer config:cache / route:cache ici :
-# ces commandes bootent tout Laravel (y compris ViewServiceProvider) et peuvent
-# échouer si la DB ou un service n'est pas encore disponible, créant des caches corrompus.
-# Laravel fonctionne correctement sans cache (légèrement plus lent seulement).
-
-php artisan storage:link 2>/dev/null || true
+# NE PAS appeler artisan ici : chaque commande artisan booote tout Laravel
+# et peut écrire des fichiers root dans bootstrap/cache/ causant des erreurs.
+# storage:link est fait via ln -sf dans le Dockerfile (build-time, sans APP_KEY).
 
 # ── Permissions storage ────────────────────────────────────────
 chown -R www-data:www-data storage bootstrap/cache
