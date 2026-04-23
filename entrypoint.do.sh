@@ -75,21 +75,26 @@ echo "✅ .env écrit ($(wc -l < "$ENV_FILE") variables)"
 
 # ── Optimisations Laravel ──────────────────────────────────────
 cd /var/www/html
-echo "⚙️  Cache Laravel..."
+echo "⚙️  Nettoyage des caches Laravel..."
 
-# Supprimer les caches corrompus des déploiements précédents AVANT de recacher
+# Supprimer TOUS les caches du déploiement précédent
+# (config:cache/route:cache peuvent planter au runtime et laisser des fichiers corrompus)
 rm -f bootstrap/cache/config.php \
       bootstrap/cache/routes-v7.php \
       bootstrap/cache/routes.php \
       bootstrap/cache/services.php \
       bootstrap/cache/packages.php \
-      bootstrap/cache/compiled.php
+      bootstrap/cache/compiled.php \
+      bootstrap/cache/events.php
 
-php artisan config:cache 2>&1 | tail -1
-php artisan route:cache  2>&1 | tail -1
+# NE PAS regénérer config:cache / route:cache ici :
+# ces commandes bootent tout Laravel (y compris ViewServiceProvider) et peuvent
+# échouer si la DB ou un service n'est pas encore disponible, créant des caches corrompus.
+# Laravel fonctionne correctement sans cache (légèrement plus lent seulement).
+
 php artisan storage:link 2>/dev/null || true
 
-# ── Permissions storage (artisan crée des fichiers en root) ────
+# ── Permissions storage ────────────────────────────────────────
 chown -R www-data:www-data storage bootstrap/cache
 chmod -R 775 storage bootstrap/cache
 
