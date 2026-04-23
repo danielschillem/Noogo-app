@@ -21,6 +21,8 @@ class OrderController extends Controller
      */
     public function index(Request $request, Restaurant $restaurant): JsonResponse
     {
+        $this->authorize('manageOrders', $restaurant);
+
         $query = $restaurant->orders()->with(['items.dish:id,nom,prix', 'user:id,name,phone']);
 
         // Filter by status
@@ -173,6 +175,8 @@ class OrderController extends Controller
      */
     public function show(Restaurant $restaurant, Order $order): JsonResponse
     {
+        $this->authorize('manageOrders', $restaurant);
+
         $order->load(['items.dish:id,nom,prix,images', 'user:id,name,phone,email']);
 
         return response()->json([
@@ -245,6 +249,8 @@ class OrderController extends Controller
      */
     public function cancel(Restaurant $restaurant, Order $order): JsonResponse
     {
+        $this->authorize('manageOrders', $restaurant);
+
         if (!$order->canBeCancelled()) {
             return response()->json([
                 'success' => false,
