@@ -224,6 +224,15 @@ class OrderController extends Controller
             \Illuminate\Support\Facades\Log::warning('FCM notifyOrderStatusChanged failed: ' . $fcmEx->getMessage());
         }
 
+        // Notification push FCM au staff/serveurs quand la commande est prête
+        if ($request->status === 'ready') {
+            try {
+                (new FcmNotificationService())->notifyOrderReady($restaurant, $order->fresh());
+            } catch (\Exception $fcmEx) {
+                \Illuminate\Support\Facades\Log::warning('FCM notifyOrderReady failed: ' . $fcmEx->getMessage());
+            }
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Statut mis à jour',

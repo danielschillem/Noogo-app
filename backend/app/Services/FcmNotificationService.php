@@ -214,6 +214,34 @@ class FcmNotificationService
     // ─── Helpers métier ──────────────────────────────────────────────────────
 
     /**
+     * Notifie le staff du restaurant (serveurs) qu'une commande est prête à être servie.
+     * Envoyé via le topic restaurant quand une commande passe à l'état 'ready'.
+     */
+    public function notifyOrderReady(
+        \App\Models\Restaurant $restaurant,
+        \App\Models\Order $order
+    ): void {
+        $tableInfo = $order->table_number ? " · Table {$order->table_number}" : '';
+        $title = "🔔 Commande #{$order->id} prête{$tableInfo}";
+        $body = 'La commande est prête, vous pouvez la servir.';
+
+        $data = [
+            'type' => 'order_ready',
+            'order_id' => (string) $order->id,
+            'restaurant_id' => (string) $restaurant->id,
+            'table_number' => $order->table_number ?? '',
+            'order_type' => $order->order_type,
+        ];
+
+        $this->sendToTopic("restaurant_{$restaurant->id}", $title, $body, $data);
+
+        Log::info('FCM order_ready envoyé', [
+            'order_id' => $order->id,
+            'restaurant_id' => $restaurant->id,
+        ]);
+    }
+
+    /**
      * Notifie le staff d'un restaurant qu'une nouvelle commande vient d'arriver.
      */
     public function notifyNewOrder(

@@ -40,12 +40,12 @@ class DriverDeliveryAssigned implements ShouldBroadcastNow
         $order = $this->delivery->order;
 
         return [
-            'delivery_id'   => $this->delivery->id,
-            'order_id'      => $this->delivery->order_id,
+            'delivery_id' => $this->delivery->id,
+            'order_id' => $this->delivery->order_id,
             'customer_name' => $order?->customer_name,
-            'address'       => $this->delivery->client_address,
-            'fee'           => $this->delivery->fee,
-            'status'        => $this->delivery->status,
+            'address' => $this->delivery->client_address,
+            'fee' => $this->delivery->fee,
+            'status' => $this->delivery->status,
         ];
     }
 }

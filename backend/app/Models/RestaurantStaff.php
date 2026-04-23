@@ -70,7 +70,7 @@ class RestaurantStaff extends Model
      */
     public function canViewKitchenDisplay(): bool
     {
-        return in_array($this->role, ['owner', 'manager', 'cashier']);
+        return in_array($this->role, ['owner', 'manager', 'cashier', 'waiter']);
     }
 
     // ─── Relations ────────────────────────────────────────────────────────────

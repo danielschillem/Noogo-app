@@ -358,379 +358,379 @@ export default function RestaurantFormPage() {
     // ── Render ───────────────────────────────────────────────────────────
     return (
         <>
-        {credentials && (
-            <CredentialsModal
-                creds={credentials}
-                onClose={() => { setCredentials(null); navigate('/restaurants'); }}
-            />
-        )}
-        <div className="max-w-2xl mx-auto">
-            {/* Header */}
-            <div className="flex items-center gap-4 mb-8">
-                <button
-                    onClick={() => navigate('/restaurants')}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                    <ArrowLeft className="h-5 w-5 text-gray-500" />
-                </button>
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">
-                        {isEdit ? 'Modifier le restaurant' : 'Nouveau restaurant'}
-                    </h1>
-                    <p className="text-gray-500 text-sm mt-0.5">
-                        {isEdit ? 'Mettez à jour les informations de votre restaurant.' : 'Ajoutez un nouveau restaurant à votre compte.'}
-                    </p>
-                </div>
-            </div>
-
-            {errors.general && (
-                <div className="mb-6 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-                    {errors.general}
-                </div>
+            {credentials && (
+                <CredentialsModal
+                    creds={credentials}
+                    onClose={() => { setCredentials(null); navigate('/restaurants'); }}
+                />
             )}
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-                {/* ── Logo ── */}
-                <section className="bg-white rounded-xl border border-gray-200 p-6">
-                    <h2 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <Image className="h-4 w-4 text-orange-500" />
-                        Logo
-                    </h2>
-
-                    <div className="flex items-start gap-6">
-                        {/* Preview */}
-                        <div className="relative flex-shrink-0">
-                            <div className="w-24 h-24 rounded-xl border-2 border-dashed border-gray-300 overflow-hidden bg-gray-50 flex items-center justify-center">
-                                {currentLogoDisplay ? (
-                                    <img src={currentLogoDisplay} alt="Logo" className="w-full h-full object-cover" />
-                                ) : (
-                                    <Upload className="h-8 w-8 text-gray-300" />
-                                )}
-                            </div>
-                            {currentLogoDisplay && (
-                                <button
-                                    type="button"
-                                    onClick={removeLogo}
-                                    className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
-                                >
-                                    <X className="h-3 w-3" />
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Upload button */}
-                        <div className="flex-1">
-                            <input
-                                ref={logoInputRef}
-                                type="file"
-                                accept="image/jpeg,image/png,image/gif,image/webp"
-                                onChange={handleLogoChange}
-                                className="hidden"
-                                id="logo-upload"
-                            />
-                            <label
-                                htmlFor="logo-upload"
-                                className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors"
-                            >
-                                <Upload className="h-4 w-4" />
-                                {currentLogoDisplay ? 'Changer le logo' : 'Choisir un logo'}
-                            </label>
-                            <p className="text-xs text-gray-400 mt-2">JPEG, PNG, GIF ou WebP · Max 2 Mo</p>
-                            {errors.logo && <p className="text-xs text-red-600 mt-1">{errors.logo}</p>}
-                        </div>
-                    </div>
-                </section>
-
-                {/* ── Galerie Photos ── */}
-                <section className="bg-white rounded-xl border border-gray-200 p-6">
-                    <h2 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <Image className="h-4 w-4 text-orange-500" />
-                        Galerie photos
-                        <span className="ml-auto text-xs font-normal text-gray-400">
-                            {existingImages.length + newImageFiles.length}/10
-                        </span>
-                    </h2>
-
-                    {(existingImages.length > 0 || newImagePreviews.length > 0) && (
-                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-4">
-                            {existingImages.map((path) => (
-                                <div key={path} className="relative group aspect-square">
-                                    <img
-                                        src={buildImageUrl(path)}
-                                        alt=""
-                                        className="w-full h-full object-cover rounded-lg border border-gray-200"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => removeExistingImage(path)}
-                                        className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                                    >
-                                        <X className="h-3 w-3" />
-                                    </button>
-                                </div>
-                            ))}
-                            {newImagePreviews.map((preview, i) => (
-                                <div key={i} className="relative group aspect-square">
-                                    <img
-                                        src={preview}
-                                        alt=""
-                                        className="w-full h-full object-cover rounded-lg border-2 border-orange-300"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => removeNewImage(i)}
-                                        className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                                    >
-                                        <X className="h-3 w-3" />
-                                    </button>
-                                    <span className="absolute bottom-1 left-1 text-xs bg-orange-500 text-white px-1 py-0.5 rounded leading-tight">Nouveau</span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
+            <div className="max-w-2xl mx-auto">
+                {/* Header */}
+                <div className="flex items-center gap-4 mb-8">
+                    <button
+                        onClick={() => navigate('/restaurants')}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                        <ArrowLeft className="h-5 w-5 text-gray-500" />
+                    </button>
                     <div>
-                        <input
-                            ref={galleryInputRef}
-                            type="file"
-                            accept="image/jpeg,image/png,image/jpg,image/webp"
-                            multiple
-                            onChange={handleGalleryChange}
-                            className="hidden"
-                            id="gallery-upload"
-                        />
-                        <label
-                            htmlFor="gallery-upload"
-                            className="inline-flex items-center gap-2 px-4 py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50 cursor-pointer transition-colors"
-                        >
-                            <Plus className="h-4 w-4" />
-                            Ajouter des photos
-                        </label>
-                        <p className="text-xs text-gray-400 mt-2">JPEG, PNG ou WebP · Max 2 Mo par photo · 10 photos maximum</p>
-                        {errors.gallery && <p className="text-xs text-red-600 mt-1">{errors.gallery}</p>}
-                    </div>
-                </section>
-
-                {/* ── Informations principales ── */}
-                <section className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-                    <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-orange-500" />
-                        Informations principales
-                    </h2>
-
-                    {/* Nom */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Nom du restaurant <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            value={form.nom}
-                            onChange={e => setForm(f => ({ ...f, nom: e.target.value }))}
-                            placeholder="Ex: Le Bon Plat"
-                            className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent ${errors.nom ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
-                        />
-                        {errors.nom && <p className="text-xs text-red-600 mt-1">{errors.nom}</p>}
-                    </div>
-
-                    {/* Description */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                        <textarea
-                            value={form.description}
-                            onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                            rows={3}
-                            placeholder="Décrivez votre restaurant en quelques mots..."
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
-                        />
-                    </div>
-                </section>
-
-                {/* ── Contact ── */}
-                <section className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-                    <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-orange-500" />
-                        Contact
-                    </h2>
-
-                    {/* Téléphone */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Téléphone <span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative">
-                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <input
-                                type="tel"
-                                value={form.telephone}
-                                onChange={e => setForm(f => ({ ...f, telephone: e.target.value }))}
-                                placeholder="Ex: +226 70 00 00 00"
-                                className={`w-full pl-9 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent ${errors.telephone ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
-                            />
-                        </div>
-                        {errors.telephone && <p className="text-xs text-red-600 mt-1">{errors.telephone}</p>}
-                    </div>
-
-                    {/* Email */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <input
-                                type="email"
-                                value={form.email}
-                                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                                placeholder="Ex: contact@restaurant.com"
-                                className={`w-full pl-9 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent ${errors.email ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
-                            />
-                        </div>
-                        {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
-                    </div>
-                </section>
-
-                {/* ── Localisation & Horaires ── */}
-                <section className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-                    <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-orange-500" />
-                        Localisation & Horaires
-                    </h2>
-
-                    {/* Adresse */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Adresse <span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative">
-                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <input
-                                type="text"
-                                value={form.adresse}
-                                onChange={e => setForm(f => ({ ...f, adresse: e.target.value }))}
-                                placeholder="Ex: Avenue Kwame Nkrumah, Ouagadougou"
-                                className={`w-full pl-9 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent ${errors.adresse ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
-                            />
-                        </div>
-                        {errors.adresse && <p className="text-xs text-red-600 mt-1">{errors.adresse}</p>}
-                    </div>
-
-                    {/* Coordonnées GPS */}
-                    <div>
-                        <div className="flex items-center justify-between mb-1">
-                            <label className="block text-sm font-medium text-gray-700">Coordonnées GPS</label>
-                            <button
-                                type="button"
-                                disabled={isLocating}
-                                onClick={() => {
-                                    if (!navigator.geolocation) return;
-                                    setIsLocating(true);
-                                    navigator.geolocation.getCurrentPosition(
-                                        (pos) => {
-                                            setForm(f => ({
-                                                ...f,
-                                                latitude: pos.coords.latitude.toFixed(6),
-                                                longitude: pos.coords.longitude.toFixed(6),
-                                            }));
-                                            setIsLocating(false);
-                                        },
-                                        (err) => {
-                                            setIsLocating(false);
-                                            const msg = err.code === 1
-                                                ? 'Permission de localisation refusée. Autorisez-la dans les paramètres du navigateur.'
-                                                : 'Impossible de récupérer la position GPS.';
-                                            alert(msg);
-                                        },
-                                        { enableHighAccuracy: true, timeout: 10000 }
-                                    );
-                                }}
-                                className="inline-flex items-center gap-1 text-xs text-orange-600 hover:text-orange-700 disabled:opacity-50"
-                            >
-                                {isLocating
-                                    ? <span className="w-3 h-3 border border-orange-500 border-t-transparent rounded-full animate-spin" />
-                                    : <Navigation className="h-3 w-3" />}
-                                {isLocating ? 'Localisation…' : 'Ma position'}
-                            </button>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                            <div>
-                                <input
-                                    type="number"
-                                    step="any"
-                                    value={form.latitude}
-                                    onChange={e => setForm(f => ({ ...f, latitude: e.target.value }))}
-                                    placeholder="Latitude (ex: 12.3647)"
-                                    className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent ${errors.latitude ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
-                                />
-                                {errors.latitude && <p className="text-xs text-red-600 mt-1">{errors.latitude}</p>}
-                            </div>
-                            <div>
-                                <input
-                                    type="number"
-                                    step="any"
-                                    value={form.longitude}
-                                    onChange={e => setForm(f => ({ ...f, longitude: e.target.value }))}
-                                    placeholder="Longitude (ex: -1.5332)"
-                                    className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent ${errors.longitude ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
-                                />
-                                {errors.longitude && <p className="text-xs text-red-600 mt-1">{errors.longitude}</p>}
-                            </div>
-                        </div>
-                        {form.latitude && form.longitude && (
-                            <a
-                                href={`https://www.google.com/maps?q=${form.latitude},${form.longitude}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline mt-1"
-                            >
-                                <MapPin className="h-3 w-3" />
-                                Vérifier sur Google Maps
-                            </a>
-                        )}
-                        <p className="text-xs text-gray-400 mt-1">Utilisé par l'app mobile pour afficher la distance et l'itinéraire.</p>
-                    </div>
-
-                    {/* Heures d'ouverture */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Heures d'ouverture
-                        </label>
-                        <div className="relative">
-                            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <input
-                                type="text"
-                                value={form.heures_ouverture}
-                                onChange={e => setForm(f => ({ ...f, heures_ouverture: e.target.value }))}
-                                placeholder="Ex: 08:00-14:00,17:00-22:00"
-                                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                            />
-                        </div>
-                        <p className="text-xs text-gray-400 mt-1">
-                            Format : <code className="bg-gray-100 px-1 rounded">HH:mm-HH:mm</code> — plusieurs plages séparées par une virgule.
+                        <h1 className="text-2xl font-bold text-gray-900">
+                            {isEdit ? 'Modifier le restaurant' : 'Nouveau restaurant'}
+                        </h1>
+                        <p className="text-gray-500 text-sm mt-0.5">
+                            {isEdit ? 'Mettez à jour les informations de votre restaurant.' : 'Ajoutez un nouveau restaurant à votre compte.'}
                         </p>
                     </div>
-                </section>
-
-                {/* ── Actions ── */}
-                <div className="flex items-center justify-end gap-3 pb-8">
-                    <button
-                        type="button"
-                        onClick={() => navigate('/restaurants')}
-                        className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50 transition-colors"
-                    >
-                        Annuler
-                    </button>
-                    <button
-                        type="submit"
-                        disabled={isSaving}
-                        className="px-5 py-2.5 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                    >
-                        {isSaving && (
-                            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        )}
-                        {isSaving ? 'Enregistrement...' : isEdit ? 'Enregistrer les modifications' : 'Créer le restaurant'}
-                    </button>
                 </div>
-            </form>
-        </div>
+
+                {errors.general && (
+                    <div className="mb-6 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                        {errors.general}
+                    </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* ── Logo ── */}
+                    <section className="bg-white rounded-xl border border-gray-200 p-6">
+                        <h2 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            <Image className="h-4 w-4 text-orange-500" />
+                            Logo
+                        </h2>
+
+                        <div className="flex items-start gap-6">
+                            {/* Preview */}
+                            <div className="relative flex-shrink-0">
+                                <div className="w-24 h-24 rounded-xl border-2 border-dashed border-gray-300 overflow-hidden bg-gray-50 flex items-center justify-center">
+                                    {currentLogoDisplay ? (
+                                        <img src={currentLogoDisplay} alt="Logo" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <Upload className="h-8 w-8 text-gray-300" />
+                                    )}
+                                </div>
+                                {currentLogoDisplay && (
+                                    <button
+                                        type="button"
+                                        onClick={removeLogo}
+                                        className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Upload button */}
+                            <div className="flex-1">
+                                <input
+                                    ref={logoInputRef}
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/gif,image/webp"
+                                    onChange={handleLogoChange}
+                                    className="hidden"
+                                    id="logo-upload"
+                                />
+                                <label
+                                    htmlFor="logo-upload"
+                                    className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors"
+                                >
+                                    <Upload className="h-4 w-4" />
+                                    {currentLogoDisplay ? 'Changer le logo' : 'Choisir un logo'}
+                                </label>
+                                <p className="text-xs text-gray-400 mt-2">JPEG, PNG, GIF ou WebP · Max 2 Mo</p>
+                                {errors.logo && <p className="text-xs text-red-600 mt-1">{errors.logo}</p>}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* ── Galerie Photos ── */}
+                    <section className="bg-white rounded-xl border border-gray-200 p-6">
+                        <h2 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            <Image className="h-4 w-4 text-orange-500" />
+                            Galerie photos
+                            <span className="ml-auto text-xs font-normal text-gray-400">
+                                {existingImages.length + newImageFiles.length}/10
+                            </span>
+                        </h2>
+
+                        {(existingImages.length > 0 || newImagePreviews.length > 0) && (
+                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-4">
+                                {existingImages.map((path) => (
+                                    <div key={path} className="relative group aspect-square">
+                                        <img
+                                            src={buildImageUrl(path)}
+                                            alt=""
+                                            className="w-full h-full object-cover rounded-lg border border-gray-200"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => removeExistingImage(path)}
+                                            className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    </div>
+                                ))}
+                                {newImagePreviews.map((preview, i) => (
+                                    <div key={i} className="relative group aspect-square">
+                                        <img
+                                            src={preview}
+                                            alt=""
+                                            className="w-full h-full object-cover rounded-lg border-2 border-orange-300"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => removeNewImage(i)}
+                                            className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                        <span className="absolute bottom-1 left-1 text-xs bg-orange-500 text-white px-1 py-0.5 rounded leading-tight">Nouveau</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        <div>
+                            <input
+                                ref={galleryInputRef}
+                                type="file"
+                                accept="image/jpeg,image/png,image/jpg,image/webp"
+                                multiple
+                                onChange={handleGalleryChange}
+                                className="hidden"
+                                id="gallery-upload"
+                            />
+                            <label
+                                htmlFor="gallery-upload"
+                                className="inline-flex items-center gap-2 px-4 py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50 cursor-pointer transition-colors"
+                            >
+                                <Plus className="h-4 w-4" />
+                                Ajouter des photos
+                            </label>
+                            <p className="text-xs text-gray-400 mt-2">JPEG, PNG ou WebP · Max 2 Mo par photo · 10 photos maximum</p>
+                            {errors.gallery && <p className="text-xs text-red-600 mt-1">{errors.gallery}</p>}
+                        </div>
+                    </section>
+
+                    {/* ── Informations principales ── */}
+                    <section className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+                        <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-orange-500" />
+                            Informations principales
+                        </h2>
+
+                        {/* Nom */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Nom du restaurant <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                value={form.nom}
+                                onChange={e => setForm(f => ({ ...f, nom: e.target.value }))}
+                                placeholder="Ex: Le Bon Plat"
+                                className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent ${errors.nom ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
+                            />
+                            {errors.nom && <p className="text-xs text-red-600 mt-1">{errors.nom}</p>}
+                        </div>
+
+                        {/* Description */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <textarea
+                                value={form.description}
+                                onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                                rows={3}
+                                placeholder="Décrivez votre restaurant en quelques mots..."
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                            />
+                        </div>
+                    </section>
+
+                    {/* ── Contact ── */}
+                    <section className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+                        <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+                            <Phone className="h-4 w-4 text-orange-500" />
+                            Contact
+                        </h2>
+
+                        {/* Téléphone */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Téléphone <span className="text-red-500">*</span>
+                            </label>
+                            <div className="relative">
+                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                <input
+                                    type="tel"
+                                    value={form.telephone}
+                                    onChange={e => setForm(f => ({ ...f, telephone: e.target.value }))}
+                                    placeholder="Ex: +226 70 00 00 00"
+                                    className={`w-full pl-9 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent ${errors.telephone ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
+                                />
+                            </div>
+                            {errors.telephone && <p className="text-xs text-red-600 mt-1">{errors.telephone}</p>}
+                        </div>
+
+                        {/* Email */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                <input
+                                    type="email"
+                                    value={form.email}
+                                    onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                                    placeholder="Ex: contact@restaurant.com"
+                                    className={`w-full pl-9 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent ${errors.email ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
+                                />
+                            </div>
+                            {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
+                        </div>
+                    </section>
+
+                    {/* ── Localisation & Horaires ── */}
+                    <section className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+                        <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-orange-500" />
+                            Localisation & Horaires
+                        </h2>
+
+                        {/* Adresse */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Adresse <span className="text-red-500">*</span>
+                            </label>
+                            <div className="relative">
+                                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                <input
+                                    type="text"
+                                    value={form.adresse}
+                                    onChange={e => setForm(f => ({ ...f, adresse: e.target.value }))}
+                                    placeholder="Ex: Avenue Kwame Nkrumah, Ouagadougou"
+                                    className={`w-full pl-9 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent ${errors.adresse ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
+                                />
+                            </div>
+                            {errors.adresse && <p className="text-xs text-red-600 mt-1">{errors.adresse}</p>}
+                        </div>
+
+                        {/* Coordonnées GPS */}
+                        <div>
+                            <div className="flex items-center justify-between mb-1">
+                                <label className="block text-sm font-medium text-gray-700">Coordonnées GPS</label>
+                                <button
+                                    type="button"
+                                    disabled={isLocating}
+                                    onClick={() => {
+                                        if (!navigator.geolocation) return;
+                                        setIsLocating(true);
+                                        navigator.geolocation.getCurrentPosition(
+                                            (pos) => {
+                                                setForm(f => ({
+                                                    ...f,
+                                                    latitude: pos.coords.latitude.toFixed(6),
+                                                    longitude: pos.coords.longitude.toFixed(6),
+                                                }));
+                                                setIsLocating(false);
+                                            },
+                                            (err) => {
+                                                setIsLocating(false);
+                                                const msg = err.code === 1
+                                                    ? 'Permission de localisation refusée. Autorisez-la dans les paramètres du navigateur.'
+                                                    : 'Impossible de récupérer la position GPS.';
+                                                alert(msg);
+                                            },
+                                            { enableHighAccuracy: true, timeout: 10000 }
+                                        );
+                                    }}
+                                    className="inline-flex items-center gap-1 text-xs text-orange-600 hover:text-orange-700 disabled:opacity-50"
+                                >
+                                    {isLocating
+                                        ? <span className="w-3 h-3 border border-orange-500 border-t-transparent rounded-full animate-spin" />
+                                        : <Navigation className="h-3 w-3" />}
+                                    {isLocating ? 'Localisation…' : 'Ma position'}
+                                </button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <input
+                                        type="number"
+                                        step="any"
+                                        value={form.latitude}
+                                        onChange={e => setForm(f => ({ ...f, latitude: e.target.value }))}
+                                        placeholder="Latitude (ex: 12.3647)"
+                                        className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent ${errors.latitude ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
+                                    />
+                                    {errors.latitude && <p className="text-xs text-red-600 mt-1">{errors.latitude}</p>}
+                                </div>
+                                <div>
+                                    <input
+                                        type="number"
+                                        step="any"
+                                        value={form.longitude}
+                                        onChange={e => setForm(f => ({ ...f, longitude: e.target.value }))}
+                                        placeholder="Longitude (ex: -1.5332)"
+                                        className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent ${errors.longitude ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
+                                    />
+                                    {errors.longitude && <p className="text-xs text-red-600 mt-1">{errors.longitude}</p>}
+                                </div>
+                            </div>
+                            {form.latitude && form.longitude && (
+                                <a
+                                    href={`https://www.google.com/maps?q=${form.latitude},${form.longitude}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline mt-1"
+                                >
+                                    <MapPin className="h-3 w-3" />
+                                    Vérifier sur Google Maps
+                                </a>
+                            )}
+                            <p className="text-xs text-gray-400 mt-1">Utilisé par l'app mobile pour afficher la distance et l'itinéraire.</p>
+                        </div>
+
+                        {/* Heures d'ouverture */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Heures d'ouverture
+                            </label>
+                            <div className="relative">
+                                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                <input
+                                    type="text"
+                                    value={form.heures_ouverture}
+                                    onChange={e => setForm(f => ({ ...f, heures_ouverture: e.target.value }))}
+                                    placeholder="Ex: 08:00-14:00,17:00-22:00"
+                                    className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                />
+                            </div>
+                            <p className="text-xs text-gray-400 mt-1">
+                                Format : <code className="bg-gray-100 px-1 rounded">HH:mm-HH:mm</code> — plusieurs plages séparées par une virgule.
+                            </p>
+                        </div>
+                    </section>
+
+                    {/* ── Actions ── */}
+                    <div className="flex items-center justify-end gap-3 pb-8">
+                        <button
+                            type="button"
+                            onClick={() => navigate('/restaurants')}
+                            className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+                        >
+                            Annuler
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={isSaving}
+                            className="px-5 py-2.5 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        >
+                            {isSaving && (
+                                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            )}
+                            {isSaving ? 'Enregistrement...' : isEdit ? 'Enregistrer les modifications' : 'Créer le restaurant'}
+                        </button>
+                    </div>
+                </form>
+            </div>
         </>
     );
 }

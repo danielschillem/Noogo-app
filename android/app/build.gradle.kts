@@ -56,6 +56,11 @@ android {
             applicationId = "com.quickdevit.noogo.driver"
             resValue("string", "app_name", "Noogo Livreur")
         }
+        create("waiter") {
+            dimension = "app"
+            applicationId = "com.quickdevit.noogo.waiter"
+            resValue("string", "app_name", "Noogo Serveur")
+        }
     }
 
     signingConfigs {
