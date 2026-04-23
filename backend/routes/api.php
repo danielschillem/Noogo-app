@@ -32,7 +32,6 @@ use App\Http\Controllers\Api\CouponController;
 // Authentication — limitées à 10 tentatives par minute pour contrer le brute-force
 Route::middleware('throttle:10,1')->prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/register-driver', [AuthController::class, 'registerDriver']);
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
@@ -217,4 +216,7 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::post('/drivers', [DeliveryController::class, 'storeDriver']);
     Route::put('/drivers/{driver}', [DeliveryController::class, 'updateDriver']);
     Route::delete('/drivers/{driver}', [DeliveryController::class, 'destroyDriver']);
+
+    // Création compte livreur (protégé admin — évite les auto-inscriptions)
+    Route::post('/auth/register-driver', [AuthController::class, 'registerDriver']);
 });

@@ -14,18 +14,19 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
+    'allowed_origins' => array_filter([
         env('FRONTEND_URL', 'https://dashboard-noogo.quickdev-it.com'),
         'https://dashboard-noogo.quickdev-it.com',
-        'http://localhost:5173',
-        'http://localhost:3000',
-        'http://localhost:8080',
-    ],
+        // localhost uniquement en développement local
+        app()->environment('local', 'testing') ? 'http://localhost:5173' : null,
+        app()->environment('local', 'testing') ? 'http://localhost:3000' : null,
+        app()->environment('local', 'testing') ? 'http://localhost:8080' : null,
+    ]),
 
-    'allowed_origins_patterns' => [
+    'allowed_origins_patterns' => app()->environment('local', 'testing') ? [
         '/^http:\/\/localhost(:\d+)?$/',
         '/^http:\/\/127\.0\.0\.1(:\d+)?$/',
-    ],
+    ] : [],
 
     'allowed_headers' => ['*'],
 

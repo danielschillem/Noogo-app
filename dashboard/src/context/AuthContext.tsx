@@ -24,7 +24,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
     user: null,
-    token: localStorage.getItem('auth_token'),
+    token: sessionStorage.getItem('auth_token') ?? localStorage.getItem('auth_token'),
     isAuthenticated: false,
     isLoading: true,
   });
@@ -54,8 +54,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const initAuth = async () => {
-      const token = localStorage.getItem('auth_token');
-      const storedUser = localStorage.getItem('user');
+      const token = sessionStorage.getItem('auth_token') ?? localStorage.getItem('auth_token');
+      const storedUser = sessionStorage.getItem('user') ?? localStorage.getItem('user');
 
       if (token && storedUser) {
         try {
@@ -70,6 +70,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Charger les restaurants accessibles dès que l'auth est confirmée
           if (!user.is_admin) refreshMyRestaurants();
         } catch {
+          sessionStorage.removeItem('auth_token');
+          sessionStorage.removeItem('user');
           localStorage.removeItem('auth_token');
           localStorage.removeItem('user');
           setState({
@@ -91,8 +93,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const response = await authApi.login(email, password);
     const { user, token } = response.data.data;
 
-    localStorage.setItem('auth_token', token);
-    localStorage.setItem('user', JSON.stringify(user));
+    sessionStorage.setItem('auth_token', token);
+    sessionStorage.setItem('user', JSON.stringify(user));
     // Login global : aucun restaurant verrouillé
     removeLockedRestaurantId();
     setLockedRestaurantId(null);
@@ -116,14 +118,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Les super admins et admins globaux n'ont pas besoin de vérification
     if (user.is_admin) {
-      localStorage.setItem('auth_token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      sessionStorage.setItem('auth_token', token);
+      sessionStorage.setItem('user', JSON.stringify(user));
       removeLockedRestaurantId();
     }
 
     // Pour les non-admins : vérifier qu'ils ont accès à ce restaurant
     // On doit d'abord stocker le token pour que l'API /auth/my-restaurants fonctionne
-    localStorage.setItem('auth_token', token);
+    sessionStorage.setItem('auth_token', token);
     try {
       const myRestosResp = await myRestaurantsApi.get();
       const myRestos: { id: number }[] = myRestosResp.data.data ?? [];
@@ -131,16 +133,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!hasAccess) {
         // Pas accès à ce restaurant → déconnexion immédiate
+        sessionStorage.removeItem('auth_token');
+        sessionStorage.removeItem('user');
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user');
         throw new Error('Vous n\'avez pas accès à ce restaurant.');
       }
 
-      localStorage.setItem('user', JSON.stringify(user));
+      sessionStorage.setItem('user', JSON.stringify(user));
       setLockedRestaurantId(restaurantId);
       setState({ user, token, isAuthenticated: true, isLoading: false });
     } catch (err: unknown) {
       // Nettoyage si erreur API
+      sessionStorage.removeItem('auth_token');
+      sessionStorage.removeItem('user');
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user');
       throw err;
@@ -154,6 +160,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Ignore errors
     }
 
+    sessionStorage.removeItem('auth_token');
+    sessionStorage.removeItem('user');
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
     removeLockedRestaurantId();
@@ -173,8 +181,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const response = await authApi.register(data);
     const { user, token } = response.data.data;
 
-    localStorage.setItem('auth_token', token);
-    localStorage.setItem('user', JSON.stringify(user));
+    sessionStorage.setItem('auth_token', token);
+    sessionStorage.setItem('user', JSON.stringify(user));
 
     setState({
       user,
@@ -187,7 +195,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const updateProfile = async (data: { name?: string; email?: string }) => {
     const response = await authApi.updateUser(data);
     const user = response.data.user;
-    localStorage.setItem('user', JSON.stringify(user));
+    sessionStorage.setItem('user', JSON.stringify(user));
+    localStorage.removeItem('user'); // migrer l'ancienne clé si présente
     setState(prev => ({ ...prev, user }));
   };
 

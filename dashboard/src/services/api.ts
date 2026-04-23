@@ -14,7 +14,7 @@ const api = axios.create({
 // Interceptor pour ajouter le token d'auth
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('auth_token');
+    const token = sessionStorage.getItem('auth_token') ?? localStorage.getItem('auth_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -38,6 +38,8 @@ api.interceptors.response.use(
     //  - pas déjà en cours de redirection
     if (is401 && !isAuthEndpoint && !alreadyOnLogin && !_redirectingToLogin) {
       _redirectingToLogin = true;
+      sessionStorage.removeItem('auth_token');
+      sessionStorage.removeItem('user');
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user');
       // Si l'utilisateur était sur une page restaurant verrouillée, on le redirige vers ce login
@@ -51,6 +53,8 @@ api.interceptors.response.use(
     } else if (is401 && isAuthEndpoint) {
       // Pour /auth/me, /auth/refresh etc. : juste nettoyer le storage
       // AuthContext gère la redirection proprement
+      sessionStorage.removeItem('auth_token');
+      sessionStorage.removeItem('user');
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user');
     }
