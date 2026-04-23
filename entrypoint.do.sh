@@ -76,24 +76,33 @@ echo "✅ .env écrit ($(wc -l < "$ENV_FILE") variables)"
 # ── Optimisations Laravel ──────────────────────────────────────
 cd /var/www/html
 
-# Permissions avant toute commande artisan (évite les fichiers owned root)
-chown -R www-data:www-data storage bootstrap/cache
-chmod -R 775 storage bootstrap/cache
+echo "⚙️  Initialisation Laravel..."
 
-echo "⚙️  Initialisation Laravel (APP_KEY disponible ici, contrairement au build)..."
+# Les commandes artisan tournent en root — elles peuvent créer des fichiers
+# root-owned dans storage/ et bootstrap/cache/.
+# → On fait le chown/chmod APRES toutes les commandes artisan.
 
-# 1. Découverte des packages : génère bootstrap/cache/packages.php et services.php
-#    OBLIGATOIRE — sans ça, ViewServiceProvider et autres ne sont pas enregistrés
-#    → Fatal error "Class 'view' does not exist" sur chaque requête
+# 1. Créer les répertoires nécessaires (si absents)
+mkdir -p storage/logs storage/framework/cache \
+         storage/framework/sessions storage/framework/views \
+         storage/app/public bootstrap/cache
+
+# 2. Découverte des packages → génère bootstrap/cache/packages.php + services.php
+#    OBLIGATOIRE : sans ça ViewServiceProvider etc. ne sont pas chargés
 php artisan package:discover --ansi 2>&1 | tail -3
 
-# 2. Cache de configuration, routes et vues
-php artisan config:cache  2>&1 | tail -1
-php artisan route:cache   2>&1 | tail -1
-php artisan view:cache    2>&1 | tail -1
+# 3. Cache Laravel (config, routes, vues)
+php artisan config:cache 2>&1 | tail -1
+php artisan route:cache  2>&1 | tail -1
+php artisan view:cache   2>&1 | tail -1
 
-# 3. Lien symbolique storage → public/storage
-php artisan storage:link  2>/dev/null || true
+# 4. Lien symbolique storage → public/storage
+php artisan storage:link 2>/dev/null || true
+
+# 5. Re-chown APRES artisan — corrige tous les fichiers créés en root
+#    (storage/logs/laravel.log, bootstrap/cache/*.php, etc.)
+chown -R www-data:www-data storage bootstrap/cache .env
+chmod -R 775 storage bootstrap/cache
 
 # ── Répertoires temporaires nginx ──────────────────────────────
 mkdir -p /tmp/nginx_client_body
