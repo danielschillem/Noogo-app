@@ -77,7 +77,8 @@ class RestaurantPolicy
     }
 
     /**
-     * Determine whether the user can manage orders.
+     * Commandes (liste, création guichet, détail, statuts, annulation), compteur file
+     * d’attente, et notes de prise de commande orale (API oral-order-notes).
      */
     public function manageOrders(User $user, Restaurant $restaurant): bool
     {
@@ -89,7 +90,8 @@ class RestaurantPolicy
     }
 
     /**
-     * Determine whether the user can view stats/revenue.
+     * Statistiques chiffrées (CA, volumes) : GET restaurants/…/statistics
+     * et GET restaurants/…/orders-statistics — exclut le rôle serveur (waiter).
      */
     public function viewStats(User $user, Restaurant $restaurant): bool
     {

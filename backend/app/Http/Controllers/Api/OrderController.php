@@ -17,6 +17,16 @@ use Illuminate\Support\Facades\Validator;
 class OrderController extends Controller
 {
     /**
+     * Vérifie que la commande appartient bien au restaurant de l’URL (anti-IDOR).
+     */
+    private function assertOrderBelongsToRestaurant(Restaurant $restaurant, Order $order): void
+    {
+        if ((int) $order->restaurant_id !== (int) $restaurant->id) {
+            abort(404);
+        }
+    }
+
+    /**
      * Display orders for a restaurant
      */
     public function index(Request $request, Restaurant $restaurant): JsonResponse
@@ -79,6 +89,8 @@ class OrderController extends Controller
      */
     public function store(Request $request, Restaurant $restaurant): JsonResponse
     {
+        $this->authorize('manageOrders', $restaurant);
+
         $validator = Validator::make($request->all(), [
             'customer_name' => 'nullable|string|max:255',
             'customer_phone' => 'nullable|string|max:20',
@@ -181,6 +193,7 @@ class OrderController extends Controller
     public function show(Restaurant $restaurant, Order $order): JsonResponse
     {
         $this->authorize('manageOrders', $restaurant);
+        $this->assertOrderBelongsToRestaurant($restaurant, $order);
 
         $order->load(['items.dish:id,nom,prix,images', 'user:id,name,phone,email']);
 
@@ -196,6 +209,7 @@ class OrderController extends Controller
     public function updateStatus(Request $request, Restaurant $restaurant, Order $order): JsonResponse
     {
         $this->authorize('manageOrders', $restaurant);
+        $this->assertOrderBelongsToRestaurant($restaurant, $order);
 
         $validator = Validator::make($request->all(), [
             'status' => 'required|in:pending,confirmed,preparing,ready,delivered,completed,cancelled',
@@ -255,6 +269,7 @@ class OrderController extends Controller
     public function cancel(Restaurant $restaurant, Order $order): JsonResponse
     {
         $this->authorize('manageOrders', $restaurant);
+        $this->assertOrderBelongsToRestaurant($restaurant, $order);
 
         if (!$order->canBeCancelled()) {
             return response()->json([
@@ -291,6 +306,8 @@ class OrderController extends Controller
      */
     public function statistics(Request $request, Restaurant $restaurant): JsonResponse
     {
+        $this->authorize('viewStats', $restaurant);
+
         $dateFrom = $request->get('from', now()->startOfMonth());
         $dateTo = $request->get('to', now()->endOfMonth());
 
@@ -348,6 +365,8 @@ class OrderController extends Controller
      */
     public function pendingCount(Restaurant $restaurant): JsonResponse
     {
+        $this->authorize('manageOrders', $restaurant);
+
         $counts = $restaurant->orders()
             ->whereIn('status', ['pending', 'confirmed', 'preparing', 'ready'])
             ->selectRaw("status, COUNT(*) as total")

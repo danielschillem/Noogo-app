@@ -14,6 +14,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Notes prises à l’oral : lister, créer, convertir en commande, supprimer.
+ * Toutes les actions utilisent la policy {@see RestaurantPolicy::manageOrders} (même gate que les commandes et les changements de statut).
+ */
 class OralOrderNoteController extends Controller
 {
     public function index(Request $request, Restaurant $restaurant): JsonResponse

@@ -34,7 +34,9 @@ class RestaurantStaff extends Model
     }
 
     /**
-     * Peut voir et mettre à jour le statut des commandes.
+     * Peut voir les commandes, en créer (guichet / app serveur), changer les statuts,
+     * annuler (selon règles métier) et utiliser les notes de commande orale
+     * (même périmètre côté API : Gate « manageOrders » sur le restaurant).
      */
     public function canManageOrders(): bool
     {

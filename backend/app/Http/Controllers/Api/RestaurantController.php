@@ -402,6 +402,8 @@ class RestaurantController extends Controller
      */
     public function statistics(Restaurant $restaurant): JsonResponse
     {
+        $this->authorize('viewStats', $restaurant);
+
         $stats = [
             'total_orders' => $restaurant->orders()->count(),
             'orders_today' => $restaurant->orders()->today()->count(),

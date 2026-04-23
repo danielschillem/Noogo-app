@@ -46,6 +46,8 @@ class StaffController extends Controller
         ],
         'waiter' => [
             'manage_orders',
+            // Aligné sur RestaurantStaff::canViewKitchenDisplay (cuisine / KDS)
+            'kitchen_display',
         ],
     ];
 

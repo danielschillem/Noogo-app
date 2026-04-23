@@ -28,8 +28,9 @@ const ROLE_PERMISSIONS_FR: Record<string, string> = {
     manage_staff: 'Gérer le personnel',
     edit_restaurant: 'Modifier le restaurant',
     manage_menu: 'Gérer le menu',
-    manage_orders: 'Gérer les commandes',
+    manage_orders: 'Commandes, statuts et prises à l’oral',
     view_stats: 'Voir les stats',
+    kitchen_display: 'Écran cuisine (KDS)',
 };
 
 function StaffAvatar({ member, size = 40 }: { member: StaffMember; size?: number }) {
