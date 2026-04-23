@@ -61,6 +61,10 @@ class Order {
   final String? userId;
   final int? restaurantId;
 
+  /// Livraison associée (si commande livraison) — IDs / statut livreur
+  final int? deliveryId;
+  final String? deliveryStatus;
+
   Order({
     required this.id,
     required this.items,
@@ -77,6 +81,8 @@ class Order {
     this.phoneNumber,
     this.userId,
     this.restaurantId,
+    this.deliveryId,
+    this.deliveryStatus,
   });
 
   double get totalAmount =>
@@ -138,6 +144,33 @@ class Order {
     final List<OrderItem> orderItems =
         itemsList.map((i) => OrderItem.fromJson(i)).toList();
 
+    int? parseDeliveryId(dynamic v) {
+      if (v == null) return null;
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      return int.tryParse(v.toString());
+    }
+
+    String? parseDeliveryStatus(Map<String, dynamic> root) {
+      final d = root['delivery'];
+      if (d is Map<String, dynamic>) {
+        final s = d['status']?.toString();
+        if (s != null && s.isNotEmpty) return s;
+      }
+      final flat = root['delivery_status']?.toString();
+      if (flat != null && flat.isNotEmpty) return flat;
+      return null;
+    }
+
+    int? deliveryIdFromJson(Map<String, dynamic> root) {
+      final d = root['delivery'];
+      if (d is Map<String, dynamic>) {
+        final id = parseDeliveryId(d['id']);
+        if (id != null) return id;
+      }
+      return parseDeliveryId(root['delivery_id']);
+    }
+
     OrderType parseOrderType(String? type) {
       switch (type?.toLowerCase()) {
         case 'sur_place': // backend
@@ -178,6 +211,8 @@ class Order {
       phoneNumber: json['phone_number'],
       userId: json['user_id']?.toString(),
       restaurantId: (json['restaurant_id'] as num?)?.toInt(),
+      deliveryId: deliveryIdFromJson(json),
+      deliveryStatus: parseDeliveryStatus(json),
     );
   }
 
@@ -231,6 +266,8 @@ class Order {
     String? phoneNumber,
     String? userId,
     int? restaurantId,
+    int? deliveryId,
+    String? deliveryStatus,
   }) {
     return Order(
       id: id ?? this.id,
@@ -248,6 +285,8 @@ class Order {
       phoneNumber: phoneNumber ?? this.phoneNumber,
       userId: userId ?? this.userId,
       restaurantId: restaurantId ?? this.restaurantId,
+      deliveryId: deliveryId ?? this.deliveryId,
+      deliveryStatus: deliveryStatus ?? this.deliveryStatus,
     );
   }
 }

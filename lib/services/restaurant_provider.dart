@@ -12,6 +12,7 @@ import '../models/app_notification.dart';
 import '../config/api_config.dart';
 import '../config/demo_data.dart';
 import '../utils/qr_helper.dart';
+import '../utils/api_exceptions.dart';
 import 'api_service.dart';
 import 'notification_service.dart';
 import 'realtime_service.dart';
@@ -1158,8 +1159,17 @@ class RestaurantProvider with ChangeNotifier {
 
       // Puis synchroniser avec le serveur
       if (_restaurant != null) {
-        final fetchedOrders =
-            await _apiService.getOrders(restaurantId: _restaurant!.id);
+        List<Order> fetchedOrders = [];
+
+        try {
+          fetchedOrders =
+              await _apiService.getOrders(restaurantId: _restaurant!.id);
+        } on ForbiddenException {
+          // Compte client : endpoint restaurant interdit — fallback "mes commandes"
+          final mine = await _apiService.getMyOrders();
+          final rid = _restaurant!.id;
+          fetchedOrders = mine.where((o) => o.restaurantId == rid).toList();
+        }
 
         if (fetchedOrders.isNotEmpty) {
           final Map<int, Order> merged = {for (var o in localOrders) o.id: o};

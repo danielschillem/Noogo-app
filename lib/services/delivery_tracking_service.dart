@@ -7,6 +7,7 @@ import 'package:pusher_channels_flutter/pusher_channels_flutter.dart';
 import 'package:latlong2/latlong.dart';
 import '../config/api_config.dart';
 import '../utils/app_logger.dart';
+import 'auth_service.dart';
 
 /// Position GPS du livreur reçue via Pusher
 class DriverLocation {
@@ -88,7 +89,7 @@ class DeliveryTrackingService {
   /// Démarre le tracking d'une livraison
   Future<void> startTracking(int orderId, {String? authToken}) async {
     _ensureControllersOpen();
-    _authToken = authToken;
+    _authToken = authToken ?? await AuthService.getToken();
     final deliveryChannel = 'delivery.$orderId';
     final orderChannel = 'order.$orderId';
 
@@ -168,14 +169,22 @@ class DeliveryTrackingService {
         final loc = DriverLocation.fromJson(data);
         _locationController.add(loc);
       } else if (eventName.startsWith('delivery.') ||
-          eventName == 'order.updated') {
-        // Handle all delivery status events:
-        // delivery.assigned, delivery.picked_up, delivery.on_way,
-        // delivery.delivered, delivery.failed, delivery.rejected,
-        // delivery.status, order.updated
-        final statusStr = data['status']?.toString() ?? '';
-        if (statusStr.isNotEmpty) {
-          final status = DeliveryStatusEvent.fromJson(data);
+          eventName == 'order.updated' ||
+          eventName == 'order.created') {
+        // Statut explicite dans le payload (ex: delivery.* avec colonne status)
+        String? statusStr = data['status']?.toString();
+
+        // Sinon dériver depuis le nom d'événement Laravel (broadcastAs)
+        if (statusStr == null || statusStr.isEmpty) {
+          if (eventName.startsWith('delivery.')) {
+            statusStr = eventName.substring('delivery.'.length);
+          }
+        }
+
+        if (statusStr != null && statusStr.isNotEmpty) {
+          final payload = Map<String, dynamic>.from(data);
+          payload['status'] = statusStr;
+          final status = DeliveryStatusEvent.fromJson(payload);
           _statusController.add(status);
           AppLogger.info(
               'DeliveryTracking: status event $eventName → $statusStr');
@@ -189,14 +198,15 @@ class DeliveryTrackingService {
   /// Envoie la position GPS du client au backend
   /// POST /api/deliveries/{deliveryId}/client-location
   Future<void> sendClientLocation(int deliveryId, LatLng position) async {
-    if (_authToken == null) return;
+    final token = _authToken ?? await AuthService.getToken();
+    if (token == null) return;
     try {
       final uri = Uri.parse(
           '${ApiConfig.baseUrl}/deliveries/$deliveryId/client-location');
       await http.post(
         uri,
         headers: {
-          'Authorization': 'Bearer $_authToken',
+          'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },

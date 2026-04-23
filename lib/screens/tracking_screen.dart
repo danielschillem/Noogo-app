@@ -46,6 +46,7 @@ class _TrackingScreenState extends State<TrackingScreen>
   LatLng? _driverPosition;
   LatLng? _clientPosition;
   String _deliveryStatus;
+  int? _deliveryId;
 
   // Sharing
   bool _sharingLocation = false;
@@ -97,8 +98,9 @@ class _TrackingScreenState extends State<TrackingScreen>
   @override
   void initState() {
     super.initState();
-    _deliveryStatus =
-        _normalizeTrackingStatus(widget.order.status.toString().split('.').last);
+    _deliveryStatus = _normalizeTrackingStatus(
+        widget.order.status.toString().split('.').last);
+    _deliveryId = widget.order.deliveryId;
 
     // Animation pulse du marker livreur
     _markerAnimCtrl = AnimationController(
@@ -119,13 +121,29 @@ class _TrackingScreenState extends State<TrackingScreen>
       if (!mounted) return;
       final provider = Provider.of<RestaurantProvider>(context, listen: false);
       await provider.loadOrders();
-      final updated =
-          provider.orders.where((o) => o.id == widget.order.id).firstOrNull;
+      Order? updated;
+      for (final o in provider.orders) {
+        if (o.id == widget.order.id) {
+          updated = o;
+          break;
+        }
+      }
       if (updated != null && mounted) {
-        final newStatus = _normalizeTrackingStatus(
-            updated.status.toString().split('.').last);
-        if (newStatus != _deliveryStatus) {
-          setState(() => _deliveryStatus = newStatus);
+        final newStatus =
+            _normalizeTrackingStatus(updated.status.toString().split('.').last);
+        final newDeliveryStatus =
+            updated.deliveryStatus != null && updated.deliveryStatus!.isNotEmpty
+                ? _normalizeTrackingStatus(updated.deliveryStatus!)
+                : null;
+        final effective = newDeliveryStatus ?? newStatus;
+        if (effective != _deliveryStatus) {
+          setState(() {
+            _deliveryStatus = effective;
+            _deliveryId = updated!.deliveryId ?? _deliveryId;
+          });
+        } else if (updated.deliveryId != null &&
+            updated.deliveryId != _deliveryId) {
+          setState(() => _deliveryId = updated!.deliveryId);
         }
       }
     });
@@ -182,8 +200,9 @@ class _TrackingScreenState extends State<TrackingScreen>
       _locationShareTimer =
           Timer.periodic(const Duration(seconds: 15), (_) async {
         if (_clientPosition == null) return;
-        await _trackingService.sendClientLocation(
-            widget.order.id, _clientPosition!);
+        final id = _deliveryId ?? widget.order.deliveryId;
+        if (id == null) return;
+        await _trackingService.sendClientLocation(id, _clientPosition!);
       });
     } else {
       _locationShareTimer?.cancel();

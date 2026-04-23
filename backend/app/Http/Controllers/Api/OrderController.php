@@ -59,7 +59,12 @@ class OrderController extends Controller
     public function myOrders(Request $request): JsonResponse
     {
         $orders = Order::where('user_id', $request->user()->id)
-            ->with(['items.dish:id,nom,prix,image', 'restaurant:id,nom,logo'])
+            ->with([
+                'items.dish:id,nom,prix,image',
+                'restaurant:id,nom,logo',
+                // Suivi livraison côté app client (statuts picked_up / on_way / …)
+                'delivery:id,order_id,status,delivery_driver_id',
+            ])
             ->latest('order_date')
             ->paginate($request->get('per_page', 20));
 

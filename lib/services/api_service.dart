@@ -34,10 +34,10 @@ class ApiService {
         'Réponse API inattendue ($method $uri): JSON non-objet.',
       );
     } on FormatException catch (e) {
-      final preview = trimmed.length > 220
-          ? '${trimmed.substring(0, 220)}...'
-          : trimmed;
-      final looksHtml = trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<html');
+      final preview =
+          trimmed.length > 220 ? '${trimmed.substring(0, 220)}...' : trimmed;
+      final looksHtml =
+          trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<html');
       final hint = looksHtml
           ? 'Le serveur a renvoyé du HTML au lieu de JSON (URL/API ou proxy à vérifier).'
           : 'Le serveur a renvoyé un format non JSON.';
@@ -350,9 +350,43 @@ class ApiService {
       if (data == null) return [];
       final List<dynamic> list = data['data'] ?? [];
       return list.map((json) => Order.fromJson(json)).toList();
+    } on ForbiddenException {
+      // Client final : pas le droit de lister toutes les commandes du restaurant
+      rethrow;
     } catch (e) {
       if (kDebugMode)
         debugPrint('⚠️ ApiService-getOrders: Endpoint non disponible ($e)');
+      return [];
+    }
+  }
+
+  /// Commandes du client connecté — GET /auth/my-orders
+  Future<List<Order>> getMyOrders() async {
+    try {
+      final token = await AuthService.getToken();
+      if (token == null) return [];
+
+      final data = await _get('/auth/my-orders');
+      if (data == null) return [];
+
+      final dynamic payload = data['data'];
+      final List<dynamic> list;
+      if (payload is List) {
+        list = payload;
+      } else if (payload is Map && payload['data'] is List) {
+        list = payload['data'] as List<dynamic>;
+      } else {
+        list = const [];
+      }
+
+      return list
+          .whereType<Map<String, dynamic>>()
+          .map(Order.fromJson)
+          .toList();
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('⚠️ ApiService-getMyOrders: ($e)');
+      }
       return [];
     }
   }
