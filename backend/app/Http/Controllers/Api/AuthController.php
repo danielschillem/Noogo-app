@@ -35,6 +35,15 @@ class AuthController extends Controller
             ], 422);
         }
 
+        // Au moins un moyen de contact requis
+        if (empty($request->telephone) && empty($request->email)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email ou numéro de téléphone requis',
+                'errors' => ['contact' => ['Fournir un email ou un numéro de téléphone']],
+            ], 422);
+        }
+
         $user = User::create([
             'name' => $request->name,
             'phone' => $request->telephone,
@@ -363,32 +372,42 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // La colonne « email » stocke l'email OU le phone selon le type d'utilisateur
-        $key = $record->email;
-        $user = User::where('email', $key)->orWhere('phone', $key)->first();
+        // Tout ce qui suit dans une transaction pour éviter les race conditions
+        return DB::transaction(function () use ($record, $request, $tokenHash) {
+            // Consommer le token immédiatement (usage unique, atomique)
+            $deleted = DB::table('password_reset_tokens')
+                ->where('token', $tokenHash)
+                ->delete();
 
-        if (!$user) {
+            if (!$deleted) {
+                // Un autre processus a déjà consommé ce token
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Token invalide ou déjà utilisé',
+                ], 422);
+            }
+
+            $key = $record->email;
+            $user = User::where('email', $key)->orWhere('phone', $key)->first();
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Utilisateur introuvable',
+                ], 404);
+            }
+
+            $user->password = Hash::make($request->password);
+            $user->save();
+
+            // Révoquer tous les tokens Sanctum (force re-login partout)
+            $user->tokens()->delete();
+
             return response()->json([
-                'success' => false,
-                'message' => 'Utilisateur introuvable',
-            ], 404);
-        }
-
-        $user->password = Hash::make($request->password);
-        $user->save();
-
-        // Révoquer tous les tokens Sanctum (bonne pratique après reset)
-        $user->tokens()->delete();
-
-        // Consommer le token de reset (usage unique)
-        DB::table('password_reset_tokens')
-            ->where('token', $tokenHash)
-            ->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Mot de passe mis à jour avec succès',
-        ]);
+                'success' => true,
+                'message' => 'Mot de passe mis à jour avec succès',
+            ]);
+        });
     }
 
     /**
@@ -422,6 +441,9 @@ class AuthController extends Controller
 
         $user->password = Hash::make($request->password);
         $user->save();
+
+        // Révoquer TOUS les tokens (force re-login sur tous les appareils)
+        $user->tokens()->delete();
 
         return response()->json([
             'success' => true,

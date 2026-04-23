@@ -23,7 +23,6 @@ class User extends Authenticatable
         'email',
         'password',
         'phone',
-        'is_admin',
         'role',
         'fcm_token',
     ];
@@ -56,7 +55,8 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return in_array($this->role, ['admin', 'super_admin']);
+        // is_admin boolean (toggled via admin panel) OR role-based admin (seeded users)
+        return (bool) $this->is_admin || in_array($this->role, ['admin', 'super_admin']);
     }
 
     /**

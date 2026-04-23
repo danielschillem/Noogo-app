@@ -121,6 +121,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sessionStorage.setItem('auth_token', token);
       sessionStorage.setItem('user', JSON.stringify(user));
       removeLockedRestaurantId();
+      setLockedRestaurantId(null);
+      setState({ user, token, isAuthenticated: true, isLoading: false });
+      return;
     }
 
     // Pour les non-admins : vérifier qu'ils ont accès à ce restaurant

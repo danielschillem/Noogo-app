@@ -47,7 +47,6 @@ class AuthService {
       );
 
       final data = jsonDecode(response.body);
-      debugPrint('Login response status: ${response.statusCode}');
 
       if (response.statusCode == 200 && data['data'] != null) {
         final user = User.fromJson(data['data']['user']);
