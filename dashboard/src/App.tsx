@@ -7,6 +7,7 @@ import RestaurantLayout from './components/layout/RestaurantLayout';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import RestaurantLoginPage from './pages/auth/RestaurantLoginPage';
+import PortalLoginPage from './pages/auth/PortalLoginPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import RestaurantsPage from './pages/restaurants/RestaurantsPage';
 import RestaurantFormPage from './pages/restaurants/RestaurantFormPage';
@@ -154,6 +155,9 @@ function AppRoutes() {
       {/* Routes restaurant isolées (/r/:restaurantId/*) */}
       {/* Login spécifique à un restaurant — public */}
       <Route path="/r/:restaurantId/login" element={<RestaurantLoginPage />} />
+
+      {/* Portail général de connexion restaurant — choisir dans la liste */}
+      <Route path="/portal" element={<PortalLoginPage />} />
 
       {/* Espace staff verrouillé — le RestaurantLayout gère l'isolation */}
       <Route path="/r/:restaurantId" element={<RestaurantLayout />}>

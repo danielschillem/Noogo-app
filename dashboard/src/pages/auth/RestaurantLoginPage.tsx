@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { restaurantsApi } from '../../services/api';
+import { portalApi } from '../../services/api';
 import { Mail, Lock, Loader2, Store, ArrowRight, AlertTriangle } from 'lucide-react';
 import type { Restaurant } from '../../types';
 
@@ -24,7 +24,7 @@ export default function RestaurantLoginPage() {
     // Charger les infos du restaurant (sans auth — endpoint public)
     useEffect(() => {
         if (!id || isNaN(id)) { setNotFound(true); setLoadingResto(false); return; }
-        restaurantsApi.getById(id)
+        portalApi.getRestaurant(id)
             .then(r => { setRestaurant(r.data.data ?? r.data); setLoadingResto(false); })
             .catch(() => { setNotFound(true); setLoadingResto(false); });
     }, [id]);

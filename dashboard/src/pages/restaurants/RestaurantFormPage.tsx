@@ -1,6 +1,6 @@
 ﻿import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Upload, X, MapPin, Phone, Mail, Clock, FileText, Image, Navigation, Plus } from 'lucide-react';
+import { ArrowLeft, Upload, X, MapPin, Phone, Mail, Clock, FileText, Image, Navigation, Plus, Copy, Check, ExternalLink, KeyRound } from 'lucide-react';
 import { restaurantsApi } from '../../services/api';
 import type { Restaurant } from '../../types';
 
@@ -15,6 +15,110 @@ function buildImageUrl(path?: string | null): string {
 }
 
 // ─── Types ─────────────────────────────────────────────────────────────────
+
+interface AdminCredentials {
+    name: string;
+    email: string;
+    password: string;
+    login_url: string;
+    restaurantId: number;
+    restaurantName: string;
+}
+
+function CredentialsModal({ creds, onClose }: { creds: AdminCredentials; onClose: () => void }) {
+    const [copied, setCopied] = useState<string | null>(null);
+
+    const copy = (text: string, key: string) => {
+        navigator.clipboard.writeText(text).then(() => {
+            setCopied(key);
+            setTimeout(() => setCopied(null), 2000);
+        });
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.55)' }}>
+            <div className="w-full max-w-md rounded-2xl overflow-hidden"
+                style={{ background: '#fff', boxShadow: '0 24px 60px rgba(0,0,0,0.2)' }}>
+
+                {/* Header */}
+                <div className="px-6 py-5 flex items-center gap-3"
+                    style={{ background: 'linear-gradient(135deg,#0f172a,#1e1b4b)' }}>
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                        style={{ background: 'rgba(249,115,22,0.2)' }}>
+                        <KeyRound className="h-5 w-5" style={{ color: '#f97316' }} />
+                    </div>
+                    <div>
+                        <h2 className="font-bold text-white text-base">Accès Admin créés !</h2>
+                        <p className="text-xs" style={{ color: '#94a3b8' }}>{creds.restaurantName}</p>
+                    </div>
+                </div>
+
+                {/* Body */}
+                <div className="p-6 space-y-4">
+                    <p className="text-sm" style={{ color: '#64748b' }}>
+                        Transmettez ces identifiants à l'administrateur du restaurant.
+                        <strong className="text-red-500"> Le mot de passe n'est affiché qu'une seule fois.</strong>
+                    </p>
+
+                    {[
+                        { label: 'Email', value: creds.email, key: 'email' },
+                        { label: 'Mot de passe', value: creds.password, key: 'pwd' },
+                    ].map(({ label, value, key }) => (
+                        <div key={key}>
+                            <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#94a3b8' }}>{label}</p>
+                            <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
+                                style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0' }}>
+                                <code className="flex-1 text-sm font-mono" style={{ color: '#0f172a' }}>{value}</code>
+                                <button type="button" onClick={() => copy(value, key)}
+                                    className="p-1 rounded-lg transition-colors"
+                                    style={{ background: copied === key ? '#dcfce7' : '#f1f5f9' }}>
+                                    {copied === key
+                                        ? <Check className="h-3.5 w-3.5" style={{ color: '#16a34a' }} />
+                                        : <Copy className="h-3.5 w-3.5" style={{ color: '#64748b' }} />}
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+
+                    {/* Login URL */}
+                    <div>
+                        <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#94a3b8' }}>Lien de connexion</p>
+                        <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
+                            style={{ background: '#fff7ed', border: '1.5px solid #fed7aa' }}>
+                            <code className="flex-1 text-xs font-mono truncate" style={{ color: '#ea580c' }}>{creds.login_url}</code>
+                            <div className="flex gap-1 shrink-0">
+                                <button type="button" onClick={() => copy(creds.login_url, 'url')}
+                                    className="p-1 rounded-lg transition-colors"
+                                    style={{ background: copied === 'url' ? '#dcfce7' : '#fff' }}>
+                                    {copied === 'url'
+                                        ? <Check className="h-3.5 w-3.5" style={{ color: '#16a34a' }} />
+                                        : <Copy className="h-3.5 w-3.5" style={{ color: '#64748b' }} />}
+                                </button>
+                                <a href={creds.login_url} target="_blank" rel="noreferrer"
+                                    className="p-1 rounded-lg" style={{ background: '#fff' }}>
+                                    <ExternalLink className="h-3.5 w-3.5" style={{ color: '#64748b' }} />
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Footer */}
+                <div className="px-6 pb-5">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="w-full py-3 rounded-xl font-semibold text-sm text-white transition-colors"
+                        style={{ background: '#f97316' }}
+                    >
+                        Compris, continuer
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 interface FormData {
     nom: string;
@@ -53,6 +157,7 @@ export default function RestaurantFormPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [isLocating, setIsLocating] = useState(false);
     const [errors, setErrors] = useState<Partial<FormData> & { logo?: string; gallery?: string; general?: string }>({});
+    const [credentials, setCredentials] = useState<AdminCredentials | null>(null);
 
     // ── Galerie ──────────────────────────────────────────────────────────
     const [existingImages, setExistingImages] = useState<string[]>([]);
@@ -200,11 +305,24 @@ export default function RestaurantFormPage() {
 
             if (isEdit && id) {
                 await restaurantsApi.update(parseInt(id), fd);
+                navigate('/restaurants');
             } else {
-                await restaurantsApi.create(fd);
+                const res = await restaurantsApi.create(fd);
+                const creds = res.data.admin_credentials;
+                const resto = res.data.data;
+                if (creds) {
+                    setCredentials({
+                        name: creds.name,
+                        email: creds.email,
+                        password: creds.password,
+                        login_url: creds.login_url,
+                        restaurantId: resto?.id ?? 0,
+                        restaurantName: resto?.nom ?? form.nom,
+                    });
+                } else {
+                    navigate('/restaurants');
+                }
             }
-
-            navigate('/restaurants');
         } catch (err: unknown) {
             const axiosErr = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } };
             const apiErrors = axiosErr.response?.data?.errors;
@@ -239,6 +357,13 @@ export default function RestaurantFormPage() {
 
     // ── Render ───────────────────────────────────────────────────────────
     return (
+        <>
+        {credentials && (
+            <CredentialsModal
+                creds={credentials}
+                onClose={() => { setCredentials(null); navigate('/restaurants'); }}
+            />
+        )}
         <div className="max-w-2xl mx-auto">
             {/* Header */}
             <div className="flex items-center gap-4 mb-8">
@@ -606,5 +731,6 @@ export default function RestaurantFormPage() {
                 </div>
             </form>
         </div>
+        </>
     );
 }

@@ -45,6 +45,12 @@ Route::prefix('restaurant')->group(function () {
 // Recherche publique de restaurants (Flutter client)
 Route::get('/restaurants/search', [RestaurantController::class, 'publicSearch']);
 
+// Portail de connexion restaurant — endpoints publics (aucune auth requise)
+Route::prefix('portal')->group(function () {
+    Route::get('/restaurants', [RestaurantController::class, 'portalList']);
+    Route::get('/restaurants/{restaurant}', [RestaurantController::class, 'portalShow']);
+});
+
 // Offres actives (endpoint public pour Flutter)
 Route::get('/offres/actives/{restaurantId}', [FlashInfoController::class, 'actives']);
 

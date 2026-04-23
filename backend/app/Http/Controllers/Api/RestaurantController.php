@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Concerns\UsesStorageDisk;
 use App\Models\Restaurant;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -79,6 +81,37 @@ class RestaurantController extends Controller
     }
 
     /**
+     * Liste publique des restaurants actifs pour le portail de connexion.
+     * GET /api/portal/restaurants
+     * Retourne uniquement les infos nécessaires à l'affichage du sélecteur.
+     */
+    public function portalList(): JsonResponse
+    {
+        $restaurants = Restaurant::where('is_active', true)
+            ->select('id', 'nom', 'logo', 'adresse')
+            ->orderBy('nom')
+            ->get();
+
+        return response()->json(['success' => true, 'data' => $restaurants]);
+    }
+
+    /**
+     * Détail public d'un restaurant (pour la page de login).
+     * GET /api/portal/restaurants/{id}
+     */
+    public function portalShow(Restaurant $restaurant): JsonResponse
+    {
+        if (!$restaurant->is_active) {
+            return response()->json(['success' => false, 'message' => 'Restaurant non disponible.'], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $restaurant->only(['id', 'nom', 'logo', 'adresse', 'telephone', 'description']),
+        ]);
+    }
+
+    /**
      * Store a newly created restaurant
      */
     public function store(Request $request): JsonResponse
@@ -124,13 +157,52 @@ class RestaurantController extends Controller
 
         $restaurant = Restaurant::create($data);
 
+        // ── Création automatique du compte Admin Restaurant ──────────────────
+        // Génère un utilisateur dédié (propriétaire du restaurant) avec un mot
+        // de passe aléatoire que le Super Admin peut communiquer à l'intéressé.
+        $adminPassword = Str::random(12);
+        $baseEmail = $request->input('email');
+        $slug = Str::slug($request->input('nom'), '.');
+
+        // Utiliser l'email du restaurant comme email admin, ou en générer un
+        if ($baseEmail && !User::where('email', $baseEmail)->exists()) {
+            $adminEmail = $baseEmail;
+        } else {
+            // Générer un email unique sous domaine noogo.app
+            $candidate = "admin.{$slug}@noogo.app";
+            $i = 1;
+            while (User::where('email', $candidate)->exists()) {
+                $candidate = "admin.{$slug}{$i}@noogo.app";
+                $i++;
+            }
+            $adminEmail = $candidate;
+        }
+
+        $adminUser = User::create([
+            'name' => 'Admin ' . $restaurant->nom,
+            'email' => $adminEmail,
+            'password' => bcrypt($adminPassword),
+            'phone' => $request->input('telephone'),
+            'is_admin' => false,
+            'role' => 'restaurant_owner',
+        ]);
+
+        // Réassigner le restaurant à ce nouvel utilisateur admin
+        $restaurant->update(['user_id' => $adminUser->id]);
+
         // Generate QR code
         $this->generateQrCode($restaurant);
 
         return response()->json([
             'success' => true,
             'message' => 'Restaurant créé avec succès',
-            'data' => $restaurant->load('user:id,name,email')
+            'data' => $restaurant->load('user:id,name,email'),
+            'admin_credentials' => [
+                'name' => $adminUser->name,
+                'email' => $adminEmail,
+                'password' => $adminPassword,
+                'login_url' => rtrim(config('app.frontend_url', config('app.url')), '/') . '/r/' . $restaurant->id . '/login',
+            ],
         ], 201);
     }
 

@@ -223,6 +223,21 @@ export const myRestaurantsApi = {
   get: () => api.get('/auth/my-restaurants'),
 };
 
+// Portal API — endpoints publics (aucune auth requise), pour la page de connexion restaurant
+// Instance axios sans intercepteur auth pour ne pas envoyer de token
+const publicApi = axios.create({
+  baseURL: API_URL,
+  timeout: 15000,
+  headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+});
+
+export const portalApi = {
+  /** Liste des restaurants actifs (id, nom, logo, adresse) */
+  listRestaurants: () => publicApi.get('/portal/restaurants'),
+  /** Détail d'un restaurant sans auth (id, nom, logo, adresse, telephone) */
+  getRestaurant: (id: number) => publicApi.get(`/portal/restaurants/${id}`),
+};
+
 // Admin API (super admin only)
 export const adminApi = {
   getStats: () => api.get('/admin/stats'),
