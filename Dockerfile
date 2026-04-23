@@ -88,26 +88,28 @@ COPY --from=dashboard-builder /app/dist ./public/dashboard
 # packages.php liste les ServiceProviders de chaque package vendor.
 # SANS ce fichier, PackageManifest::build() est appelé à la 1ère requête HTTP
 # et peut échouer (permissions/race condition) → 'Class view does not exist'.
-# On génère packages.php ici en lisant vendor/composer/installed.php directement,
-# SANS booter Laravel (pas de .env, pas d'APP_KEY, pas de DB nécessaires).
-# C'est exactement ce que fait PackageManifest::build() en interne.
+# Ancien script php -r lisait installed.php['packages'] (format Composer 1) ;
+# Composer 2 expose surtout 'versions' → warnings + foreach(null). On utilise
+# artisan package:discover avec un .env minimal (pas de DB réelle requise).
 RUN mkdir -p storage/logs storage/framework/cache \
     storage/framework/sessions storage/framework/views \
     storage/app/public \
     bootstrap/cache \
-    && php -r " \
-    \$i = require 'vendor/composer/installed.php'; \
-    \$p = []; \$a = []; \
-    foreach (\$i['packages'] as \$m) { \
-    foreach ((\$m['extra']['laravel']['providers'] ?? []) as \$v) \$p[] = \$v; \
-    foreach ((\$m['extra']['laravel']['aliases'] ?? []) as \$k => \$v) \$a[\$k] = \$v; \
-    } \
-    file_put_contents( \
-    'bootstrap/cache/packages.php', \
-    '<?php return ' . var_export(['providers' => \$p, 'aliases' => \$a], true) . ';' \
-    ); \
-    echo count(\$p) . ' providers écrits dans bootstrap/cache/packages.php' . PHP_EOL; \
-    " \
+    && touch /tmp/noogo-build.sqlite \
+    && APP_KEY="base64:$(php -r "echo base64_encode(random_bytes(32));")" \
+    && printf '%s\n' \
+         "APP_NAME=Noogo" \
+         "APP_ENV=local" \
+         "APP_KEY=${APP_KEY}" \
+         "APP_DEBUG=false" \
+         "DB_CONNECTION=sqlite" \
+         "DB_DATABASE=/tmp/noogo-build.sqlite" \
+         "SESSION_DRIVER=file" \
+         "CACHE_STORE=file" \
+         "QUEUE_CONNECTION=sync" \
+         > .env \
+    && php artisan package:discover --ansi \
+    && rm -f .env /tmp/noogo-build.sqlite \
     && ln -sf /var/www/html/storage/app/public /var/www/html/public/storage \
     && chown -R www-data:www-data storage bootstrap/cache public/dashboard \
     && chmod -R 775 storage bootstrap/cache
