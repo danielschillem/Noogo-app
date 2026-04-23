@@ -87,14 +87,16 @@ mkdir -p storage/logs storage/framework/cache \
          storage/framework/sessions storage/framework/views \
          storage/app/public bootstrap/cache
 
-# 2. Découverte des packages → génère bootstrap/cache/packages.php + services.php
-#    OBLIGATOIRE : sans ça ViewServiceProvider etc. ne sont pas chargés
-php artisan package:discover --ansi 2>&1 | tail -3
+# 2. Découverte des packages → régénère bootstrap/cache/packages.php + services.php
+#    packages.php est déjà pré-généré au build (Dockerfile), mais on le rafraîchit ici.
+#    || true → non-fatal : si artisan échoue, le fichier baked-in du build reste intact.
+php artisan package:discover --ansi 2>&1 || true
 
-# 3. Cache Laravel (config, routes, vues)
-php artisan config:cache 2>&1 | tail -1
-php artisan route:cache  2>&1 | tail -1
-php artisan view:cache   2>&1 | tail -1
+# 3. Cache Laravel (config, routes, vues) — || true pour ne pas bloquer au démarrage
+#    Si config:cache échoue, Laravel lira les fichiers live (plus lent mais fonctionnel).
+php artisan config:cache 2>&1 || echo "⚠️  config:cache échoué — Laravel utilisera la config live"
+php artisan route:cache  2>&1 || echo "⚠️  route:cache échoué — routes lues en live"
+php artisan view:cache   2>&1 || echo "⚠️  view:cache échoué — vues compilées à la demande"
 
 # 4. Lien symbolique storage → public/storage
 php artisan storage:link 2>/dev/null || true
