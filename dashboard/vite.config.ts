@@ -1,24 +1,29 @@
-import { defineConfig } from 'vitest/config'
+import { defineConfig } from 'vite'
+import { mergeConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  server: {
-    port: 5173,
-    // Proxy uniquement en développement local
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
+export default mergeConfig(
+  defineConfig({
+    plugins: [react(), tailwindcss()],
+    server: {
+      port: 5173,
+      // Proxy uniquement en développement local
+      proxy: {
+        '/api': {
+          target: 'http://localhost:8000',
+          changeOrigin: true,
+        },
       },
     },
-  },
-  test: {
-    environment: 'jsdom',
-    globals: true,
-    setupFiles: ['./src/test/setup.ts'],
-    css: false,
-  },
-})
+  }),
+  {
+    test: {
+      environment: 'jsdom',
+      globals: true,
+      setupFiles: ['./src/test/setup.ts'],
+      css: false,
+    },
+  }
+)
