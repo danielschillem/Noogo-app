@@ -77,13 +77,13 @@ echo "✅ .env écrit ($(wc -l < "$ENV_FILE") variables)"
 cd /var/www/html
 echo "⚙️  Nettoyage des caches Laravel..."
 
-# Supprimer TOUS les caches du déploiement précédent
-# (config:cache/route:cache peuvent planter au runtime et laisser des fichiers corrompus)
+# packages.php est pré-généré au BUILD TIME (Dockerfile) — NE PAS le supprimer !
+# Il contient la liste des providers Laravel (ViewServiceProvider etc.).
+# Le supprimer forcerait une régénération au runtime qui peut échouer (permissions/concurrence).
+# On supprime seulement config/routes qui peuvent être corrompus entre déploiements.
 rm -f bootstrap/cache/config.php \
       bootstrap/cache/routes-v7.php \
       bootstrap/cache/routes.php \
-      bootstrap/cache/services.php \
-      bootstrap/cache/packages.php \
       bootstrap/cache/compiled.php \
       bootstrap/cache/events.php
 

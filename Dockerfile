@@ -84,11 +84,17 @@ RUN composer dump-autoload --optimize --no-dev --no-interaction --no-scripts
 # Dashboard React (fichiers statiques servis par Nginx)
 COPY --from=dashboard-builder /app/dist ./public/dashboard
 
-# Permissions Laravel + symlink public/storage (sans artisan - pas d'APP_KEY au build)
+# Créer les dossiers + pré-générer packages.php au BUILD TIME
+# Ceci est l'étape critique : packages.php doit exister avant que PHP-FPM démarre.
+# Sans lui, Laravel ne peut pas découvrir ViewServiceProvider → 'Class view does not exist'.
+# On le génère ici (root) puis on chown www-data → zéro écriture nécessaire au runtime.
 RUN mkdir -p storage/logs storage/framework/cache \
     storage/framework/sessions storage/framework/views \
     storage/app/public \
     bootstrap/cache \
+    && APP_KEY=build-time-dummy-key \
+       LOG_CHANNEL=stderr \
+       php artisan package:discover --ansi \
     && ln -sf /var/www/html/storage/app/public /var/www/html/public/storage \
     && chown -R www-data:www-data storage bootstrap/cache public/dashboard \
     && chmod -R 775 storage bootstrap/cache
