@@ -126,9 +126,6 @@ chmod 777 /tmp/nginx_client_body
     done
     echo "✅ [migration] DB prête, lancement des migrations..."
     # ── Étape 1 : Permissions via doadmin si DB_ADMIN_URL est disponible ──
-    # DB_ADMIN_URL = credentials doadmin du cluster standalone DO
-    # PG15+ : le schema public n'est plus ouvert par défaut.
-    # On transfère le ownership du schema à l'app user.
     php -r "
     \$adminUrl = getenv('DB_ADMIN_URL');
     if (!\$adminUrl) { echo \"DB_ADMIN_URL absent — GRANT ignoré\n\"; exit(0); }
@@ -143,26 +140,23 @@ chmod 777 /tmp/nginx_client_body
         \$pdo = new PDO(\$dsn, \$user, \$pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
         \$cu = \$pdo->query('SELECT current_user')->fetchColumn();
         echo \"Admin connecté: current_user=\$cu\n\";
-        // Récupérer le nom de l'app user depuis DATABASE_URL
         \$appUrl  = getenv('DATABASE_URL') ?: getenv('DB_URL');
         \$appUser = parse_url(\$appUrl)['user'] ?? 'noogo-db';
         \$safe    = str_replace('\"', '', \$appUser);
-        // Transférer ownership du schema public à l'app user
         \$pdo->exec(\"ALTER SCHEMA public OWNER TO \\\"\$safe\\\"\");
         echo \"ALTER SCHEMA public OWNER TO \$safe : OK\n\";
-        // GRANTs supplémentaires
         \$pdo->exec(\"GRANT ALL PRIVILEGES ON DATABASE \\\"\$db\\\" TO \\\"\$safe\\\"\");
         \$pdo->exec(\"GRANT ALL ON SCHEMA public TO \\\"\$safe\\\"\");
         \$pdo->exec(\"ALTER ROLE \\\"\$safe\\\" SET search_path TO public\");
         echo \"GRANT ALL ON SCHEMA public → \$safe : OK\n\";
     } catch (Exception \$e) { echo 'Admin GRANT failed: ' . \$e->getMessage() . \"\n\"; }
     " 2>&1
-    # ── Étape 2 : Migrations ──────────────────────────────────────────
-    php artisan config:clear 2>&1 | tail -1
-    php artisan config:cache 2>&1 | tail -1
-    php artisan migrate --force 2>&1 || echo "⚠️ [migration] Non-fatal"
-    php artisan db:seed --class=AdminUsersSeeder --force 2>&1 || true
-    php artisan db:seed --class=NoogoDeliceMenuSeeder --force 2>&1 || true
+    # ── Étape 2 : Migrations — TOUJOURS en tant que www-data ─────────
+    # IMPORTANT: ne jamais lancer artisan en root — crée des fichiers root dans
+    # storage/ et bootstrap/cache/ qui bloquent ensuite PHP-FPM (www-data).
+    su -s /bin/sh www-data -c "cd /var/www/html && php artisan migrate --force 2>&1" || echo "⚠️ [migration] Non-fatal"
+    su -s /bin/sh www-data -c "cd /var/www/html && php artisan db:seed --class=AdminUsersSeeder --force 2>&1" || true
+    su -s /bin/sh www-data -c "cd /var/www/html && php artisan db:seed --class=NoogoDeliceMenuSeeder --force 2>&1" || true
     echo "✅ [migration] Terminé"
     touch /tmp/migrations_done
 ) &
@@ -171,30 +165,27 @@ chmod 777 /tmp/nginx_client_body
 echo "🚀 Démarrage PHP-FPM..."
 /usr/local/sbin/php-fpm -F &
 
-# ── Queue Worker en arrière-plan ─────────────────────────────
+# ── Queue Worker en arrière-plan (en tant que www-data) ──────
 echo "⚙️  Démarrage Queue Worker..."
 (
     sleep 20
-    cd /var/www/html
     while true; do
-        php artisan queue:work database --sleep=3 --tries=3 --max-time=3600 2>&1 || sleep 5
+        su -s /bin/sh www-data -c "cd /var/www/html && php artisan queue:work database --sleep=3 --tries=3 --max-time=3600 2>&1" || sleep 5
     done
 ) &
 
-# ── Scheduler en arrière-plan ────────────────────────────────
+# ── Scheduler en arrière-plan (en tant que www-data) ─────────
 echo "⏰ Démarrage Scheduler..."
 (
     sleep 30
-    # Attendre la fin des migrations avant de démarrer le scheduler
     WAIT=0
     until [ -f /tmp/migrations_done ] || [ $WAIT -ge 180 ]; do
         sleep 5
         WAIT=$((WAIT + 5))
     done
     [ -f /tmp/migrations_done ] && echo "⏰ Migrations OK — scheduler démarré" || echo "⚠️ Scheduler démarré sans confirmation migrations (timeout 180s)"
-    cd /var/www/html
     while true; do
-        php artisan schedule:run --no-interaction 2>&1 || true
+        su -s /bin/sh www-data -c "cd /var/www/html && php artisan schedule:run --no-interaction 2>&1" || true
         sleep 60
     done
 ) &

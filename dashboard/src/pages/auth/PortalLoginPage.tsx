@@ -22,7 +22,7 @@ function buildLogoUrl(path?: string | null): string {
 
 export default function PortalLoginPage() {
     const navigate = useNavigate();
-    const { loginForRestaurant, isAuthenticated, lockedRestaurantId } = useAuth();
+    const { login, loginForRestaurant, isAuthenticated, lockedRestaurantId } = useAuth();
 
     const [restaurants, setRestaurants] = useState<PortalRestaurant[]>([]);
     const [loadingList, setLoadingList] = useState(true);
@@ -65,12 +65,18 @@ export default function PortalLoginPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!selected) { setError('Veuillez sélectionner un restaurant.'); return; }
         setError('');
         setIsLoading(true);
         try {
-            await loginForRestaurant(email, password, selected.id);
-            navigate(`/r/${selected.id}/orders`, { replace: true });
+            if (selected) {
+                // Connexion admin restaurant
+                await loginForRestaurant(email, password, selected.id);
+                navigate(`/r/${selected.id}/orders`, { replace: true });
+            } else {
+                // Connexion super admin (sans restaurant)
+                await login(email, password);
+                navigate('/', { replace: true });
+            }
         } catch (err: unknown) {
             const e = err as { message?: string; response?: { data?: { message?: string } }; code?: string };
             if (e.code === 'ECONNABORTED' || (!e.response && !e.message?.includes('accès'))) {
@@ -318,22 +324,24 @@ export default function PortalLoginPage() {
                             disabled={isLoading || !selected}
                             className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-semibold text-sm transition-all"
                             style={{
-                                background: (!selected || isLoading) ? '#cbd5e1' : '#f97316',
+                                background: isLoading ? '#cbd5e1' : '#f97316',
                                 color: '#fff',
-                                cursor: (!selected || isLoading) ? 'not-allowed' : 'pointer',
+                                cursor: isLoading ? 'not-allowed' : 'pointer',
                             }}
                         >
                             {isLoading ? (
                                 <><Loader2 className="h-4 w-4 animate-spin" /> Connexion…</>
-                            ) : (
+                            ) : selected ? (
                                 <>Accéder à mon espace</>
+                            ) : (
+                                <>Se connecter (super admin)</>
                             )}
                         </button>
                     </form>
 
                     <p className="text-center text-xs" style={{ color: '#94a3b8' }}>
-                        Accès Super Admin ?{' '}
-                        <a href="/login" className="font-semibold" style={{ color: '#f97316' }}>
+                        Connexion directe super admin ?{' '}
+                        <a href="/portal-admin" className="font-semibold" style={{ color: '#f97316' }}>
                             Connexion admin
                         </a>
                     </p>

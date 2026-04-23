@@ -90,9 +90,10 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   return (
     <Routes>
-      {/* Public routes */}
+      {/* Public routes — /login redirige vers le portail multi-restaurant */}
+      <Route path="/login" element={<Navigate to="/portal" replace />} />
       <Route
-        path="/login"
+        path="/portal-admin"
         element={
           <PublicRoute>
             <LoginPage />
