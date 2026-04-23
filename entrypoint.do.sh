@@ -75,27 +75,25 @@ echo "✅ .env écrit ($(wc -l < "$ENV_FILE") variables)"
 
 # ── Optimisations Laravel ──────────────────────────────────────
 cd /var/www/html
-echo "⚙️  Nettoyage des caches Laravel..."
 
-# Supprimer tous les caches compilés entre les déploiements.
-# services.php et packages.php seront régénérés par Laravel au premier boot
-# (ProviderRepository + PackageManifest) avec la liste complète des providers
-# issue de config/app.providers (ServiceProvider::defaultProviders()).
-rm -f bootstrap/cache/config.php \
-      bootstrap/cache/routes-v7.php \
-      bootstrap/cache/routes.php \
-      bootstrap/cache/compiled.php \
-      bootstrap/cache/events.php \
-      bootstrap/cache/services.php \
-      bootstrap/cache/packages.php
-
-# NE PAS appeler artisan ici : chaque commande artisan booote tout Laravel
-# et peut écrire des fichiers root dans bootstrap/cache/ causant des erreurs.
-# storage:link est fait via ln -sf dans le Dockerfile (build-time, sans APP_KEY).
-
-# ── Permissions storage ────────────────────────────────────────
+# Permissions avant toute commande artisan (évite les fichiers owned root)
 chown -R www-data:www-data storage bootstrap/cache
 chmod -R 775 storage bootstrap/cache
+
+echo "⚙️  Initialisation Laravel (APP_KEY disponible ici, contrairement au build)..."
+
+# 1. Découverte des packages : génère bootstrap/cache/packages.php et services.php
+#    OBLIGATOIRE — sans ça, ViewServiceProvider et autres ne sont pas enregistrés
+#    → Fatal error "Class 'view' does not exist" sur chaque requête
+php artisan package:discover --ansi 2>&1 | tail -3
+
+# 2. Cache de configuration, routes et vues
+php artisan config:cache  2>&1 | tail -1
+php artisan route:cache   2>&1 | tail -1
+php artisan view:cache    2>&1 | tail -1
+
+# 3. Lien symbolique storage → public/storage
+php artisan storage:link  2>/dev/null || true
 
 # ── Répertoires temporaires nginx ──────────────────────────────
 mkdir -p /tmp/nginx_client_body
