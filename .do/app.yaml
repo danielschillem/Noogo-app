@@ -112,6 +112,10 @@ spec:
           value: file
           scope: RUN_TIME
 
+        - key: FILESYSTEM_DISK
+          value: public
+          scope: RUN_TIME
+
         # ── Pusher (temps réel — activé en production) ───────
         - key: BROADCAST_CONNECTION
           value: pusher
@@ -135,6 +139,28 @@ spec:
         # - key: PUSHER_APP_SECRET
         #   value: <valeur dans DO console>
         #   type: SECRET
+        #   scope: RUN_TIME
+
+        # ── Cloudflare R2 (médias persistants) ────────────────
+        # Active R2 en définissant ces variables dans DO.
+        # Dès que CLOUDFLARE_R2_ENDPOINT est non vide, l'app stocke/lit
+        # les images sur le disque "r2" (au lieu du disque local éphémère).
+        # - key: CLOUDFLARE_R2_ACCESS_KEY_ID
+        #   value: <R2 access key id>
+        #   type: SECRET
+        #   scope: RUN_TIME
+        # - key: CLOUDFLARE_R2_SECRET_ACCESS_KEY
+        #   value: <R2 secret access key>
+        #   type: SECRET
+        #   scope: RUN_TIME
+        # - key: CLOUDFLARE_R2_BUCKET
+        #   value: noogo-media
+        #   scope: RUN_TIME
+        # - key: CLOUDFLARE_R2_ENDPOINT
+        #   value: https://<account-id>.r2.cloudflarestorage.com
+        #   scope: RUN_TIME
+        # - key: CLOUDFLARE_R2_PUBLIC_URL
+        #   value: https://<public-bucket-domain>
         #   scope: RUN_TIME
 
         # ── Mail (optionnel) ─────────────────────────────────
