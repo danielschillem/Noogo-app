@@ -125,4 +125,22 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Autoloaded Service Providers
+    |--------------------------------------------------------------------------
+    |
+    | The service providers listed here will be automatically loaded on the
+    | request to your application. You may add your own services to the
+    | array to grant expanded functionality to your applications.
+    |
+    */
+
+    'providers' => \Illuminate\Support\ServiceProvider::defaultProviders()->merge([
+        /*
+         * Application Service Providers...
+         */
+        App\Providers\AppServiceProvider::class,
+    ])->toArray(),
+
 ];
