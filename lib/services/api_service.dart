@@ -18,6 +18,35 @@ class ApiService {
   static final ApiService instance = ApiService._internal();
   factory ApiService() => instance;
 
+  Map<String, dynamic> _decodeJsonMapOrThrow({
+    required String body,
+    required Uri uri,
+    required String method,
+    required int statusCode,
+  }) {
+    final trimmed = body.trim();
+    if (trimmed.isEmpty) return <String, dynamic>{};
+
+    try {
+      final decoded = json.decode(trimmed);
+      if (decoded is Map<String, dynamic>) return decoded;
+      throw ParseException(
+        'Réponse API inattendue ($method $uri): JSON non-objet.',
+      );
+    } on FormatException catch (e) {
+      final preview = trimmed.length > 220
+          ? '${trimmed.substring(0, 220)}...'
+          : trimmed;
+      final looksHtml = trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<html');
+      final hint = looksHtml
+          ? 'Le serveur a renvoyé du HTML au lieu de JSON (URL/API ou proxy à vérifier).'
+          : 'Le serveur a renvoyé un format non JSON.';
+      throw ParseException(
+        'Réponse JSON invalide ($method $uri, HTTP $statusCode): $hint Détail: $e. Aperçu: $preview',
+      );
+    }
+  }
+
   /// Construit les headers avec le token Bearer si l'utilisateur est connecté
   Future<Map<String, String>> _buildHeaders() async {
     final token = await AuthService.getToken();
@@ -50,12 +79,12 @@ class ApiService {
         if (kDebugMode) debugPrint('📡 Réponse: ${response.statusCode}');
 
         if (response.statusCode >= 200 && response.statusCode < 300) {
-          if (response.body.isEmpty) return {};
-          try {
-            return json.decode(response.body) as Map<String, dynamic>;
-          } on FormatException catch (e) {
-            throw ParseException('Réponse JSON invalide : $e');
-          }
+          return _decodeJsonMapOrThrow(
+            body: response.body,
+            uri: uri,
+            method: 'GET',
+            statusCode: response.statusCode,
+          );
         } else {
           if (kDebugMode) {
             debugPrint(
@@ -124,12 +153,12 @@ class ApiService {
             );
 
         if (response.statusCode >= 200 && response.statusCode < 300) {
-          if (response.body.isEmpty) return {};
-          try {
-            return json.decode(response.body) as Map<String, dynamic>;
-          } on FormatException catch (e) {
-            throw ParseException('Réponse JSON invalide : $e');
-          }
+          return _decodeJsonMapOrThrow(
+            body: response.body,
+            uri: uri,
+            method: 'POST',
+            statusCode: response.statusCode,
+          );
         } else {
           if (kDebugMode) {
             debugPrint(

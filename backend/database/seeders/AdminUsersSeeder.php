@@ -45,7 +45,8 @@ class AdminUsersSeeder extends Seeder
                 'email' => 'livreur@noogo.com',
                 'password' => Hash::make('password123'),
                 'is_admin' => false,
-                'role' => 'driver',
+                // users.role accepts only user/admin/super_admin in current schema.
+                'role' => 'user',
                 'email_verified_at' => now(),
             ]
         );

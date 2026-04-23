@@ -37,7 +37,7 @@ class FlashInfo {
       if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
         imageUrl = imagePath;
       } else {
-        imageUrl = 'https://dashboard-noogo.quickdev-it.com/storage/$imagePath';
+        imageUrl = 'https://noogo-e5ygx.ondigitalocean.app/storage/$imagePath';
       }
     }
 

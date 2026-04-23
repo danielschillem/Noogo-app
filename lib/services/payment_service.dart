@@ -116,7 +116,18 @@ class PaymentResult {
 ///   3. [confirmOtp] → envoyer l'OTP au backend
 ///   4. [pollUntilDone] / [checkStatus] → attendre le statut final
 class PaymentService {
-  static String get _base => ApiConfig.baseUrl;
+  static String get _base => ApiConfig.paymentBaseUrl;
+
+  static Map<String, dynamic>? _tryDecodeJsonObject(String body) {
+    final trimmed = body.trim();
+    if (trimmed.isEmpty) return <String, dynamic>{};
+    try {
+      final decoded = jsonDecode(trimmed);
+      return decoded is Map<String, dynamic> ? decoded : null;
+    } catch (_) {
+      return null;
+    }
+  }
 
   static Future<Map<String, String>> _authHeaders() async {
     final token = await AuthService.getToken();
@@ -153,7 +164,19 @@ class PaymentService {
           )
           .timeout(const Duration(seconds: 20));
 
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final data = _tryDecodeJsonObject(response.body);
+
+      if (data == null) {
+        final preview = response.body.trim().replaceAll('\n', ' ');
+        final shortPreview =
+            preview.length > 180 ? '${preview.substring(0, 180)}...' : preview;
+        return PaymentInitResult(
+          success: false,
+          message:
+              'Service paiement indisponible (réponse non JSON, HTTP ${response.statusCode}). '
+              'Vérifie la route $_base/payments/initiate. Aperçu: $shortPreview',
+        );
+      }
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         final pd = data['data'] as Map<String, dynamic>?;
@@ -194,7 +217,15 @@ class PaymentService {
           )
           .timeout(const Duration(seconds: 15));
 
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final data = _tryDecodeJsonObject(response.body);
+      if (data == null) {
+        return (
+          success: false,
+          message:
+              'Réponse serveur invalide (non JSON) pendant la confirmation OTP.',
+          payment: null,
+        );
+      }
       final pd = data['data'] as Map<String, dynamic>?;
 
       return (
@@ -220,7 +251,8 @@ class PaymentService {
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final data = _tryDecodeJsonObject(response.body);
+        if (data == null) return null;
         final pd = data['data'] as Map<String, dynamic>?;
         return pd != null ? PaymentRecord.fromJson(pd) : null;
       }

@@ -184,7 +184,9 @@ class RestaurantController extends Controller
             'password' => bcrypt($adminPassword),
             'phone' => $request->input('telephone'),
             'is_admin' => false,
-            'role' => 'restaurant_owner',
+            // SQLite local role constraint only allows user/admin/super_admin.
+            // Restaurant ownership is modeled by restaurants.user_id, not this field.
+            'role' => 'user',
         ]);
 
         // Réassigner le restaurant à ce nouvel utilisateur admin

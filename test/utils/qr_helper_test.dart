@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:noogo/utils/qr_helper.dart';
 
 void main() {
-  const dashboardUrl = 'https://dashboard-noogo.quickdev-it.com';
+  const dashboardUrl = 'https://noogo-e5ygx.ondigitalocean.app';
 
   group('QRHelper.isValidRestaurantQR', () {
     test('retourne true pour une URL de restaurant valide', () {

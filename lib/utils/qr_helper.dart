@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 class QRHelper {
   /// URLs acceptées comme sources de QR codes valides
   static const List<String> _validBaseUrls = [
-    'https://dashboard-noogo.quickdev-it.com',
+    'https://noogo-e5ygx.ondigitalocean.app',
     'http://localhost',
     'http://127.0.0.1',
   ];
@@ -18,12 +18,16 @@ class QRHelper {
       return false;
     }
 
-    // Accepter toute URL contenant /restaurant/{id}
-    // ou un simple ID numérique
+    // Accepter les formats URL connus et un ID direct.
+    // Exemples:
+    // - https://.../restaurant/{id}
+    // - https://.../restaurants/{id}
+    // - https://.../r/{id}[/login]
+    // - {id}
     final uri = Uri.tryParse(qrData);
-    if (uri != null && qrData.contains('/restaurant/')) {
+    if (uri != null && parseRestaurantId(qrData) != null) {
       if (kDebugMode) {
-        debugPrint('🔍 Validation QR: valide (contient /restaurant/)');
+        debugPrint('🔍 Validation QR: valide (ID extrait depuis URL)');
         debugPrint('   - QR scanné: $qrData');
       }
       return true;
@@ -35,10 +39,10 @@ class QRHelper {
       return true;
     }
 
-    // Vérification stricte avec liste d'URLs connues
+    // Vérification stricte avec liste d'URLs connues + extraction d'ID.
     final isValidFormat =
         _validBaseUrls.any((base) => qrData.startsWith(base)) &&
-            qrData.contains('/restaurant/');
+            parseRestaurantId(qrData) != null;
 
     if (kDebugMode) {
       debugPrint('🔍 Validation QR:');
@@ -69,13 +73,33 @@ class QRHelper {
         debugPrint('   - Segments: $segments');
       }
 
-      // Chercher "restaurant" dans les segments
-      final restaurantIndex = segments.indexOf('restaurant');
+      // Formats principaux:
+      // /restaurant/{id}, /restaurants/{id}, /r/{id}[/login]
+      int? _idAfterSegment(String segmentName) {
+        final index = segments.indexOf(segmentName);
+        if (index != -1 && index + 1 < segments.length) {
+          return int.tryParse(segments[index + 1]);
+        }
+        return null;
+      }
 
-      if (restaurantIndex != -1 && restaurantIndex + 1 < segments.length) {
-        final id = int.tryParse(segments[restaurantIndex + 1]);
+      final id =
+          _idAfterSegment('restaurant') ??
+          _idAfterSegment('restaurants') ??
+          _idAfterSegment('r');
+
+      if (id != null && id > 0) {
         if (kDebugMode) debugPrint('   - ID extrait: $id');
         return id;
+      }
+
+      // Fallback query params (?restaurant_id=12, ?id=12)
+      final fromQuery =
+          int.tryParse(uri.queryParameters['restaurant_id'] ?? '') ??
+          int.tryParse(uri.queryParameters['id'] ?? '');
+      if (fromQuery != null && fromQuery > 0) {
+        if (kDebugMode) debugPrint('   - ID extrait depuis query: $fromQuery');
+        return fromQuery;
       }
 
       if (kDebugMode) debugPrint('   - ❌ Format invalide');

@@ -277,6 +277,8 @@ export const deliveryApi = {
     api.get('/admin/drivers', { params }),
   createDriver: (data: { name: string; phone: string; zone?: string; user_id?: number }) =>
     api.post('/admin/drivers', data),
+  registerDriver: (data: { name: string; telephone: string; password: string; password_confirmation: string; zone?: string }) =>
+    api.post('/admin/auth/register-driver', data),
   updateDriver: (id: number, data: { name?: string; phone?: string; zone?: string; status?: string }) =>
     api.put(`/admin/drivers/${id}`, data),
   deleteDriver: (id: number) => api.delete(`/admin/drivers/${id}`),

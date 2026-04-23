@@ -90,7 +90,9 @@ class AuthController extends Controller
                 'name' => $request->name,
                 'phone' => $request->telephone,
                 'password' => Hash::make($request->password),
-                'role' => 'driver',
+                // users.role accepts only user/admin/super_admin in current schema.
+                // Driver capabilities come from the linked delivery_drivers record.
+                'role' => 'user',
             ]);
 
             $driver = DeliveryDriver::create([

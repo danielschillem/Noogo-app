@@ -54,7 +54,7 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
-    'frontend_url' => env('FRONTEND_URL', 'https://dashboard-noogo.quickdev-it.com'),
+    'frontend_url' => env('FRONTEND_URL', 'https://noogo-e5ygx.ondigitalocean.app'),
 
     /*
     |--------------------------------------------------------------------------

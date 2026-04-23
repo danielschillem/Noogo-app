@@ -1526,6 +1526,7 @@ class _CartScreenState extends State<CartScreen>
     required String phoneNumber,
     required String paymentMethod,
     String? mobileMoneyProvider,
+    bool allowTableRetry = true,
   }) async {
     // Afficher l'indicateur de chargement
     showDialog(
@@ -1593,6 +1594,43 @@ class _CartScreenState extends State<CartScreen>
 
       // Afficher l'erreur avec plus de détails
       final errorMessage = e.toString().replaceAll('Exception: ', '');
+
+      // Certains backends renvoient une erreur métier de disponibilité de table
+      // au moment du paiement en espèces/sur place. On propose un retry fluide.
+      final lower = errorMessage.toLowerCase();
+      final isTableUnavailable = (lower.contains('table') &&
+              (lower.contains('disponible') ||
+                  lower.contains('indisponible') ||
+                  lower.contains('available'))) ||
+          lower.contains('selected table');
+
+      if (allowTableRetry &&
+          orderType == 'sur place' &&
+          paymentMethod == 'cash' &&
+          isTableUnavailable) {
+        _showSnackBar(
+          'La table choisie n\'est plus disponible. Veuillez en sélectionner une autre.',
+          isError: true,
+        );
+
+        final newTable = await _askTableNumber();
+        if (!mounted || newTable == null) return;
+
+        await _submitOrderToServer(
+          provider: provider,
+          orderType: orderType,
+          tableNumber: newTable,
+          deliveryAddress: deliveryAddress,
+          deliveryLat: deliveryLat,
+          deliveryLng: deliveryLng,
+          phoneNumber: phoneNumber,
+          paymentMethod: paymentMethod,
+          mobileMoneyProvider: mobileMoneyProvider,
+          allowTableRetry: false,
+        );
+        return;
+      }
+
       _showSnackBar(
         'Erreur: $errorMessage',
         isError: true,

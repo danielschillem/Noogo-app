@@ -73,16 +73,16 @@ info "✅ Déploiement terminé avec succès !"
 # ─────────────────────────────────────────────────────────────────────────────────
 # server {
 #     listen 80;
-#     server_name dashboard-noogo.quickdev-it.com;
+#     server_name noogo-e5ygx.ondigitalocean.app;
 #     return 301 https://$host$request_uri;
 # }
 #
 # server {
 #     listen 443 ssl http2;
-#     server_name dashboard-noogo.quickdev-it.com;
+#     server_name noogo-e5ygx.ondigitalocean.app;
 #
-#     ssl_certificate     /etc/letsencrypt/live/dashboard-noogo.quickdev-it.com/fullchain.pem;
-#     ssl_certificate_key /etc/letsencrypt/live/dashboard-noogo.quickdev-it.com/privkey.pem;
+#     ssl_certificate     /etc/letsencrypt/live/noogo-e5ygx.ondigitalocean.app/fullchain.pem;
+#     ssl_certificate_key /etc/letsencrypt/live/noogo-e5ygx.ondigitalocean.app/privkey.pem;
 #
 #     # Dashboard React (SPA)
 #     root /var/www/html/dashboard-noogo;
@@ -102,7 +102,7 @@ info "✅ Déploiement terminé avec succès !"
 # # ── Ou Laravel en root directement ─────────────────────────
 # server {
 #     listen 443 ssl http2;
-#     server_name dashboard-noogo.quickdev-it.com;
+#     server_name noogo-e5ygx.ondigitalocean.app;
 #     root /var/www/noogo/backend/public;
 #     index index.php;
 #

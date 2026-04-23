@@ -176,7 +176,7 @@
 
 - [x] **SEC-006** : Restreindre CORS au domaine dashboard exact
   - ✅ Corrigé le 12/04/2026 :
-    - `backend/config/cors.php` : `dashboard-noogo.quickdev-it.com` via `FRONTEND_URL` env var
+    - `backend/config/cors.php` : `noogo-e5ygx.ondigitalocean.app` via `FRONTEND_URL` env var
     - Configuré dans les variables d'environnement Digital Ocean
 
 ### Tests
@@ -481,8 +481,8 @@ noogo-app/
 
 ```env
 # API Configuration
-API_BASE_URL=https://dashboard-noogo.quickdev-it.com/api
-IMAGE_BASE_URL=https://dashboard-noogo.quickdev-it.com
+API_BASE_URL=https://noogo-e5ygx.ondigitalocean.app/api
+IMAGE_BASE_URL=https://noogo-e5ygx.ondigitalocean.app
 
 # Pusher Configuration
 PUSHER_APP_ID=2072946

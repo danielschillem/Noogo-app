@@ -92,6 +92,13 @@ android {
             )
         }
     }
+
+    lint {
+        // Évite un crash connu de lint sur certaines dépendances
+        // (ex: app_links) pendant le build release.
+        checkReleaseBuilds = false
+        abortOnError = false
+    }
 }
 
 flutter {

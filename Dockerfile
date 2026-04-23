@@ -96,17 +96,17 @@ RUN mkdir -p storage/logs storage/framework/cache \
     storage/app/public \
     bootstrap/cache \
     && php -r " \
-        \$i = require 'vendor/composer/installed.php'; \
-        \$p = []; \$a = []; \
-        foreach (\$i['packages'] as \$m) { \
-            foreach ((\$m['extra']['laravel']['providers'] ?? []) as \$v) \$p[] = \$v; \
-            foreach ((\$m['extra']['laravel']['aliases'] ?? []) as \$k => \$v) \$a[\$k] = \$v; \
-        } \
-        file_put_contents( \
-            'bootstrap/cache/packages.php', \
-            '<?php return ' . var_export(['providers' => \$p, 'aliases' => \$a], true) . ';' \
-        ); \
-        echo count(\$p) . ' providers écrits dans bootstrap/cache/packages.php' . PHP_EOL; \
+    \$i = require 'vendor/composer/installed.php'; \
+    \$p = []; \$a = []; \
+    foreach (\$i['packages'] as \$m) { \
+    foreach ((\$m['extra']['laravel']['providers'] ?? []) as \$v) \$p[] = \$v; \
+    foreach ((\$m['extra']['laravel']['aliases'] ?? []) as \$k => \$v) \$a[\$k] = \$v; \
+    } \
+    file_put_contents( \
+    'bootstrap/cache/packages.php', \
+    '<?php return ' . var_export(['providers' => \$p, 'aliases' => \$a], true) . ';' \
+    ); \
+    echo count(\$p) . ' providers écrits dans bootstrap/cache/packages.php' . PHP_EOL; \
     " \
     && ln -sf /var/www/html/storage/app/public /var/www/html/public/storage \
     && chown -R www-data:www-data storage bootstrap/cache public/dashboard \

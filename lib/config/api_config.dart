@@ -20,6 +20,11 @@ class ApiConfig {
   static String get qrBaseUrl =>
       dotenv.env['QR_BASE_URL'] ?? 'https://noogo-e5ygx.ondigitalocean.app/api';
 
+  /// Base URL dédiée aux paiements (optionnelle).
+  /// Si absente, l'app utilise [baseUrl].
+  static String get paymentBaseUrl =>
+      dotenv.env['PAYMENT_API_BASE_URL'] ?? baseUrl;
+
   // ============================================
   // 🔌 CONFIGURATION PUSHER
   // ============================================

@@ -100,7 +100,7 @@ class _NooqoAppState extends State<NooqoApp> {
     if (ctx == null) return;
 
     final qrUrl =
-        'https://dashboard-noogo.quickdev-it.com/restaurant/$restaurantId';
+        'https://noogo-e5ygx.ondigitalocean.app/restaurant/$restaurantId';
 
     // Charger le restaurant via le provider
     ctx.read<RestaurantProvider>().validateRestaurantQRCode(qrUrl).then((_) {

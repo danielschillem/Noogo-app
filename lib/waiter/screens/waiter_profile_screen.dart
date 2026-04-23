@@ -85,8 +85,7 @@ class WaiterProfileScreen extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(email,
                         style: const TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textSecondary)),
+                            fontSize: 14, color: AppColors.textSecondary)),
                     const SizedBox(height: 24),
 
                     // Role + Restaurant card
@@ -125,8 +124,7 @@ class WaiterProfileScreen extends StatelessWidget {
                           children: [
                             const Text('Commandes actives',
                                 style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15)),
+                                    fontWeight: FontWeight.bold, fontSize: 15)),
                             const SizedBox(height: 12),
                             Row(
                               children: [
@@ -196,9 +194,7 @@ class WaiterProfileScreen extends StatelessWidget {
   }
 
   Widget _infoTile(
-      {required IconData icon,
-      required String label,
-      required String value}) {
+      {required IconData icon, required String label, required String value}) {
     return Row(
       children: [
         Icon(icon, size: 18, color: AppColors.textSecondary),
@@ -221,9 +217,7 @@ class WaiterProfileScreen extends StatelessWidget {
   }
 
   Widget _statCard(
-      {required String label,
-      required String value,
-      required Color color}) {
+      {required String label, required String value, required Color color}) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -235,9 +229,7 @@ class WaiterProfileScreen extends StatelessWidget {
         children: [
           Text(value,
               style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: color)),
+                  fontSize: 22, fontWeight: FontWeight.bold, color: color)),
           const SizedBox(height: 2),
           Text(label,
               style: const TextStyle(

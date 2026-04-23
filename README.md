@@ -140,7 +140,7 @@ flutter build ios --release
 L'application se connecte à un backend Laravel :
 
 ```
-Base URL: https://dashboard-noogo.quickdev-it.com/api
+Base URL: https://noogo-e5ygx.ondigitalocean.app/api
 Pusher Cluster: eu
 ```
 

@@ -27,7 +27,7 @@ export default function DriversPage() {
     const [statusFilter, setStatusFilter] = useState<string>('');
     const [showModal, setShowModal] = useState(false);
     const [editDriver, setEditDriver] = useState<DeliveryDriver | null>(null);
-    const [form, setForm] = useState({ name: '', phone: '', zone: '' });
+    const [form, setForm] = useState({ name: '', phone: '', zone: '', password: '', passwordConfirmation: '' });
     const [error, setError] = useState('');
     const [saving, setSaving] = useState(false);
 
@@ -46,14 +46,14 @@ export default function DriversPage() {
 
     const openCreate = () => {
         setEditDriver(null);
-        setForm({ name: '', phone: '', zone: '' });
+        setForm({ name: '', phone: '', zone: '', password: '', passwordConfirmation: '' });
         setError('');
         setShowModal(true);
     };
 
     const openEdit = (d: DeliveryDriver) => {
         setEditDriver(d);
-        setForm({ name: d.name, phone: d.phone, zone: d.zone ?? '' });
+        setForm({ name: d.name, phone: d.phone, zone: d.zone ?? '', password: '', passwordConfirmation: '' });
         setError('');
         setShowModal(true);
     };
@@ -73,10 +73,23 @@ export default function DriversPage() {
                     zone: form.zone || undefined,
                 });
             } else {
-                await deliveryApi.createDriver({
+                if (!form.password || form.password.length < 8) {
+                    setError('Le mot de passe doit contenir au moins 8 caractères.');
+                    setSaving(false);
+                    return;
+                }
+                if (form.password !== form.passwordConfirmation) {
+                    setError('La confirmation du mot de passe ne correspond pas.');
+                    setSaving(false);
+                    return;
+                }
+
+                await deliveryApi.registerDriver({
                     name: form.name,
-                    phone: form.phone,
+                    telephone: form.phone,
                     zone: form.zone || undefined,
+                    password: form.password,
+                    password_confirmation: form.passwordConfirmation,
                 });
             }
             setShowModal(false);
@@ -290,6 +303,34 @@ export default function DriversPage() {
                                 </label>
                                 <input className="input-pro w-full" value={form.zone} onChange={e => setForm(f => ({ ...f, zone: e.target.value }))} placeholder="Ex: Ouagadougou Centre" />
                             </div>
+                            {!editDriver && (
+                                <>
+                                    <div>
+                                        <label className="block text-xs font-semibold mb-1.5" style={{ color: '#374151' }}>
+                                            Mot de passe *
+                                        </label>
+                                        <input
+                                            type="password"
+                                            className="input-pro w-full"
+                                            value={form.password}
+                                            onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                                            placeholder="Minimum 8 caractères"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold mb-1.5" style={{ color: '#374151' }}>
+                                            Confirmer le mot de passe *
+                                        </label>
+                                        <input
+                                            type="password"
+                                            className="input-pro w-full"
+                                            value={form.passwordConfirmation}
+                                            onChange={e => setForm(f => ({ ...f, passwordConfirmation: e.target.value }))}
+                                            placeholder="Retapez le mot de passe"
+                                        />
+                                    </div>
+                                </>
+                            )}
                         </div>
                         <div className="flex gap-3 px-6 py-4" style={{ borderTop: '1px solid #f1f5f9' }}>
                             <button onClick={() => setShowModal(false)} className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium" style={{ background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0' }}>
