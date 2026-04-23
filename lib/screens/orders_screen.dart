@@ -459,7 +459,8 @@ class _OrdersScreenState extends State<OrdersScreen>
                     ],
                   ),
                 ] else if (order.status == OrderStatus.confirmed ||
-                    order.status == OrderStatus.preparing) ...[
+                    order.status == OrderStatus.preparing ||
+                    order.status == OrderStatus.ready) ...[
                   const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,

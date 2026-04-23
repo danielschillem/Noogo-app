@@ -108,6 +108,7 @@ class Delivery {
   }
 
   factory Delivery.fromJson(Map<String, dynamic> json) {
+    final order = json['order'] as Map<String, dynamic>?;
     return Delivery(
       id: json['id'] is int ? json['id'] : int.tryParse('${json['id']}') ?? 0,
       orderId: json['order_id'] is int
@@ -118,18 +119,24 @@ class Delivery {
           : int.tryParse('${json['driver_id']}'),
       status: json['status']?.toString() ?? 'pending',
       pickupAddress: json['pickup_address']?.toString(),
-      deliveryAddress: json['delivery_address']?.toString(),
+      deliveryAddress: json['client_address']?.toString() ??
+          json['delivery_address']?.toString() ??
+          order?['delivery_address']?.toString(),
       pickupLat: _toDouble(json['pickup_lat']),
       pickupLng: _toDouble(json['pickup_lng']),
-      deliveryLat: _toDouble(json['delivery_lat']),
-      deliveryLng: _toDouble(json['delivery_lng']),
+      deliveryLat: _toDouble(json['client_lat']) ??
+          _toDouble(json['delivery_lat']) ??
+          _toDouble(order?['delivery_lat']),
+      deliveryLng: _toDouble(json['client_lng']) ??
+          _toDouble(json['delivery_lng']) ??
+          _toDouble(order?['delivery_lng']),
       fee: _toDouble(json['fee']),
       customerPhone: json['customer_phone']?.toString(),
       customerName: json['customer_name']?.toString(),
-      restaurantName: json['restaurant_name']?.toString() ??
-          json['restaurant']?['nom']?.toString(),
+      restaurantName:
+          json['restaurant_name']?.toString() ?? order?['restaurant']?['nom']?.toString(),
       restaurantPhone: json['restaurant_phone']?.toString() ??
-          json['restaurant']?['telephone']?.toString(),
+          order?['restaurant']?['telephone']?.toString(),
       totalAmount:
           _toDouble(json['total_amount'] ?? json['order']?['total_amount']),
       assignedAt: _toDate(json['assigned_at']),

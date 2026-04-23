@@ -30,8 +30,24 @@ class DriverProvider extends ChangeNotifier {
 
     try {
       _activeDeliveries = await _api.getActiveDeliveries();
-      // Auto-select current if only one active
-      if (_activeDeliveries.length == 1) {
+      // Synchroniser la livraison courante avec la version serveur
+      if (_currentDelivery != null) {
+        Delivery? fresh;
+        for (final d in _activeDeliveries) {
+          if (d.id == _currentDelivery!.id) {
+            fresh = d;
+            break;
+          }
+        }
+        if (fresh != null) {
+          _currentDelivery = fresh;
+        } else {
+          // Livraison terminée/retirée du scope actif
+          _currentDelivery = null;
+          await DriverLocationService.instance.stopTracking();
+        }
+      } else if (_activeDeliveries.length == 1) {
+        // Auto-select current if only one active
         _currentDelivery = _activeDeliveries.first;
       }
     } catch (e) {

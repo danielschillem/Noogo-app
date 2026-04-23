@@ -13,6 +13,7 @@ import '../utils/app_colors.dart';
 const List<_TrackingStep> _kSteps = [
   _TrackingStep('confirmed', 'Confirmée', Icons.check_circle_outline),
   _TrackingStep('preparing', 'En préparation', Icons.restaurant),
+  _TrackingStep('ready', 'Terminée', Icons.done_all),
   _TrackingStep('picked_up', 'Récupérée', Icons.directions_bike),
   _TrackingStep('on_way', 'En route', Icons.delivery_dining),
   _TrackingStep('delivered', 'Livrée', Icons.home),
@@ -69,10 +70,35 @@ class _TrackingScreenState extends State<TrackingScreen>
       : _deliveryStatus =
             OrderStatus.values.last.toString().split('.').last; // fallback
 
+  String _normalizeTrackingStatus(String raw) {
+    final s = raw.trim().toLowerCase();
+    switch (s) {
+      case 'pending':
+      case 'confirmed':
+        return 'confirmed';
+      case 'preparing':
+        return 'preparing';
+      case 'ready':
+      case 'assigned':
+      case 'pending_assignment':
+        return 'ready';
+      case 'picked_up':
+        return 'picked_up';
+      case 'on_way':
+        return 'on_way';
+      case 'delivered':
+      case 'completed':
+        return 'delivered';
+      default:
+        return 'confirmed';
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    _deliveryStatus = widget.order.status.toString().split('.').last;
+    _deliveryStatus =
+        _normalizeTrackingStatus(widget.order.status.toString().split('.').last);
 
     // Animation pulse du marker livreur
     _markerAnimCtrl = AnimationController(
@@ -96,7 +122,8 @@ class _TrackingScreenState extends State<TrackingScreen>
       final updated =
           provider.orders.where((o) => o.id == widget.order.id).firstOrNull;
       if (updated != null && mounted) {
-        final newStatus = updated.status.toString().split('.').last;
+        final newStatus = _normalizeTrackingStatus(
+            updated.status.toString().split('.').last);
         if (newStatus != _deliveryStatus) {
           setState(() => _deliveryStatus = newStatus);
         }
@@ -122,7 +149,7 @@ class _TrackingScreenState extends State<TrackingScreen>
 
     _statusSub = _trackingService.deliveryStatusStream.listen((event) {
       if (!mounted) return;
-      setState(() => _deliveryStatus = event.status);
+      setState(() => _deliveryStatus = _normalizeTrackingStatus(event.status));
     });
   }
 
