@@ -44,6 +44,9 @@ fi
 
 # App
 [ -n "$FRONTEND_URL" ]      && echo "FRONTEND_URL=$FRONTEND_URL"     >> "$ENV_FILE"
+[ -n "$SANCTUM_STATEFUL_DOMAINS" ] && echo "SANCTUM_STATEFUL_DOMAINS=$SANCTUM_STATEFUL_DOMAINS" >> "$ENV_FILE"
+[ -n "$SESSION_DOMAIN" ]    && echo "SESSION_DOMAIN=$SESSION_DOMAIN" >> "$ENV_FILE"
+[ -n "$SESSION_SECURE_COOKIE" ] && echo "SESSION_SECURE_COOKIE=$SESSION_SECURE_COOKIE" >> "$ENV_FILE"
 [ -n "$LOG_CHANNEL" ]       && echo "LOG_CHANNEL=$LOG_CHANNEL"       >> "$ENV_FILE"
 [ -n "$SESSION_DRIVER" ]    && echo "SESSION_DRIVER=$SESSION_DRIVER" >> "$ENV_FILE"
 [ -n "$CACHE_STORE" ]       && echo "CACHE_STORE=$CACHE_STORE"       >> "$ENV_FILE"
@@ -87,21 +90,25 @@ mkdir -p storage/logs storage/framework/cache \
          storage/framework/sessions storage/framework/views \
          storage/app/public bootstrap/cache
 
-# 2. Découverte des packages → régénère bootstrap/cache/packages.php + services.php
+# 2. Purge agressive des caches bootstrap (évite les états cassés entre déploiements)
+rm -f bootstrap/cache/*.php 2>/dev/null || true
+php artisan optimize:clear 2>&1 || true
+
+# 3. Découverte des packages → régénère bootstrap/cache/packages.php + services.php
 #    packages.php est déjà pré-généré au build (Dockerfile), mais on le rafraîchit ici.
 #    || true → non-fatal : si artisan échoue, le fichier baked-in du build reste intact.
 php artisan package:discover --ansi 2>&1 || true
 
-# 3. Cache Laravel (config, routes, vues) — || true pour ne pas bloquer au démarrage
+# 4. Cache Laravel (config, routes, vues) — || true pour ne pas bloquer au démarrage
 #    Si config:cache échoue, Laravel lira les fichiers live (plus lent mais fonctionnel).
 php artisan config:cache 2>&1 || echo "⚠️  config:cache échoué — Laravel utilisera la config live"
 php artisan route:cache  2>&1 || echo "⚠️  route:cache échoué — routes lues en live"
 php artisan view:cache   2>&1 || echo "⚠️  view:cache échoué — vues compilées à la demande"
 
-# 4. Lien symbolique storage → public/storage
+# 5. Lien symbolique storage → public/storage
 php artisan storage:link 2>/dev/null || true
 
-# 5. Re-chown APRES artisan — corrige tous les fichiers créés en root
+# 6. Re-chown APRES artisan — corrige tous les fichiers créés en root
 #    (storage/logs/laravel.log, bootstrap/cache/*.php, etc.)
 chown -R www-data:www-data storage bootstrap/cache .env
 chmod -R 775 storage bootstrap/cache

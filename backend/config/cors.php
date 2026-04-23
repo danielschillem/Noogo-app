@@ -15,15 +15,16 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => array_filter([
-        env('FRONTEND_URL', 'https://dashboard-noogo.quickdev-it.com'),
-        'https://dashboard-noogo.quickdev-it.com',
+        env('FRONTEND_URL', 'https://noogo-e5ygx.ondigitalocean.app'),
+        env('APP_URL'),
+        'https://noogo-e5ygx.ondigitalocean.app',
         // localhost uniquement en développement local
-        app()->environment('local', 'testing') ? 'http://localhost:5173' : null,
-        app()->environment('local', 'testing') ? 'http://localhost:3000' : null,
-        app()->environment('local', 'testing') ? 'http://localhost:8080' : null,
+        in_array(env('APP_ENV', 'production'), ['local', 'testing'], true) ? 'http://localhost:5173' : null,
+        in_array(env('APP_ENV', 'production'), ['local', 'testing'], true) ? 'http://localhost:3000' : null,
+        in_array(env('APP_ENV', 'production'), ['local', 'testing'], true) ? 'http://localhost:8080' : null,
     ]),
 
-    'allowed_origins_patterns' => app()->environment('local', 'testing') ? [
+    'allowed_origins_patterns' => in_array(env('APP_ENV', 'production'), ['local', 'testing'], true) ? [
         '/^http:\/\/localhost(:\d+)?$/',
         '/^http:\/\/127\.0\.0\.1(:\d+)?$/',
     ] : [],
