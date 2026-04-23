@@ -85,16 +85,30 @@ RUN composer dump-autoload --optimize --no-dev --no-interaction --no-scripts
 COPY --from=dashboard-builder /app/dist ./public/dashboard
 
 # Créer les dossiers + pré-générer packages.php au BUILD TIME
-# Ceci est l'étape critique : packages.php doit exister avant que PHP-FPM démarre.
-# Sans lui, Laravel ne peut pas découvrir ViewServiceProvider → 'Class view does not exist'.
-# On le génère ici (root) puis on chown www-data → zéro écriture nécessaire au runtime.
+# packages.php liste tous les ServiceProviders Laravel des packages vendor.
+# Sans ce fichier, Laravel appelle PackageManifest::build() à la 1ère requête HTTP,
+# ce qui peut échouer (permissions/concurrence) → 'Class view does not exist'.
+#
+# On génère packages.php en lisant vendor/composer/installed.php directement,
+# SANS booter Laravel (pas besoin de .env, APP_KEY, DB, etc.).
+# C'est exactement ce que fait PackageManifest::build() en interne.
 RUN mkdir -p storage/logs storage/framework/cache \
     storage/framework/sessions storage/framework/views \
     storage/app/public \
     bootstrap/cache \
-    && APP_KEY=build-time-dummy-key \
-       LOG_CHANNEL=stderr \
-       php artisan package:discover --ansi \
+    && php -r " \
+        \$i = require 'vendor/composer/installed.php'; \
+        \$p = []; \$a = []; \
+        foreach (\$i['versions'] as \$name => \$pkg) { \
+            \$f = 'vendor/' . \$name . '/composer.json'; \
+            if (!file_exists(\$f)) continue; \
+            \$m = json_decode(file_get_contents(\$f), true); \
+            foreach ((\$m['extra']['laravel']['providers'] ?? []) as \$pr) \$p[] = \$pr; \
+            foreach ((\$m['extra']['laravel']['aliases'] ?? []) as \$k => \$v) \$a[\$k] = \$v; \
+        } \
+        file_put_contents('bootstrap/cache/packages.php', '<?php return ' . var_export(['providers' => \$p, 'aliases' => \$a], true) . ';'); \
+        echo count(\$p) . ' providers written to bootstrap/cache/packages.php' . PHP_EOL; \
+    " \
     && ln -sf /var/www/html/storage/app/public /var/www/html/public/storage \
     && chown -R www-data:www-data storage bootstrap/cache public/dashboard \
     && chmod -R 775 storage bootstrap/cache
