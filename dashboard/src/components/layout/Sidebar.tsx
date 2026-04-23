@@ -16,6 +16,7 @@ import {
   Truck,
   Package,
   Star,
+  ClipboardList,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
@@ -27,6 +28,7 @@ const ADMIN_NAV = [
   { name: 'Restaurants', href: '/restaurants', icon: Store },
   { name: 'Commandes', href: '/orders', icon: ShoppingBag },
   { name: 'Menu', href: '/menu', icon: UtensilsCrossed },
+  { name: 'Commandes orales', href: '/oral-notes', icon: ClipboardList },
   { name: 'Promotions', href: '/promotions', icon: Tag },
   { name: 'Avis clients', href: '/ratings', icon: Star },
   { name: 'Livreurs', href: '/drivers', icon: Truck },
@@ -59,6 +61,7 @@ export default function Sidebar({ restaurantId }: { restaurantId?: number }) {
     { name: 'Commandes', href: `/r/${restaurantId}/orders`, icon: ShoppingBag },
     { name: 'Cuisine', href: `/r/${restaurantId}/kitchen`, icon: UtensilsCrossed },
     { name: 'Menu', href: `/r/${restaurantId}/menu`, icon: Tag },
+    { name: 'Commandes orales', href: `/r/${restaurantId}/oral-notes`, icon: ClipboardList },
   ] : [];
 
   const navigation = isLocked
@@ -68,6 +71,7 @@ export default function Sidebar({ restaurantId }: { restaurantId?: number }) {
       : [
         { name: 'Commandes', href: '/orders', icon: ShoppingBag },
         { name: 'Menu', href: '/menu', icon: UtensilsCrossed },
+        { name: 'Commandes orales', href: '/oral-notes', icon: ClipboardList },
         { name: 'Promotions', href: '/promotions', icon: Tag },
         { name: 'Avis clients', href: '/ratings', icon: Star },
       ];

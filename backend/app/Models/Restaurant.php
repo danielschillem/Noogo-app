@@ -70,6 +70,11 @@ class Restaurant extends Model
         return $this->hasMany(Order::class);
     }
 
+    public function oralOrderNotes(): HasMany
+    {
+        return $this->hasMany(OralOrderNote::class);
+    }
+
     public function flashInfos(): HasMany
     {
         return $this->hasMany(FlashInfo::class);

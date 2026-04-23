@@ -32,6 +32,9 @@ spec:
       source_dir: /
 
       # ── Source GitHub ──────────────────────────────────────
+      # ⚠ Déploiement auto **uniquement** sur push vers cette branche (pas main).
+      #    Pour livrer : merger/pousser sur develop, ou lancer le workflow
+      #    « Trigger DigitalOcean Deploy » (secrets DO requis).
       github:
         repo: danielschillem/Noogo-app
         branch: develop

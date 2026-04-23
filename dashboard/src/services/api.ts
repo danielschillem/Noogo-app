@@ -163,6 +163,34 @@ export const ordersApi = {
     api.get(`/restaurants/${restaurantId}/orders-pending-count`),
 };
 
+// Bloc note — commandes orales (menu par catégorie, validation avec snapshot)
+export const oralOrderNotesApi = {
+  list: (restaurantId: number, params?: { status?: string; page?: number; per_page?: number }) =>
+    api.get(`/restaurants/${restaurantId}/oral-order-notes`, { params }),
+  create: (restaurantId: number, data?: { title?: string; staff_comment?: string }) =>
+    api.post(`/restaurants/${restaurantId}/oral-order-notes`, data ?? {}),
+  get: (restaurantId: number, id: number) =>
+    api.get(`/restaurants/${restaurantId}/oral-order-notes/${id}`),
+  update: (restaurantId: number, id: number, data: {
+    title?: string | null;
+    staff_comment?: string | null;
+    items?: { dish_id: number; quantity: number }[];
+  }) => api.patch(`/restaurants/${restaurantId}/oral-order-notes/${id}`, data),
+  validate: (restaurantId: number, id: number) =>
+    api.post(`/restaurants/${restaurantId}/oral-order-notes/${id}/validate`),
+  convertToOrder: (restaurantId: number, id: number, data: {
+    order_type: 'sur_place' | 'a_emporter' | 'livraison';
+    payment_method: string;
+    mobile_money_provider?: string;
+    customer_name?: string;
+    customer_phone?: string;
+    table_number?: string;
+    notes?: string;
+  }) => api.post(`/restaurants/${restaurantId}/oral-order-notes/${id}/convert-to-order`, data),
+  remove: (restaurantId: number, id: number) =>
+    api.delete(`/restaurants/${restaurantId}/oral-order-notes/${id}`),
+};
+
 // Flash Infos API
 export const flashInfosApi = {
   getAll: (restaurantId: number, params?: Record<string, unknown>) =>

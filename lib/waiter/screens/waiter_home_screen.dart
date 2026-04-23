@@ -7,6 +7,7 @@ import '../../utils/app_colors.dart';
 import '../services/waiter_provider.dart';
 import '../services/waiter_notification_service.dart';
 import 'waiter_orders_screen.dart';
+import 'waiter_oral_notes_screen.dart';
 import 'waiter_new_order_screen.dart';
 import 'waiter_profile_screen.dart';
 
@@ -156,6 +157,7 @@ class _WaiterHomeScreenState extends State<WaiterHomeScreen> {
             index: _currentIndex,
             children: const [
               WaiterOrdersScreen(),
+              WaiterOralNotesScreen(),
               WaiterNewOrderScreen(),
               WaiterProfileScreen(),
             ],
@@ -181,6 +183,11 @@ class _WaiterHomeScreenState extends State<WaiterHomeScreen> {
                   child: const Icon(Icons.receipt_long),
                 ),
                 label: 'Commandes',
+              ),
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.edit_note_outlined),
+                activeIcon: Icon(Icons.edit_note),
+                label: "À l'oral",
               ),
               const BottomNavigationBarItem(
                 icon: Icon(Icons.add_circle_outline),

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { portalApi } from '../../services/api';
@@ -91,17 +91,38 @@ export default function PortalLoginPage() {
 
     const logoUrl = selected ? buildLogoUrl(selected.logo) : null;
 
+    const pageBg: CSSProperties = {
+        backgroundImage: "url('/portal-bg.jpg')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+    };
+
     return (
-        <div className="min-h-screen flex" style={{ background: '#f1f5f9' }}>
+        <div className="min-h-screen flex relative" style={pageBg}>
+            {/* Lisibilité : bandeau sombre à gauche (desktop), voile clair sur mobile */}
+            <div
+                className="pointer-events-none absolute inset-0 z-0 hidden lg:block"
+                style={{
+                    background:
+                        'linear-gradient(105deg, rgba(15,23,42,0.88) 0%, rgba(15,23,42,0.78) 46%, rgba(241,245,249,0.9) 46%, rgba(241,245,249,0.94) 100%)',
+                }}
+                aria-hidden
+            />
+            <div
+                className="pointer-events-none absolute inset-0 z-0 lg:hidden"
+                style={{ background: 'rgba(248,250,252,0.88)' }}
+                aria-hidden
+            />
 
             {/* Left panel */}
             <div
-                className="hidden lg:flex lg:w-[48%] relative overflow-hidden flex-col justify-between p-12"
-                style={{ background: 'linear-gradient(145deg,#0f172a 0%,#1e1b4b 50%,#0f172a 100%)' }}
+                className="hidden lg:flex lg:w-[48%] relative overflow-hidden flex-col justify-between p-12 z-10"
+                style={{ background: 'transparent' }}
             >
-                <div className="absolute top-0 left-0 w-96 h-96 rounded-full opacity-20 blur-3xl"
+                <div className="absolute top-0 left-0 w-96 h-96 rounded-full opacity-15 blur-3xl"
                     style={{ background: 'radial-gradient(circle,#f97316,transparent)', transform: 'translate(-30%,-30%)' }} />
-                <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full opacity-15 blur-3xl"
+                <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full opacity-10 blur-3xl"
                     style={{ background: 'radial-gradient(circle,#8b5cf6,transparent)', transform: 'translate(30%,30%)' }} />
 
                 <div className="relative flex items-center gap-3">
@@ -141,8 +162,15 @@ export default function PortalLoginPage() {
             </div>
 
             {/* Right panel — form */}
-            <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
-                <div className="w-full max-w-md space-y-6">
+            <div className="flex-1 flex items-center justify-center p-6 lg:p-12 relative z-10">
+                <div
+                    className="w-full max-w-md space-y-6 rounded-2xl p-6 sm:p-8 shadow-xl border"
+                    style={{
+                        background: 'rgba(255,255,255,0.92)',
+                        borderColor: 'rgba(226,232,240,0.9)',
+                        backdropFilter: 'blur(10px)',
+                    }}
+                >
 
                     {/* Mobile logo */}
                     <div className="lg:hidden flex justify-center mb-2">

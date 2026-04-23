@@ -24,6 +24,7 @@ import KitchenPage from './pages/restaurants/KitchenPage';
 import DriversPage from './pages/delivery/DriversPage';
 import DeliveriesPage from './pages/delivery/DeliveriesPage';
 import RatingsPage from './pages/ratings/RatingsPage';
+import OralOrderNotesPage from './pages/oral-notes/OralOrderNotesPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -130,6 +131,8 @@ function AppRoutes() {
         <Route path="restaurants/:id/kitchen" element={<KitchenPage />} />
         <Route path="orders" element={<OrdersPage />} />
         <Route path="restaurants/:restaurantId/orders" element={<OrdersPage />} />
+        <Route path="oral-notes" element={<OralOrderNotesPage />} />
+        <Route path="restaurants/:restaurantId/oral-notes" element={<OralOrderNotesPage />} />
         <Route path="menu" element={<MenuPage />} />
         <Route path="promotions" element={<PromotionsPage />} />
         <Route path="ratings" element={<RatingsPage />} />
@@ -166,6 +169,7 @@ function AppRoutes() {
         <Route path="orders" element={<OrdersPage />} />
         <Route path="kitchen" element={<KitchenPage />} />
         <Route path="menu" element={<MenuPage />} />
+        <Route path="oral-notes" element={<OralOrderNotesPage />} />
       </Route>
     </Routes>
   );

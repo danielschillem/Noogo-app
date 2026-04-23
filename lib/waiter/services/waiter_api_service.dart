@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../config/api_config.dart';
 import '../../services/auth_service.dart';
+import '../models/oral_order_note.dart';
 import '../models/waiter_order.dart';
 
 class WaiterApiService {
@@ -179,6 +180,193 @@ class WaiterApiService {
   }
 
   // ─── Stats ─────────────────────────────────────────────────────────────────
+
+  // ─── Commandes orales (bloc note) ─────────────────────────────────────────
+
+  List<OralOrderNote> _parseOralNotesPaginated(Map<String, dynamic> body) {
+    final dynamic raw = body['data'];
+    if (raw is List) {
+      return raw
+          .map((e) => OralOrderNote.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+    if (raw is Map && raw['data'] is List) {
+      return (raw['data'] as List)
+          .map((e) => OralOrderNote.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+    return [];
+  }
+
+  String _errorMessage(http.Response resp) {
+    try {
+      final m = jsonDecode(resp.body);
+      if (m is Map && m['message'] != null) return m['message'].toString();
+    } catch (_) {}
+    return 'Erreur ${resp.statusCode}';
+  }
+
+  /// GET liste des notes orales
+  Future<List<OralOrderNote>> listOralOrderNotes(
+    int restaurantId, {
+    String? status,
+    int perPage = 40,
+  }) async {
+    final uri =
+        Uri.parse('$_base/restaurants/$restaurantId/oral-order-notes').replace(
+      queryParameters: {
+        'per_page': perPage.toString(),
+        if (status != null && status.isNotEmpty) 'status': status,
+      },
+    );
+    final resp = await http
+        .get(uri, headers: await _headers())
+        .timeout(const Duration(seconds: 15));
+
+    if (resp.statusCode == 200) {
+      final body = jsonDecode(resp.body) as Map<String, dynamic>;
+      return _parseOralNotesPaginated(body);
+    }
+    throw Exception(_errorMessage(resp));
+  }
+
+  Future<OralOrderNote> getOralOrderNote(int restaurantId, int noteId) async {
+    final resp = await http
+        .get(
+          Uri.parse(
+              '$_base/restaurants/$restaurantId/oral-order-notes/$noteId'),
+          headers: await _headers(),
+        )
+        .timeout(const Duration(seconds: 15));
+
+    if (resp.statusCode == 200) {
+      final body = jsonDecode(resp.body) as Map<String, dynamic>;
+      return OralOrderNote.fromJson(body['data'] as Map<String, dynamic>);
+    }
+    throw Exception(_errorMessage(resp));
+  }
+
+  Future<OralOrderNote> createOralOrderNote(
+    int restaurantId, {
+    String? title,
+    String? staffComment,
+  }) async {
+    final resp = await http
+        .post(
+          Uri.parse('$_base/restaurants/$restaurantId/oral-order-notes'),
+          headers: await _headers(),
+          body: jsonEncode({
+            if (title != null) 'title': title,
+            if (staffComment != null) 'staff_comment': staffComment,
+          }),
+        )
+        .timeout(const Duration(seconds: 15));
+
+    if (resp.statusCode == 201) {
+      final body = jsonDecode(resp.body) as Map<String, dynamic>;
+      return OralOrderNote.fromJson(body['data'] as Map<String, dynamic>);
+    }
+    throw Exception(_errorMessage(resp));
+  }
+
+  Future<OralOrderNote> updateOralOrderNote(
+    int restaurantId,
+    int noteId, {
+    String? title,
+    String? staffComment,
+    required List<Map<String, dynamic>> items,
+  }) async {
+    final resp = await http
+        .patch(
+          Uri.parse(
+              '$_base/restaurants/$restaurantId/oral-order-notes/$noteId'),
+          headers: await _headers(),
+          body: jsonEncode({
+            'title': title,
+            'staff_comment': staffComment,
+            'items': items,
+          }),
+        )
+        .timeout(const Duration(seconds: 20));
+
+    if (resp.statusCode == 200) {
+      final body = jsonDecode(resp.body) as Map<String, dynamic>;
+      return OralOrderNote.fromJson(body['data'] as Map<String, dynamic>);
+    }
+    throw Exception(_errorMessage(resp));
+  }
+
+  Future<OralOrderNote> validateOralOrderNote(int restaurantId, int noteId) async {
+    final resp = await http
+        .post(
+          Uri.parse(
+              '$_base/restaurants/$restaurantId/oral-order-notes/$noteId/validate'),
+          headers: await _headers(),
+        )
+        .timeout(const Duration(seconds: 15));
+
+    if (resp.statusCode == 200) {
+      final body = jsonDecode(resp.body) as Map<String, dynamic>;
+      return OralOrderNote.fromJson(body['data'] as Map<String, dynamic>);
+    }
+    throw Exception(_errorMessage(resp));
+  }
+
+  /// Retourne la note mise à jour et l’id de la commande créée.
+  Future<({OralOrderNote note, int orderId})> convertOralOrderNoteToOrder(
+    int restaurantId,
+    int noteId, {
+    required String orderType,
+    required String paymentMethod,
+    String? mobileMoneyProvider,
+    String? customerName,
+    String? customerPhone,
+    String? tableNumber,
+    String? notes,
+  }) async {
+    final resp = await http
+        .post(
+          Uri.parse(
+              '$_base/restaurants/$restaurantId/oral-order-notes/$noteId/convert-to-order'),
+          headers: await _headers(),
+          body: jsonEncode({
+            'order_type': orderType,
+            'payment_method': paymentMethod,
+            if (mobileMoneyProvider != null)
+              'mobile_money_provider': mobileMoneyProvider,
+            if (customerName != null) 'customer_name': customerName,
+            if (customerPhone != null) 'customer_phone': customerPhone,
+            if (tableNumber != null) 'table_number': tableNumber,
+            if (notes != null) 'notes': notes,
+          }),
+        )
+        .timeout(const Duration(seconds: 25));
+
+    if (resp.statusCode == 201) {
+      final body = jsonDecode(resp.body) as Map<String, dynamic>;
+      final data = body['data'] as Map<String, dynamic>;
+      final order = data['order'] as Map<String, dynamic>;
+      final note =
+          OralOrderNote.fromJson(data['oral_order_note'] as Map<String, dynamic>);
+      final oid = order['id'] as int;
+      return (note: note, orderId: oid);
+    }
+    throw Exception(_errorMessage(resp));
+  }
+
+  Future<void> deleteOralOrderNote(int restaurantId, int noteId) async {
+    final resp = await http
+        .delete(
+          Uri.parse(
+              '$_base/restaurants/$restaurantId/oral-order-notes/$noteId'),
+          headers: await _headers(),
+        )
+        .timeout(const Duration(seconds: 15));
+
+    if (resp.statusCode != 200) {
+      throw Exception(_errorMessage(resp));
+    }
+  }
 
   /// GET pending orders count
   Future<int> getPendingCount(int restaurantId) async {

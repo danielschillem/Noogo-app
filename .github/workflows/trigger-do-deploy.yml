@@ -1,0 +1,63 @@
+# ============================================================
+# Déclenche manuellement un déploiement sur DigitalOcean App Platform.
+#
+# Pourquoi le déploiement « ne démarre pas » souvent :
+#   • L’app DO est branchée sur la branche **develop** (voir .do/app.yaml).
+#     Un push sur **main** seul ne reconstruit pas l’app tant que develop n’est pas à jour.
+#   • Le déploiement auto vient de DigitalOcean (webhook GitHub), pas de ce fichier CI.
+#
+# Utilisation :
+#   GitHub → Actions → « Trigger DigitalOcean Deploy » → Run workflow
+#
+# Secrets (Settings → Secrets and variables → Actions) :
+#   DIGITALOCEAN_ACCESS_TOKEN  → token API DO (lecture + écriture, scope « apps »)
+#   DIGITALOCEAN_APP_ID        → UUID de l’app (URL console : …/apps/<uuid>)
+# ============================================================
+name: Trigger DigitalOcean Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  create-deployment:
+    name: Create DO App deployment
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Trigger deployment via API
+        env:
+          DO_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+          DO_APP_ID: ${{ secrets.DIGITALOCEAN_APP_ID }}
+        run: |
+          set -e
+          if [ -z "${DO_TOKEN}" ] || [ -z "${DO_APP_ID}" ]; then
+            echo "::error::Secrets manquants : définissez DIGITALOCEAN_ACCESS_TOKEN et DIGITALOCEAN_APP_ID dans les secrets du dépôt."
+            echo "::notice::L’app est configurée sur la branche **develop** (.do/app.yaml). Poussez vos commits sur develop pour un déploiement auto, ou configurez ces secrets pour lancer un build depuis Actions."
+            exit 1
+          fi
+
+          post_deploy() {
+            local body="$1"
+            curl -sS -o /tmp/do_resp.json -w "%{http_code}" -X POST \
+              -H "Authorization: Bearer ${DO_TOKEN}" \
+              -H "Content-Type: application/json" \
+              "https://api.digitalocean.com/v2/apps/${DO_APP_ID}/deployments" \
+              -d "${body}"
+          }
+
+          HTTP_CODE=$(post_deploy '{"force_build":true}')
+          if [ "${HTTP_CODE}" -ge 400 ]; then
+            echo "Retry sans force_build (HTTP ${HTTP_CODE})…"
+            HTTP_CODE=$(post_deploy '{}')
+          fi
+
+          echo "HTTP ${HTTP_CODE}"
+          cat /tmp/do_resp.json
+
+          if [ "${HTTP_CODE}" -lt 200 ] || [ "${HTTP_CODE}" -ge 300 ]; then
+            echo "::error::L’API DigitalOcean a refusé la requête."
+            exit 1
+          fi
+
+          echo "::notice::Déploiement demandé. Suivez la progression dans DigitalOcean → App → Activity."

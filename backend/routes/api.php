@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\DeliveryController;
 use App\Http\Controllers\Api\RatingController;
 use App\Http\Controllers\Api\CouponController;
+use App\Http\Controllers\Api\OralOrderNoteController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -140,6 +141,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel']);
         Route::get('/orders-statistics', [OrderController::class, 'statistics']);
         Route::get('/orders-pending-count', [OrderController::class, 'pendingCount']);
+
+        // Bloc note — commandes prises à l’oral (brouillon + validation avec snapshot des plats)
+        Route::get('/oral-order-notes', [OralOrderNoteController::class, 'index']);
+        Route::post('/oral-order-notes', [OralOrderNoteController::class, 'store']);
+        Route::get('/oral-order-notes/{oral_order_note}', [OralOrderNoteController::class, 'show']);
+        Route::patch('/oral-order-notes/{oral_order_note}', [OralOrderNoteController::class, 'update']);
+        Route::post('/oral-order-notes/{oral_order_note}/validate', [OralOrderNoteController::class, 'validateNote']);
+        Route::post('/oral-order-notes/{oral_order_note}/convert-to-order', [OralOrderNoteController::class, 'convertToOrder']);
+        Route::delete('/oral-order-notes/{oral_order_note}', [OralOrderNoteController::class, 'destroy']);
 
         // Flash Infos / Offres
         Route::apiResource('flash-infos', FlashInfoController::class);
