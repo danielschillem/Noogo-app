@@ -95,15 +95,19 @@ rm -f bootstrap/cache/*.php 2>/dev/null || true
 php artisan optimize:clear 2>&1 || true
 
 # 3. Découverte des packages → régénère bootstrap/cache/packages.php + services.php
-#    packages.php est déjà pré-généré au build (Dockerfile), mais on le rafraîchit ici.
-#    || true → non-fatal : si artisan échoue, le fichier baked-in du build reste intact.
-php artisan package:discover --ansi 2>&1 || true
+#    En production, on force la réussite: un cache cassé doit bloquer le déploiement.
+php artisan package:discover --ansi 2>&1
 
-# 4. Cache Laravel (config, routes, vues) — || true pour ne pas bloquer au démarrage
-#    Si config:cache échoue, Laravel lira les fichiers live (plus lent mais fonctionnel).
-php artisan config:cache 2>&1 || echo "⚠️  config:cache échoué — Laravel utilisera la config live"
-php artisan route:cache  2>&1 || echo "⚠️  route:cache échoué — routes lues en live"
-php artisan view:cache   2>&1 || echo "⚠️  view:cache échoué — vues compilées à la demande"
+# 4. Cache Laravel (config, routes, vues)
+#    config:cache est critique pour valider que l'application boote correctement.
+php artisan config:cache 2>&1
+php artisan route:cache 2>&1 || echo "⚠️  route:cache échoué — routes lues en live"
+php artisan view:cache 2>&1 || echo "⚠️  view:cache échoué — vues compilées à la demande"
+
+# 4.b Preflight bootstrap — bloque le démarrage si le container est invalide.
+#     Empêche les régressions type "Facade root has not been set" de passer en prod.
+php artisan about --only=environment 1>/dev/null
+php artisan route:list --path=api/health --compact 1>/dev/null
 
 # 5. Lien symbolique storage → public/storage
 php artisan storage:link 2>/dev/null || true
