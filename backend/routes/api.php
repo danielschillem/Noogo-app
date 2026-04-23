@@ -15,6 +15,8 @@ use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\DeliveryController;
 use App\Http\Controllers\Api\RatingController;
 use App\Http\Controllers\Api\CouponController;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 /*
 |--------------------------------------------------------------------------
@@ -191,11 +193,31 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Health check
 Route::get('/health', function () {
+    $disk = config('filesystems.disks.r2.endpoint') ? 'r2' : 'public';
+    $sampleLogoPath = DB::table('restaurants')
+        ->whereNotNull('logo')
+        ->orderByDesc('id')
+        ->value('logo');
+
+    $sampleAccessible = null;
+    if (is_string($sampleLogoPath) && $sampleLogoPath !== '') {
+        try {
+            $sampleAccessible = Storage::disk($disk)->exists($sampleLogoPath);
+        } catch (\Throwable $e) {
+            $sampleAccessible = false;
+        }
+    }
+
     return response()->json([
         'success' => true,
         'message' => 'Noogo API is running',
         'version' => '1.0.0',
-        'timestamp' => now()->toISOString()
+        'timestamp' => now()->toISOString(),
+        'storage' => [
+            'active_disk' => $disk,
+            'sample_logo_path' => $sampleLogoPath,
+            'sample_logo_accessible' => $sampleAccessible,
+        ],
     ]);
 });
 

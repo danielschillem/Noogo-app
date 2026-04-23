@@ -142,13 +142,18 @@ class Restaurant {
   // Conversion depuis JSON (API -> App)
   factory Restaurant.fromJson(Map<String, dynamic> json) {
     try {
+      // Prefer the absolute URL when provided by API (logo_url),
+      // then fall back to the raw storage path (logo).
+      final logoValue =
+          _parseString(json['logo_url']) ?? _parseString(json['logo']);
+
       return Restaurant(
         id: _parseInt(json['id']) ?? 0,
         nom: _parseString(json['nom']) ?? '',
         telephone: _parseString(json['telephone']) ?? '',
         adresse: _parseString(json['adresse']) ?? '',
         email: _parseString(json['email']),
-        logo: _parseString(json['logo']),
+        logo: logoValue,
         description: _parseString(json['description']),
         heuresOuverture: _parseString(json['heures_ouverture']),
         userId: _parseInt(json['user_id']),
