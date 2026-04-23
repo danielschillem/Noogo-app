@@ -38,6 +38,7 @@ android/key.properties
 # Environment variables
 .env
 *.env.local
+assets/env/.env
 
 # Symboles de dÃ©bogage obfusquÃ©s (gÃ©nÃ©rÃ©s par flutter build --split-debug-info)
 build/debug-info/

@@ -186,6 +186,8 @@ class OrderController extends Controller
      */
     public function updateStatus(Request $request, Restaurant $restaurant, Order $order): JsonResponse
     {
+        $this->authorize('manageOrders', $restaurant);
+
         $validator = Validator::make($request->all(), [
             'status' => 'required|in:pending,confirmed,preparing,ready,delivered,completed,cancelled',
         ]);

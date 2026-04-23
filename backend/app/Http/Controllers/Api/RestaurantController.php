@@ -162,6 +162,8 @@ class RestaurantController extends Controller
      */
     public function update(Request $request, Restaurant $restaurant): JsonResponse
     {
+        $this->authorize('update', $restaurant);
+
         $validator = Validator::make($request->all(), [
             'nom' => 'sometimes|required|string|max:255',
             'telephone' => 'sometimes|required|string|max:20',
@@ -240,6 +242,8 @@ class RestaurantController extends Controller
      */
     public function destroy(Restaurant $restaurant): JsonResponse
     {
+        $this->authorize('delete', $restaurant);
+
         $restaurant->delete();
 
         return response()->json([
