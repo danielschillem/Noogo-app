@@ -24,8 +24,8 @@ class RestaurantController extends Controller
         $query = Restaurant::with(['user:id,name,email'])
             ->withCount(['categories', 'dishes', 'orders']);
 
-        // Filter by user if authenticated and not admin
-        if ($request->user() && !$request->user()->is_admin) {
+        // Scope data to accessible restaurants for everyone except super admins.
+        if ($request->user() && !$request->user()->isSuperAdmin()) {
             // Accès : proprio (user_id) OU membre du personnel
             $accessibleIds = $request->user()->accessibleRestaurantIds();
             $query->whereIn('id', $accessibleIds);
@@ -121,6 +121,10 @@ class RestaurantController extends Controller
             'telephone' => 'required|string|max:20',
             'adresse' => 'required|string|max:500',
             'email' => 'nullable|email|max:255',
+            'admin_name' => 'nullable|string|max:255',
+            'admin_email' => 'nullable|email|max:255|unique:users,email',
+            'admin_phone' => 'nullable|string|max:20',
+            'admin_password' => 'nullable|string|min:8|max:255',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'description' => 'nullable|string',
             'heures_ouverture' => 'nullable|string|max:100',
@@ -160,8 +164,9 @@ class RestaurantController extends Controller
         // ── Création automatique du compte Admin Restaurant ──────────────────
         // Génère un utilisateur dédié (propriétaire du restaurant) avec un mot
         // de passe aléatoire que le Super Admin peut communiquer à l'intéressé.
-        $adminPassword = Str::random(12);
-        $baseEmail = $request->input('email');
+        $providedAdminPassword = $request->input('admin_password');
+        $adminPassword = $providedAdminPassword ?: Str::random(12);
+        $baseEmail = $request->input('admin_email') ?: $request->input('email');
         $slug = Str::slug($request->input('nom'), '.');
 
         // Utiliser l'email du restaurant comme email admin, ou en générer un
@@ -179,10 +184,10 @@ class RestaurantController extends Controller
         }
 
         $adminUser = User::create([
-            'name' => 'Admin ' . $restaurant->nom,
+            'name' => $request->input('admin_name') ?: ('Admin ' . $restaurant->nom),
             'email' => $adminEmail,
             'password' => bcrypt($adminPassword),
-            'phone' => $request->input('telephone'),
+            'phone' => $request->input('admin_phone') ?: $request->input('telephone'),
             'is_admin' => false,
             // SQLite local role constraint only allows user/admin/super_admin.
             // Restaurant ownership is modeled by restaurants.user_id, not this field.

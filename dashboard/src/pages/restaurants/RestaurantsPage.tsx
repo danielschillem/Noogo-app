@@ -22,10 +22,12 @@ import {
 } from 'lucide-react';
 import { restaurantsApi } from '../../services/api';
 import type { Restaurant } from '../../types';
+import { useAuth } from '../../context/AuthContext';
 
 type FilterTab = 'all' | 'active' | 'inactive';
 
 export default function RestaurantsPage() {
+  const { isSuperAdmin } = useAuth();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -105,12 +107,13 @@ export default function RestaurantsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Restaurants</h1>
-          <p className="text-gray-600">Gérez vos restaurants</p>
+          <h1 className="text-2xl font-bold" style={{ color: '#0f172a' }}>Restaurants</h1>
+          <p className="text-sm mt-0.5" style={{ color: '#64748b' }}>Gestion centralisée des établissements</p>
         </div>
         <Link
           to="/restaurants/new"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+          className="btn-primary"
+          style={{ display: isSuperAdmin ? undefined : 'none' }}
         >
           <Plus className="h-5 w-5" />
           Nouveau Restaurant
@@ -125,7 +128,7 @@ export default function RestaurantsPage() {
           { label: 'Inactifs', value: inactiveCount, color: 'bg-red-50 text-red-700', icon: <XCircle className="h-5 w-5 text-red-400" /> },
           { label: 'Ouverts maintenant', value: openCount, color: 'bg-emerald-50 text-emerald-700', icon: <DoorOpen className="h-5 w-5 text-emerald-500" /> },
         ].map(s => (
-          <div key={s.label} className={`flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-100 ${s.color}`}>
+          <div key={s.label} className={`flex items-center gap-3 px-4 py-3 rounded-2xl border border-gray-100 ${s.color}`} style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
             {s.icon}
             <div>
               <p className="text-2xl font-bold leading-none">{s.value}</p>
@@ -138,7 +141,7 @@ export default function RestaurantsPage() {
       {/* Filtres + Recherche */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
         {/* Onglets filtres */}
-        <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+        <div className="flex gap-1 p-1 rounded-xl" style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
           {([
             { key: 'all', label: `Tous (${total})` },
             { key: 'active', label: `Actifs (${activeCount})` },
@@ -147,10 +150,11 @@ export default function RestaurantsPage() {
             <button
               key={tab.key}
               onClick={() => setFilterTab(tab.key)}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${filterTab === tab.key
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${filterTab === tab.key
+                ? 'bg-white shadow-sm'
+                : ''
                 }`}
+              style={filterTab === tab.key ? { color: '#0f172a' } : { color: '#64748b' }}
             >
               {tab.label}
             </button>
@@ -165,7 +169,7 @@ export default function RestaurantsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Rechercher un restaurant..."
-            className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            className="input-pro pl-9"
           />
         </div>
       </div>
@@ -177,6 +181,7 @@ export default function RestaurantsPage() {
             <RestaurantCard
               key={restaurant.id}
               restaurant={restaurant}
+              isSuperAdmin={isSuperAdmin}
               onToggleActive={handleToggleActive}
               onToggleOpen={handleToggleOpen}
               onDelete={handleDelete}
@@ -184,7 +189,7 @@ export default function RestaurantsPage() {
           ))}
         </div>
       ) : (
-        <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+        <div className="text-center py-12 bg-white rounded-2xl border border-gray-200" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
           <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
             <MapPin className="h-8 w-8 text-gray-400" />
           </div>
@@ -194,7 +199,7 @@ export default function RestaurantsPage() {
               <p className="text-gray-500 mb-4">Essayez d'autres filtres ou termes de recherche</p>
               <button
                 onClick={() => { setSearch(''); setFilterTab('all'); }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200"
               >
                 Réinitialiser les filtres
               </button>
@@ -205,7 +210,8 @@ export default function RestaurantsPage() {
               <p className="text-gray-500 mb-4">Commencez par ajouter votre premier restaurant</p>
               <Link
                 to="/restaurants/new"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
+                className="btn-primary"
+                style={{ display: isSuperAdmin ? undefined : 'none' }}
               >
                 <Plus className="h-5 w-5" />
                 Ajouter un restaurant
@@ -220,12 +226,13 @@ export default function RestaurantsPage() {
 
 interface RestaurantCardProps {
   restaurant: Restaurant;
+  isSuperAdmin: boolean;
   onToggleActive: (id: number) => void;
   onToggleOpen: (id: number) => void;
   onDelete: (id: number) => void;
 }
 
-function RestaurantCard({ restaurant, onToggleActive, onToggleOpen, onDelete }: RestaurantCardProps) {
+function RestaurantCard({ restaurant, isSuperAdmin, onToggleActive, onToggleOpen, onDelete }: RestaurantCardProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -247,7 +254,7 @@ function RestaurantCard({ restaurant, onToggleActive, onToggleOpen, onDelete }: 
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden transition-all hover:shadow-lg" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
       {/* Image */}
       <div className="relative h-40 bg-gray-100">
         {restaurant.logo_url ? (
@@ -288,10 +295,7 @@ function RestaurantCard({ restaurant, onToggleActive, onToggleOpen, onDelete }: 
 
           {/* Menu */}
           <div className="relative">
-            <button
-              onClick={() => setShowMenu(!showMenu)}
-              className="p-1 hover:bg-gray-100 rounded"
-            >
+            <button onClick={() => setShowMenu(!showMenu)} className="p-1.5 hover:bg-gray-100 rounded-lg">
               <MoreVertical className="h-5 w-5 text-gray-400" />
             </button>
             {showMenu && (
@@ -300,31 +304,33 @@ function RestaurantCard({ restaurant, onToggleActive, onToggleOpen, onDelete }: 
                   className="fixed inset-0 z-10"
                   onClick={() => setShowMenu(false)}
                 />
-                <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
+                <div className="absolute right-0 mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-20">
                   <Link
                     to={`/restaurants/${restaurant.id}`}
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     <Eye className="h-4 w-4" />
                     Voir détails
                   </Link>
                   <Link
                     to={`/restaurants/${restaurant.id}/edit`}
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     <Pencil className="h-4 w-4" />
                     Modifier
                   </Link>
-                  <button
-                    onClick={() => { onToggleActive(restaurant.id); setShowMenu(false); }}
-                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                  >
-                    <Power className="h-4 w-4" />
-                    {restaurant.is_active ? 'Désactiver' : 'Activer'}
-                  </button>
+                  {isSuperAdmin && (
+                    <button
+                      onClick={() => { onToggleActive(restaurant.id); setShowMenu(false); }}
+                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <Power className="h-4 w-4" />
+                      {restaurant.is_active ? 'Désactiver' : 'Activer'}
+                    </button>
+                  )}
                   <button
                     onClick={() => { onToggleOpen(restaurant.id); setShowMenu(false); }}
-                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     {restaurant.is_open
                       ? <DoorClosed className="h-4 w-4" />
@@ -333,18 +339,20 @@ function RestaurantCard({ restaurant, onToggleActive, onToggleOpen, onDelete }: 
                   </button>
                   <button
                     onClick={handleShowQr}
-                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     <QrCode className="h-4 w-4" />
                     Voir QR Code
                   </button>
-                  <button
-                    onClick={() => { onDelete(restaurant.id); setShowMenu(false); }}
-                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Supprimer
-                  </button>
+                  {isSuperAdmin && (
+                    <button
+                      onClick={() => { onDelete(restaurant.id); setShowMenu(false); }}
+                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Supprimer
+                    </button>
+                  )}
                 </div>
               </>
             )}
@@ -384,11 +392,8 @@ function RestaurantCard({ restaurant, onToggleActive, onToggleOpen, onDelete }: 
             <p className="text-gray-500">Commandes</p>
           </div>
           <div className="ml-auto">
-            <button
-              onClick={handleShowQr}
-              title="Voir QR Code"
-              className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs hover:bg-orange-50 hover:text-orange-600"
-            >
+            <button onClick={handleShowQr} title="Voir QR Code"
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-xl text-xs hover:bg-orange-50 hover:text-orange-600 transition-colors">
               <QrCode className="h-4 w-4" />
               QR Code
             </button>
@@ -399,7 +404,7 @@ function RestaurantCard({ restaurant, onToggleActive, onToggleOpen, onDelete }: 
       {/* QR Code Modal */}
       {showQrModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowQrModal(false)}>
-          <div className="bg-white rounded-xl p-6 text-center shadow-xl max-w-sm w-full" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl p-6 text-center shadow-xl max-w-sm w-full" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-semibold mb-2">QR Code — {restaurant.nom}</h3>
             <p className="text-sm text-gray-500 mb-4">Affichez ce QR code sur les tables pour permettre aux clients de commander</p>
             <div className="flex justify-center mb-4">
@@ -416,7 +421,7 @@ function RestaurantCard({ restaurant, onToggleActive, onToggleOpen, onDelete }: 
             <div className="flex flex-col gap-2">
               <button
                 onClick={handleDownloadQr}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 text-sm"
+                className="btn-primary w-full"
               >
                 Télécharger PNG
               </button>

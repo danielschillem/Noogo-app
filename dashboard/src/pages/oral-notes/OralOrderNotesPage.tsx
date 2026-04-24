@@ -370,9 +370,9 @@ export default function OralOrderNotesPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
         <aside className="xl:col-span-4 space-y-3">
-          <div className="rounded-2xl p-4" style={{ background: 'white', border: '1px solid #e2e8f0' }}>
+          <div className="rounded-2xl p-4 page-card">
             <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#64748b' }}>Filtre</p>
-            <div className="flex flex-wrap gap-2">
+            <div className="segmented flex-wrap">
               {(['draft', 'validated', 'all'] as const).map((f) => (
                 <button
                   key={f}
@@ -380,9 +380,9 @@ export default function OralOrderNotesPage() {
                   onClick={() => setFilter(f === 'all' ? 'all' : f)}
                   className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
                   style={{
-                    background: filter === f ? '#fff7ed' : '#f8fafc',
+                    background: filter === f ? 'white' : 'transparent',
                     color: filter === f ? '#c2410c' : '#64748b',
-                    border: `1px solid ${filter === f ? '#fed7aa' : '#e2e8f0'}`,
+                    border: `1px solid ${filter === f ? '#fed7aa' : 'transparent'}`,
                   }}
                 >
                   {f === 'draft' ? 'Brouillons' : f === 'validated' ? 'Validées' : 'Tout'}
@@ -390,7 +390,7 @@ export default function OralOrderNotesPage() {
               ))}
             </div>
           </div>
-          <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid #e2e8f0' }}>
+          <div className="rounded-2xl overflow-hidden page-card">
             <div className="px-4 py-3 border-b flex items-center justify-between" style={{ borderColor: '#f1f5f9' }}>
               <span className="text-sm font-bold" style={{ color: '#0f172a' }}>Notes récentes</span>
               {loadingNotes && <span className="text-xs" style={{ color: '#94a3b8' }}>Chargement…</span>}
@@ -440,7 +440,7 @@ export default function OralOrderNotesPage() {
 
         <section className="xl:col-span-8 space-y-4">
           {!selectedNote && (
-            <div className="rounded-2xl p-10 text-center" style={{ background: 'white', border: '1px solid #e2e8f0' }}>
+            <div className="rounded-2xl p-10 text-center page-card">
               <Layers className="h-10 w-10 mx-auto mb-3" style={{ color: '#cbd5e1' }} />
               <p className="text-sm font-medium" style={{ color: '#475569' }}>Choisissez une note à gauche ou créez une nouvelle prise.</p>
             </div>
@@ -448,7 +448,7 @@ export default function OralOrderNotesPage() {
 
           {selectedNote && (
             <>
-              <div className="rounded-2xl p-5 space-y-4" style={{ background: 'white', border: '1px solid #e2e8f0' }}>
+              <div className="rounded-2xl p-5 space-y-4 page-card">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <div>
                     <p className="text-lg font-bold" style={{ color: '#0f172a' }}>Note #{selectedNote.id}</p>
@@ -571,7 +571,7 @@ export default function OralOrderNotesPage() {
               )}
 
               {selectedNote.status === 'draft' && (
-                <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid #e2e8f0' }}>
+                <div className="rounded-2xl overflow-hidden page-card">
                   <div className="px-4 py-3 border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3" style={{ borderColor: '#f1f5f9' }}>
                     <span className="text-sm font-bold flex items-center gap-2" style={{ color: '#0f172a' }}>
                       <Layers className="h-4 w-4" style={{ color: '#f97316' }} />

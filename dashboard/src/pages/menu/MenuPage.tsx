@@ -389,7 +389,7 @@ export default function MenuPage() {
                 </button>
 
                 {/* View toggle */}
-                <div className="flex rounded-xl overflow-hidden" style={{ border: '1px solid #e2e8f0' }}>
+                <div className="segmented">
                     <button onClick={() => setViewMode('grid')} className="p-2 transition-colors" title="Grille"
                         style={{ background: viewMode === 'grid' ? '#f97316' : 'white', color: viewMode === 'grid' ? 'white' : '#94a3b8' }}>
                         <LayoutGrid size={16} />
@@ -526,7 +526,7 @@ export default function MenuPage() {
                 </div>
             ) : (
                 /* ─ List view ─ */
-                <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid #f1f5f9' }}>
+                <div className="rounded-2xl overflow-hidden page-card">
                     {filteredDishes.map((dish, idx) => {
                         const imgUrl = buildImageUrl(dish.image_url);
                         return (

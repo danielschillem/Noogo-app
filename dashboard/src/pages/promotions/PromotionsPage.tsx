@@ -72,74 +72,73 @@ function FlashInfoModal({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
-                <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white">
-                    <h2 className="text-lg font-semibold">{flashInfo ? 'Modifier la promotion' : 'Nouvelle promotion'}</h2>
-                    <button onClick={onClose}><X className="h-5 w-5 text-gray-400" /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,0.55)' }}>
+            <div className="w-full max-w-lg rounded-2xl overflow-hidden max-h-[90vh] bg-white" style={{ boxShadow: '0 25px 60px rgba(0,0,0,0.2)' }}>
+                <div className="flex items-center justify-between px-6 py-4 sticky top-0 bg-white" style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <h2 className="text-base font-bold" style={{ color: '#0f172a' }}>{flashInfo ? 'Modifier la promotion' : 'Nouvelle promotion'}</h2>
+                    <button onClick={onClose} className="p-1.5 rounded-lg" style={{ color: '#94a3b8' }}><X className="h-5 w-5" /></button>
                 </div>
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                    {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+                    {error && <div className="px-4 py-3 rounded-xl text-sm" style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}>{error}</div>}
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Titre *</label>
+                        <label className="block text-xs font-semibold mb-1.5" style={{ color: '#374151' }}>Titre *</label>
                         <input value={titre} onChange={e => setTitre(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500"
+                            className="input-pro"
                             placeholder="Ex: -20% sur les boissons" />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                        <label className="block text-xs font-semibold mb-1.5" style={{ color: '#374151' }}>Type</label>
                         <select value={type} onChange={e => setType(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500">
+                            className="input-pro">
                             {Object.entries(TYPE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                         </select>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <label className="block text-xs font-semibold mb-1.5" style={{ color: '#374151' }}>Description</label>
                         <textarea value={description} onChange={e => setDescription(e.target.value)}
-                            rows={3} className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 resize-none" />
+                            rows={3} className="input-pro resize-none" />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Réduction (%)</label>
+                            <label className="block text-xs font-semibold mb-1.5" style={{ color: '#374151' }}>Réduction (%)</label>
                             <input type="number" value={reduction} onChange={e => setReduction(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500"
+                                className="input-pro"
                                 placeholder="20" min="0" max="100" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Prix spécial (FCFA)</label>
+                            <label className="block text-xs font-semibold mb-1.5" style={{ color: '#374151' }}>Prix spécial (FCFA)</label>
                             <input type="number" value={prixSpecial} onChange={e => setPrixSpecial(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500"
+                                className="input-pro"
                                 placeholder="1000" min="0" />
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Début</label>
+                            <label className="block text-xs font-semibold mb-1.5" style={{ color: '#374151' }}>Début</label>
                             <input type="date" value={dateDebut} onChange={e => setDateDebut(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500" />
+                                className="input-pro" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Fin</label>
+                            <label className="block text-xs font-semibold mb-1.5" style={{ color: '#374151' }}>Fin</label>
                             <input type="date" value={dateFin} onChange={e => setDateFin(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500" />
+                                className="input-pro" />
                         </div>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Image</label>
+                        <label className="block text-xs font-semibold mb-1.5" style={{ color: '#374151' }}>Image</label>
                         <input type="file" accept="image/*" onChange={e => setImage(e.target.files?.[0] ?? null)}
-                            className="w-full text-sm text-gray-600" />
+                            className="w-full text-sm" style={{ color: '#64748b' }} />
                     </div>
 
                     <div className="flex gap-3 pt-2">
-                        <button type="button" onClick={onClose} className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50">Annuler</button>
-                        <button type="submit" disabled={isSaving}
-                            className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50">
+                        <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium" style={{ background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0' }}>Annuler</button>
+                        <button type="submit" disabled={isSaving} className="flex-1 btn-primary">
                             {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
                         </button>
                     </div>
@@ -208,26 +207,26 @@ function CouponModal({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
-                <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white">
-                    <h2 className="text-lg font-semibold">{coupon ? 'Modifier le coupon' : 'Nouveau coupon'}</h2>
-                    <button onClick={onClose}><X className="h-5 w-5 text-gray-400" /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,0.55)' }}>
+            <div className="w-full max-w-lg rounded-2xl overflow-hidden max-h-[90vh] bg-white" style={{ boxShadow: '0 25px 60px rgba(0,0,0,0.2)' }}>
+                <div className="flex items-center justify-between px-6 py-4 sticky top-0 bg-white" style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <h2 className="text-base font-bold" style={{ color: '#0f172a' }}>{coupon ? 'Modifier le coupon' : 'Nouveau coupon'}</h2>
+                    <button onClick={onClose} className="p-1.5 rounded-lg" style={{ color: '#94a3b8' }}><X className="h-5 w-5" /></button>
                 </div>
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                    {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+                    {error && <div className="px-4 py-3 rounded-xl text-sm" style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}>{error}</div>}
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Code *</label>
+                            <label className="block text-xs font-semibold mb-1.5" style={{ color: '#374151' }}>Code *</label>
                             <input value={code} onChange={e => setCode(e.target.value.toUpperCase())}
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 font-mono uppercase"
+                                className="input-pro font-mono uppercase"
                                 placeholder="NOOGO20" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Type *</label>
+                            <label className="block text-xs font-semibold mb-1.5" style={{ color: '#374151' }}>Type *</label>
                             <select value={type} onChange={e => setType(e.target.value as 'percentage' | 'fixed')}
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500">
+                                className="input-pro">
                                 <option value="percentage">Pourcentage (%)</option>
                                 <option value="fixed">Montant fixe (FCFA)</option>
                             </select>
@@ -236,17 +235,17 @@ function CouponModal({
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label className="block text-xs font-semibold mb-1.5" style={{ color: '#374151' }}>
                                 Valeur * {type === 'percentage' ? '(%)' : '(FCFA)'}
                             </label>
                             <input type="number" value={value} onChange={e => setValue(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500"
+                                className="input-pro"
                                 placeholder={type === 'percentage' ? '20' : '1000'} min="0" max={type === 'percentage' ? '100' : undefined} />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Commande min (FCFA)</label>
+                            <label className="block text-xs font-semibold mb-1.5" style={{ color: '#374151' }}>Commande min (FCFA)</label>
                             <input type="number" value={minOrder} onChange={e => setMinOrder(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500"
+                                className="input-pro"
                                 placeholder="5000" min="0" />
                         </div>
                     </div>
@@ -254,30 +253,30 @@ function CouponModal({
                     <div className="grid grid-cols-2 gap-4">
                         {type === 'percentage' && (
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Plafond (FCFA)</label>
+                                <label className="block text-xs font-semibold mb-1.5" style={{ color: '#374151' }}>Plafond (FCFA)</label>
                                 <input type="number" value={maxDiscount} onChange={e => setMaxDiscount(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500"
+                                    className="input-pro"
                                     placeholder="2000" min="0" />
                             </div>
                         )}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Utilisations max</label>
+                            <label className="block text-xs font-semibold mb-1.5" style={{ color: '#374151' }}>Utilisations max</label>
                             <input type="number" value={maxUses} onChange={e => setMaxUses(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500"
+                                className="input-pro"
                                 placeholder="100" min="1" />
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Début</label>
+                            <label className="block text-xs font-semibold mb-1.5" style={{ color: '#374151' }}>Début</label>
                             <input type="date" value={startsAt} onChange={e => setStartsAt(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500" />
+                                className="input-pro" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Expiration</label>
+                            <label className="block text-xs font-semibold mb-1.5" style={{ color: '#374151' }}>Expiration</label>
                             <input type="date" value={expiresAt} onChange={e => setExpiresAt(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500" />
+                                className="input-pro" />
                         </div>
                     </div>
 
@@ -290,9 +289,8 @@ function CouponModal({
                     </div>
 
                     <div className="flex gap-3 pt-2">
-                        <button type="button" onClick={onClose} className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50">Annuler</button>
-                        <button type="submit" disabled={isSaving}
-                            className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50">
+                        <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium" style={{ background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0' }}>Annuler</button>
+                        <button type="submit" disabled={isSaving} className="flex-1 btn-primary">
                             {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
                         </button>
                     </div>
@@ -306,12 +304,12 @@ function CouponModal({
 
 function ConfirmDialog({ message, onConfirm, onCancel }: { message: string; onConfirm: () => void; onCancel: () => void }) {
     return (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onCancel}>
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
-                <p className="text-gray-800 text-sm mb-6">{message}</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,0.5)' }} onClick={onCancel}>
+            <div className="bg-white rounded-2xl w-full max-w-sm p-6" style={{ boxShadow: '0 25px 60px rgba(0,0,0,0.2)' }} onClick={e => e.stopPropagation()}>
+                <p className="text-sm mb-6" style={{ color: '#374151' }}>{message}</p>
                 <div className="flex gap-3 justify-end">
-                    <button onClick={onCancel} className="px-4 py-2 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50">Annuler</button>
-                    <button onClick={onConfirm} className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600">Supprimer</button>
+                    <button onClick={onCancel} className="px-4 py-2 text-sm rounded-xl" style={{ border: '1px solid #e2e8f0', color: '#64748b', background: '#f8fafc' }}>Annuler</button>
+                    <button onClick={onConfirm} className="px-4 py-2 text-sm text-white rounded-xl" style={{ background: 'linear-gradient(135deg,#dc2626,#b91c1c)' }}>Supprimer</button>
                 </div>
             </div>
         </div>
@@ -398,7 +396,7 @@ export default function PromotionsPage() {
     const isLoading = activeTab === 'flash' ? flashLoading : couponsLoading;
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fadeIn">
             {confirmDialog && (
                 <ConfirmDialog
                     message={confirmDialog.message}
@@ -409,8 +407,8 @@ export default function PromotionsPage() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Promotions</h1>
-                    <p className="text-gray-600">Gérez les offres, flash infos et codes promo</p>
+                    <h1 className="text-2xl font-bold" style={{ color: '#0f172a' }}>Promotions</h1>
+                    <p className="text-sm mt-0.5" style={{ color: '#64748b' }}>Gérez les offres, flash infos et codes promo</p>
                 </div>
                 <div className="flex items-center gap-3">
                     {myRestaurants.length > 1 && (
@@ -427,17 +425,11 @@ export default function PromotionsPage() {
                         </div>
                     )}
                     {activeTab === 'flash' ? (
-                        <button
-                            onClick={() => setFlashModal({ open: true, flashInfo: null })}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 text-sm"
-                        >
+                        <button onClick={() => setFlashModal({ open: true, flashInfo: null })} className="btn-primary text-sm">
                             <Plus className="h-4 w-4" /> Nouvelle promotion
                         </button>
                     ) : (
-                        <button
-                            onClick={() => setCouponModal({ open: true, coupon: null })}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 text-sm"
-                        >
+                        <button onClick={() => setCouponModal({ open: true, coupon: null })} className="btn-primary text-sm">
                             <Plus className="h-4 w-4" /> Nouveau coupon
                         </button>
                     )}
@@ -445,16 +437,18 @@ export default function PromotionsPage() {
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit">
+            <div className="segmented w-fit">
                 <button
                     onClick={() => setActiveTab('flash')}
-                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'flash' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'flash' ? 'bg-white shadow-sm' : ''}`}
+                    style={activeTab === 'flash' ? { color: '#0f172a' } : { color: '#64748b' }}
                 >
                     <Tag className="h-4 w-4" /> Flash Infos
                 </button>
                 <button
                     onClick={() => setActiveTab('coupons')}
-                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'coupons' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'coupons' ? 'bg-white shadow-sm' : ''}`}
+                    style={activeTab === 'coupons' ? { color: '#0f172a' } : { color: '#64748b' }}
                 >
                     <Ticket className="h-4 w-4" /> Codes promo
                     {coupons.length > 0 && (
@@ -470,21 +464,18 @@ export default function PromotionsPage() {
             ) : activeTab === 'flash' ? (
                 /* ─── Flash Infos Tab ─── */
                 flashInfos.length === 0 ? (
-                    <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
+                    <div className="text-center py-16 page-card">
                         <Tag className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune promotion</h3>
                         <p className="text-gray-500 mb-4">Créez votre première promotion pour attirer des clients</p>
-                        <button
-                            onClick={() => setFlashModal({ open: true, flashInfo: null })}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
-                        >
+                        <button onClick={() => setFlashModal({ open: true, flashInfo: null })} className="btn-primary">
                             <Plus className="h-4 w-4" /> Ajouter une promotion
                         </button>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                         {flashInfos.map(fi => (
-                            <div key={fi.id} className={`bg-white rounded-xl border overflow-hidden ${fi.is_active ? 'border-orange-200' : 'border-gray-200 opacity-70'}`}>
+                            <div key={fi.id} className={`bg-white rounded-2xl border overflow-hidden ${fi.is_active ? 'border-orange-200' : 'border-gray-200 opacity-70'}`} style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                                 {fi.image_url && (
                                     <img src={fi.image_url} alt={fi.titre} className="w-full h-36 object-cover" />
                                 )}
@@ -534,19 +525,16 @@ export default function PromotionsPage() {
             ) : (
                 /* ─── Coupons Tab ─── */
                 coupons.length === 0 ? (
-                    <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
+                    <div className="text-center py-16 page-card">
                         <Ticket className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun code promo</h3>
                         <p className="text-gray-500 mb-4">Créez des codes promo pour fidéliser vos clients</p>
-                        <button
-                            onClick={() => setCouponModal({ open: true, coupon: null })}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
-                        >
+                        <button onClick={() => setCouponModal({ open: true, coupon: null })} className="btn-primary">
                             <Plus className="h-4 w-4" /> Créer un coupon
                         </button>
                     </div>
                 ) : (
-                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                         <table className="w-full text-sm">
                             <thead className="bg-gray-50 border-b border-gray-200">
                                 <tr>

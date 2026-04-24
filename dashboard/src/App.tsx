@@ -63,8 +63,9 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
+  const isSuperAdmin = !!user?.is_admin && user?.role === 'super_admin';
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (!user?.is_admin) return <Navigate to="/" replace />;
+  if (!isSuperAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
@@ -85,6 +86,47 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/" replace />;
   }
 
+  return <>{children}</>;
+}
+
+function RestaurantOpsRoute({
+  children,
+  requiredPermission,
+  allowSuperAdmin = false,
+}: {
+  children: React.ReactNode;
+  requiredPermission?: string;
+  allowSuperAdmin?: boolean;
+}) {
+  const {
+    isAuthenticated,
+    isLoading,
+    isSuperAdmin,
+    isRestaurantAdmin,
+    lockedRestaurantId,
+    selectedRestaurantId,
+    hasRestaurantPermission,
+  } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  // Super admin plateforme: pas d'opérations restaurant quotidiennes,
+  // sauf exceptions explicites (ex: édition d'un restaurant).
+  if (isSuperAdmin && !allowSuperAdmin) return <Navigate to="/admin" replace />;
+  if (isSuperAdmin && allowSuperAdmin) return <>{children}</>;
+  if (isRestaurantAdmin) return <>{children}</>;
+
+  const contextRestaurantId = lockedRestaurantId ?? selectedRestaurantId ?? null;
+  if (requiredPermission && !hasRestaurantPermission(requiredPermission, contextRestaurantId)) {
+    return <Navigate to="/" replace />;
+  }
   return <>{children}</>;
 }
 
@@ -124,18 +166,62 @@ function AppRoutes() {
         <Route index element={<DashboardPage />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="restaurants" element={<RestaurantsPage />} />
-        <Route path="restaurants/new" element={<RestaurantFormPage />} />
+        <Route path="restaurants/new" element={
+          <AdminRoute>
+            <RestaurantFormPage />
+          </AdminRoute>
+        } />
         <Route path="restaurants/:id" element={<RestaurantDetailPage />} />
-        <Route path="restaurants/:id/edit" element={<RestaurantFormPage />} />
-        <Route path="restaurants/:id/staff" element={<StaffPage />} />
-        <Route path="restaurants/:id/kitchen" element={<KitchenPage />} />
-        <Route path="orders" element={<OrdersPage />} />
-        <Route path="restaurants/:restaurantId/orders" element={<OrdersPage />} />
-        <Route path="oral-notes" element={<OralOrderNotesPage />} />
-        <Route path="restaurants/:restaurantId/oral-notes" element={<OralOrderNotesPage />} />
-        <Route path="menu" element={<MenuPage />} />
-        <Route path="promotions" element={<PromotionsPage />} />
-        <Route path="ratings" element={<RatingsPage />} />
+        <Route path="restaurants/:id/edit" element={
+          <RestaurantOpsRoute requiredPermission="edit_restaurant" allowSuperAdmin>
+            <RestaurantFormPage />
+          </RestaurantOpsRoute>
+        } />
+        <Route path="restaurants/:id/staff" element={
+          <RestaurantOpsRoute requiredPermission="manage_staff">
+            <StaffPage />
+          </RestaurantOpsRoute>
+        } />
+        <Route path="restaurants/:id/kitchen" element={
+          <RestaurantOpsRoute requiredPermission="kitchen_display">
+            <KitchenPage />
+          </RestaurantOpsRoute>
+        } />
+        <Route path="orders" element={
+          <RestaurantOpsRoute requiredPermission="manage_orders">
+            <OrdersPage />
+          </RestaurantOpsRoute>
+        } />
+        <Route path="restaurants/:restaurantId/orders" element={
+          <RestaurantOpsRoute requiredPermission="manage_orders">
+            <OrdersPage />
+          </RestaurantOpsRoute>
+        } />
+        <Route path="oral-notes" element={
+          <RestaurantOpsRoute requiredPermission="manage_orders">
+            <OralOrderNotesPage />
+          </RestaurantOpsRoute>
+        } />
+        <Route path="restaurants/:restaurantId/oral-notes" element={
+          <RestaurantOpsRoute requiredPermission="manage_orders">
+            <OralOrderNotesPage />
+          </RestaurantOpsRoute>
+        } />
+        <Route path="menu" element={
+          <RestaurantOpsRoute requiredPermission="manage_menu">
+            <MenuPage />
+          </RestaurantOpsRoute>
+        } />
+        <Route path="promotions" element={
+          <RestaurantOpsRoute requiredPermission="view_stats">
+            <PromotionsPage />
+          </RestaurantOpsRoute>
+        } />
+        <Route path="ratings" element={
+          <RestaurantOpsRoute requiredPermission="view_stats">
+            <RatingsPage />
+          </RestaurantOpsRoute>
+        } />
         <Route path="drivers" element={
           <AdminRoute>
             <DriversPage />

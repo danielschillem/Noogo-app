@@ -181,7 +181,7 @@ export default function DriversPage() {
                         onChange={e => setSearch(e.target.value)}
                     />
                 </div>
-                <div className="flex gap-1 p-1 rounded-xl" style={{ background: '#f1f5f9' }}>
+                <div className="segmented">
                     {[{ key: '', label: 'Tous' }, { key: 'available', label: 'Dispo' }, { key: 'busy', label: 'En course' }, { key: 'offline', label: 'Hors ligne' }].map(f => (
                         <button
                             key={f.key}
@@ -199,13 +199,13 @@ export default function DriversPage() {
 
             {/* Table */}
             {drivers.length === 0 ? (
-                <div className="text-center py-16">
+                <div className="text-center py-16 page-card">
                     <Truck size={48} style={{ color: '#cbd5e1', margin: '0 auto' }} />
                     <p className="mt-3 font-medium" style={{ color: '#374151' }}>Aucun livreur trouvé</p>
                     <p className="text-sm" style={{ color: '#94a3b8' }}>Ajoutez votre premier livreur pour commencer.</p>
                 </div>
             ) : (
-                <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                <div className="rounded-2xl overflow-hidden page-card">
                     <table className="w-full text-sm">
                         <thead>
                             <tr style={{ borderBottom: '1px solid #f1f5f9', background: '#f8fafc' }}>

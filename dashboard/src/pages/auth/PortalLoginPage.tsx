@@ -187,7 +187,7 @@ export default function PortalLoginPage() {
             </div>
 
             {/* Right panel — form */}
-            <div className="flex-1 flex items-center justify-center p-6 lg:p-12 relative z-10">
+            <div className="flex-1 flex items-center justify-center p-6 lg:p-12 relative z-50">
                 <div
                     className="w-full max-w-md space-y-6 rounded-2xl p-6 sm:p-8 shadow-xl border"
                     style={{
@@ -256,7 +256,7 @@ export default function PortalLoginPage() {
                             {/* Dropdown */}
                             {dropdownOpen && (
                                 <div
-                                    className="absolute z-50 w-full mt-1 rounded-xl border overflow-hidden"
+                                    className="absolute z-[70] w-full mt-1 rounded-xl border overflow-hidden"
                                     style={{ background: '#fff', border: '1.5px solid #e2e8f0', boxShadow: '0 10px 40px rgba(0,0,0,0.12)' }}
                                 >
                                     {/* Search */}
@@ -417,7 +417,7 @@ export default function PortalLoginPage() {
 
             {/* Click outside to close dropdown */}
             {dropdownOpen && (
-                <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)} />
+                <div className="fixed inset-0 z-30" onClick={() => setDropdownOpen(false)} />
             )}
         </div>
     );

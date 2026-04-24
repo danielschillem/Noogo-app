@@ -4,12 +4,17 @@ import { authApi, myRestaurantsApi } from '../services/api';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 interface AuthContextType extends AuthState {
+  isSuperAdmin: boolean;
+  isRestaurantAdmin: boolean;
   lockedRestaurantId: number | null;
   /** Tous les restaurants accessibles (owned + staff). Vide pour les admins. */
   myRestaurants: MyRestaurant[];
   /** Restaurant actuellement sélectionné dans les pages globales (persisté). */
   selectedRestaurantId: number | null;
   setSelectedRestaurantId: (id: number | null) => void;
+  getRestaurantAccess: (restaurantId?: number | null) => MyRestaurant | null;
+  hasRestaurantPermission: (permission: string, restaurantId?: number | null) => boolean;
+  isOwnerOrManager: (restaurantId?: number | null) => boolean;
   /** Recharge la liste des restaurants (utile après création/suppression). */
   refreshMyRestaurants: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
@@ -21,6 +26,10 @@ interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+function isSuperAdminUser(user: { is_admin?: boolean; role?: string | null } | null | undefined): boolean {
+  return !!user?.is_admin && user?.role === 'super_admin';
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
     user: null,
@@ -31,6 +40,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [lockedRestaurantId, setLockedRestaurantId, removeLockedRestaurantId] = useLocalStorage<number | null>('locked_restaurant_id', null);
   const [myRestaurants, setMyRestaurants] = useState<MyRestaurant[]>([]);
   const [selectedRestaurantId, setSelectedRestaurantIdRaw, removeSelectedRestaurantId] = useLocalStorage<number | null>('selected_restaurant_id', null);
+  const isSuperAdmin = isSuperAdminUser(state.user);
+  const isRestaurantAdmin = !!state.user?.is_admin && state.user?.role === 'admin';
 
   // Wrap setter: when explicitly choosing a restaurant, persist it
   const setSelectedRestaurantId = useCallback((id: number | null) => {
@@ -67,8 +78,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             isAuthenticated: true,
             isLoading: false,
           });
-          // Charger les restaurants accessibles dès que l'auth est confirmée
-          if (!user.is_admin) refreshMyRestaurants();
+          // Charger les restaurants pour tous les acteurs restaurant (admin resto + staff).
+          if (!isSuperAdminUser(user)) refreshMyRestaurants();
         } catch {
           sessionStorage.removeItem('auth_token');
           sessionStorage.removeItem('user');
@@ -106,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading: false,
     });
 
-    if (!user.is_admin) refreshMyRestaurants();
+    if (!isSuperAdminUser(user)) refreshMyRestaurants();
   };
 
   // Login depuis la page d'un restaurant (/r/:id/login)
@@ -116,8 +127,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const response = await authApi.login(email, password);
     const { user, token } = response.data.data;
 
-    // Les super admins et admins globaux n'ont pas besoin de vérification
-    if (user.is_admin) {
+    // Super admin plateforme: pas de scope restaurant
+    if (isSuperAdminUser(user)) {
       sessionStorage.setItem('auth_token', token);
       sessionStorage.setItem('user', JSON.stringify(user));
       removeLockedRestaurantId();
@@ -126,7 +137,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Pour les non-admins : vérifier qu'ils ont accès à ce restaurant
+    // Tous les acteurs restaurant (admin resto + staff):
+    // vérifier qu'ils ont accès au restaurant sélectionné.
     // On doit d'abord stocker le token pour que l'API /auth/my-restaurants fonctionne
     sessionStorage.setItem('auth_token', token);
     try {
@@ -144,7 +156,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       sessionStorage.setItem('user', JSON.stringify(user));
-      setLockedRestaurantId(restaurantId);
+
+      // Admin restaurant: multi-restaurants (pas verrouillé), mais on mémorise le resto choisi.
+      if (user.is_admin && user.role === 'admin') {
+        removeLockedRestaurantId();
+        setLockedRestaurantId(null);
+        setSelectedRestaurantIdRaw(restaurantId);
+      } else {
+        // Staff/cashier/waiter: session verrouillée sur un seul restaurant.
+        setLockedRestaurantId(restaurantId);
+      }
+
+      setMyRestaurants(myRestos as MyRestaurant[]);
       setState({ user, token, isAuthenticated: true, isLoading: false });
     } catch (err: unknown) {
       // Nettoyage si erreur API
@@ -203,13 +226,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, user }));
   };
 
+  const getRestaurantAccess = useCallback((restaurantId?: number | null): MyRestaurant | null => {
+    const targetId = restaurantId ?? lockedRestaurantId ?? selectedRestaurantId ?? myRestaurants[0]?.id ?? null;
+    if (!targetId) return null;
+    return myRestaurants.find(r => r.id === targetId) ?? null;
+  }, [lockedRestaurantId, selectedRestaurantId, myRestaurants]);
+
+  const isOwnerOrManager = useCallback((restaurantId?: number | null): boolean => {
+    if (isSuperAdmin || isRestaurantAdmin) return true;
+    const access = getRestaurantAccess(restaurantId);
+    return access?.role === 'owner' || access?.role === 'manager';
+  }, [isSuperAdmin, isRestaurantAdmin, getRestaurantAccess]);
+
+  const hasRestaurantPermission = useCallback((permission: string, restaurantId?: number | null): boolean => {
+    if (isSuperAdmin || isRestaurantAdmin) return true;
+    if (isOwnerOrManager(restaurantId)) return true;
+    const access = getRestaurantAccess(restaurantId);
+    return access?.permissions?.includes(permission) ?? false;
+  }, [isSuperAdmin, isRestaurantAdmin, isOwnerOrManager, getRestaurantAccess]);
+
   return (
     <AuthContext.Provider value={{
       ...state,
+      isSuperAdmin,
+      isRestaurantAdmin,
       lockedRestaurantId,
       myRestaurants,
       selectedRestaurantId,
       setSelectedRestaurantId,
+      getRestaurantAccess,
+      hasRestaurantPermission,
+      isOwnerOrManager,
       refreshMyRestaurants,
       login,
       loginForRestaurant,

@@ -380,12 +380,10 @@ export default function StaffPage() {
                 })}
             </div>
 
-            {staff.length > 5 && (
-                <div className="relative">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: '#94a3b8' }} />
-                    <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher un membre…" className="input-pro pl-10" style={{ width: '100%', maxWidth: 380 }} />
-                </div>
-            )}
+            <div className="relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: '#94a3b8' }} />
+                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher un membre…" className="input-pro pl-10" style={{ width: '100%', maxWidth: 380 }} />
+            </div>
 
             {filtered.length === 0 ? (
                 <div className="text-center py-20 rounded-2xl" style={{ background: 'white', border: '1px solid #f1f5f9' }}>

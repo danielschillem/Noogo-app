@@ -60,8 +60,11 @@ class StaffController extends Controller
     private function canManageStaff(Request $request, Restaurant $restaurant): bool
     {
         $user = $request->user();
-        if ($user->is_admin) {
+        if ($user && $user->isSuperAdmin()) {
             return true;
+        }
+        if ($user && $user->isAdmin()) {
+            return in_array($restaurant->id, $user->accessibleRestaurantIds(), true);
         }
         // Propriétaire via restaurants.user_id
         if ($restaurant->user_id === $user->id) {
@@ -253,7 +256,7 @@ class StaffController extends Controller
     {
         $user = $request->user();
 
-        if ($user->is_admin) {
+        if ($user->isSuperAdmin()) {
             return response()->json([
                 'success' => true,
                 'is_admin' => true,
@@ -293,7 +296,7 @@ class StaffController extends Controller
 
         return response()->json([
             'success' => true,
-            'is_admin' => false,
+            'is_admin' => (bool) $user->is_admin,
             'data' => $all,
         ]);
     }

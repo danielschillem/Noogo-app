@@ -131,6 +131,13 @@ interface FormData {
     longitude: string;
 }
 
+interface RestaurantAdminForm {
+    name: string;
+    email: string;
+    phone: string;
+    password: string;
+}
+
 // ─── Component ─────────────────────────────────────────────────────────────
 
 export default function RestaurantFormPage() {
@@ -148,6 +155,12 @@ export default function RestaurantFormPage() {
         latitude: '',
         longitude: '',
     });
+    const [adminForm, setAdminForm] = useState<RestaurantAdminForm>({
+        name: '',
+        email: '',
+        phone: '',
+        password: '',
+    });
 
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -156,7 +169,14 @@ export default function RestaurantFormPage() {
     const [isLoading, setIsLoading] = useState(isEdit);
     const [isSaving, setIsSaving] = useState(false);
     const [isLocating, setIsLocating] = useState(false);
-    const [errors, setErrors] = useState<Partial<FormData> & { logo?: string; gallery?: string; general?: string }>({});
+    const [errors, setErrors] = useState<Partial<FormData> & {
+        logo?: string;
+        gallery?: string;
+        general?: string;
+        admin_name?: string;
+        admin_email?: string;
+        admin_password?: string;
+    }>({});
     const [credentials, setCredentials] = useState<AdminCredentials | null>(null);
 
     // ── Galerie ──────────────────────────────────────────────────────────
@@ -270,6 +290,13 @@ export default function RestaurantFormPage() {
             newErrors.email = 'Email invalide.';
         }
 
+        if (!isEdit) {
+            if (!adminForm.name.trim()) newErrors.admin_name = "Le nom de l'admin du restaurant est requis.";
+            if (!adminForm.email.trim()) newErrors.admin_email = "L'email de l'admin du restaurant est requis.";
+            else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(adminForm.email)) newErrors.admin_email = 'Email admin invalide.';
+            if (adminForm.password && adminForm.password.length < 8) newErrors.admin_password = 'Le mot de passe admin doit contenir au moins 8 caractères.';
+        }
+
         if (form.latitude && (isNaN(Number(form.latitude)) || Number(form.latitude) < -90 || Number(form.latitude) > 90)) {
             newErrors.latitude = 'Latitude invalide (–90 à 90).';
         }
@@ -295,6 +322,12 @@ export default function RestaurantFormPage() {
             fd.append('telephone', form.telephone.trim());
             fd.append('adresse', form.adresse.trim());
             if (form.email.trim()) fd.append('email', form.email.trim());
+            if (!isEdit) {
+                fd.append('admin_name', adminForm.name.trim());
+                fd.append('admin_email', adminForm.email.trim());
+                if (adminForm.phone.trim()) fd.append('admin_phone', adminForm.phone.trim());
+                if (adminForm.password.trim()) fd.append('admin_password', adminForm.password.trim());
+            }
             if (form.description.trim()) fd.append('description', form.description.trim());
             if (form.heures_ouverture.trim()) fd.append('heures_ouverture', form.heures_ouverture.trim());
             if (form.latitude.trim()) fd.append('latitude', form.latitude.trim());
@@ -332,6 +365,9 @@ export default function RestaurantFormPage() {
                 if (apiErrors.telephone) mapped.telephone = apiErrors.telephone[0];
                 if (apiErrors.adresse) mapped.adresse = apiErrors.adresse[0];
                 if (apiErrors.email) mapped.email = apiErrors.email[0];
+                if (apiErrors.admin_name) mapped.admin_name = apiErrors.admin_name[0];
+                if (apiErrors.admin_email) mapped.admin_email = apiErrors.admin_email[0];
+                if (apiErrors.admin_password) mapped.admin_password = apiErrors.admin_password[0];
                 if (apiErrors.logo) mapped.logo = apiErrors.logo[0];
                 setErrors(mapped);
             } else {
@@ -587,6 +623,68 @@ export default function RestaurantFormPage() {
                             {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
                         </div>
                     </section>
+
+                    {!isEdit && (
+                        <section className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+                            <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+                                <KeyRound className="h-4 w-4 text-orange-500" />
+                                Admin du restaurant
+                            </h2>
+                            <p className="text-xs text-gray-500">
+                                Ce compte sera utilise pour gerer le restaurant (staff, commandes, menu, etc.).
+                            </p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Nom admin <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={adminForm.name}
+                                        onChange={e => setAdminForm(f => ({ ...f, name: e.target.value }))}
+                                        placeholder="Ex: Admin Le Bon Plat"
+                                        className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent ${errors.admin_name ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
+                                    />
+                                    {errors.admin_name && <p className="text-xs text-red-600 mt-1">{errors.admin_name}</p>}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Email admin <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="email"
+                                        value={adminForm.email}
+                                        onChange={e => setAdminForm(f => ({ ...f, email: e.target.value }))}
+                                        placeholder="admin@restaurant.com"
+                                        className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent ${errors.admin_email ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
+                                    />
+                                    {errors.admin_email && <p className="text-xs text-red-600 mt-1">{errors.admin_email}</p>}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Telephone admin</label>
+                                    <input
+                                        type="text"
+                                        value={adminForm.phone}
+                                        onChange={e => setAdminForm(f => ({ ...f, phone: e.target.value }))}
+                                        placeholder="+226 70 00 00 00"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Mot de passe admin (optionnel)</label>
+                                    <input
+                                        type="password"
+                                        value={adminForm.password}
+                                        onChange={e => setAdminForm(f => ({ ...f, password: e.target.value }))}
+                                        placeholder="Laisser vide pour generation automatique"
+                                        className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent ${errors.admin_password ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
+                                    />
+                                    {errors.admin_password && <p className="text-xs text-red-600 mt-1">{errors.admin_password}</p>}
+                                </div>
+                            </div>
+                        </section>
+                    )}
 
                     {/* ── Localisation & Horaires ── */}
                     <section className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">

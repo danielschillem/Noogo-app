@@ -606,7 +606,7 @@ function KanbanCard({ order, col, isDragging, onDragStart, onDragEnd, onAdvance,
         {order.customer_name || 'Client'}
       </p>
       <p className="text-xs mb-1" style={{ color: '#94a3b8' }}>
-        {order.order_type_text}{order.table_number ? ` Â· Table ${order.table_number}` : ''}
+              {order.order_type_text}{order.table_number ? ` · Table ${order.table_number}` : ''}
       </p>
       <p className="text-xs mb-2" style={{ color: '#cbd5e1' }}>
         {new Date(order.order_date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} · ⏱ {elapsedTime(order.order_date)}
@@ -683,7 +683,7 @@ function ListOrderCard({ order, onUpdateStatus, onCancel, onRequestDelivery }: {
               </span>
             </div>
             <p className="text-xs mt-0.5" style={{ color: '#94a3b8' }}>
-              {order.order_type_text}{order.table_number ? ` Â· Table ${order.table_number}` : ''} Â·{' '}
+              {order.order_type_text}{order.table_number ? ` · Table ${order.table_number}` : ''} ·{' '}
               {new Date(order.order_date).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
             </p>
             <div className="flex flex-wrap gap-1 mt-2">

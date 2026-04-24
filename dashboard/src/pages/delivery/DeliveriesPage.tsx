@@ -312,7 +312,7 @@ export default function DeliveriesPage() {
             </div>
 
             {/* Filters */}
-            <div className="flex gap-1 p-1 rounded-xl" style={{ background: '#f1f5f9' }}>
+            <div className="segmented">
                 {[
                     { key: '', label: 'Toutes' },
                     { key: 'pending_assignment', label: 'En attente' },
@@ -338,7 +338,7 @@ export default function DeliveriesPage() {
             {/* Table / Map */}
             {viewMode === 'map' ? (
                 /* ── DEL-D04 : Carte temps réel des livreurs ── */
-                <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', height: 500 }}>
+                <div className="rounded-2xl overflow-hidden page-card" style={{ height: 500 }}>
                     {allPositions.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full">
                             <MapPin size={48} style={{ color: '#cbd5e1' }} />
@@ -381,13 +381,13 @@ export default function DeliveriesPage() {
                     )}
                 </div>
             ) : deliveries.length === 0 ? (
-                <div className="text-center py-16">
+                <div className="text-center py-16 page-card">
                     <Package size={48} style={{ color: '#cbd5e1', margin: '0 auto' }} />
                     <p className="mt-3 font-medium" style={{ color: '#374151' }}>Aucune livraison trouvée</p>
                     <p className="text-sm" style={{ color: '#94a3b8' }}>Les livraisons apparaîtront ici une fois créées.</p>
                 </div>
             ) : (
-                <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                <div className="rounded-2xl overflow-hidden page-card">
                     <table className="w-full text-sm">
                         <thead>
                             <tr style={{ borderBottom: '1px solid #f1f5f9', background: '#f8fafc' }}>

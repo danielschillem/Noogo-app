@@ -121,7 +121,7 @@ export default function RatingsPage() {
             </div>
 
             {/* Distribution */}
-            <div className="rounded-2xl p-5" style={{ background: 'white', border: '1px solid #f1f5f9' }}>
+            <div className="rounded-2xl p-5 page-card">
                 <h3 className="text-sm font-semibold mb-4" style={{ color: '#0f172a' }}>Distribution des notes</h3>
                 <div className="space-y-2">
                     {distribution.map(d => (
@@ -157,8 +157,7 @@ export default function RatingsPage() {
             ) : (
                 <div className="space-y-3">
                     {ratings.map(rating => (
-                        <div key={rating.id} className="rounded-2xl p-5 transition-shadow hover:shadow-md"
-                            style={{ background: 'white', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                        <div key={rating.id} className="rounded-2xl p-5 transition-shadow hover:shadow-md page-card">
                             <div className="flex items-start justify-between gap-4">
                                 <div className="flex items-start gap-3">
                                     <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"

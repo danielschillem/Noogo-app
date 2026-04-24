@@ -1,4 +1,5 @@
 ﻿import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useInterval } from '../../hooks/useInterval';
 import {
   ShoppingBag,
@@ -13,9 +14,14 @@ import {
   Activity,
   ChefHat,
   Star,
+  FileText,
+  PlusCircle,
+  Power,
+  CheckCircle,
+  Users,
 } from 'lucide-react';
-import { dashboardApi, restaurantsApi } from '../../services/api';
-import type { DashboardStats, Order, RestaurantStats } from '../../types';
+import { adminApi, dashboardApi, restaurantsApi } from '../../services/api';
+import type { AdminAuditLog, AdminRestaurant, AdminStats, DashboardStats, Order, RestaurantStats } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useRestaurants } from '../../hooks/useQueries';
 import {
@@ -54,11 +60,11 @@ const TODAY_LABEL = new Date().toLocaleDateString('fr-FR', {
 // â”€â”€â”€ Main Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function DashboardPage() {
-  const { user, selectedRestaurantId, setSelectedRestaurantId, myRestaurants } = useAuth();
+  const { user, selectedRestaurantId, setSelectedRestaurantId, myRestaurants, isSuperAdmin } = useAuth();
 
   // Admin: can see all restaurants for per-restaurant stats
   const { data: adminRestaurants = [] } = useRestaurants();
-  const restaurants = user?.is_admin ? adminRestaurants : myRestaurants;
+  const restaurants = isSuperAdmin ? adminRestaurants : myRestaurants;
   const [restaurantStats, setRestaurantStats] = useState<RestaurantStats | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
@@ -68,14 +74,18 @@ export default function DashboardPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [chartTab, setChartTab] = useState<'orders' | 'revenue'>('orders');
+  const [platformStats, setPlatformStats] = useState<AdminStats | null>(null);
+  const [platformRestaurants, setPlatformRestaurants] = useState<AdminRestaurant[]>([]);
+  const [platformLogs, setPlatformLogs] = useState<AdminAuditLog[]>([]);
 
 
   useEffect(() => {
+    if (isSuperAdmin) return;
     if (!selectedRestaurantId) { setRestaurantStats(null); return; }
     restaurantsApi.getStatistics(selectedRestaurantId)
       .then(res => setRestaurantStats(res.data.data))
       .catch(console.error);
-  }, [selectedRestaurantId]);
+  }, [selectedRestaurantId, isSuperAdmin]);
 
   const fetchData = useCallback(async (silent = false) => {
     try {
@@ -99,11 +109,37 @@ export default function DashboardPage() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  const fetchPlatformData = useCallback(async (silent = false) => {
+    try {
+      if (!silent) setIsRefreshing(true);
+      const [statsRes, restaurantsRes, logsRes] = await Promise.all([
+        adminApi.getStats(),
+        adminApi.listRestaurants({ per_page: 8 }),
+        adminApi.listAuditLogs({ per_page: 8 }),
+      ]);
+      const restaurantsPayload = restaurantsRes.data.data;
+      const logsPayload = logsRes.data.data;
+      setPlatformStats(statsRes.data.data);
+      setPlatformRestaurants(restaurantsPayload.data ?? restaurantsPayload);
+      setPlatformLogs(logsPayload.data ?? logsPayload);
+      setLastUpdated(new Date());
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, []);
 
-  useInterval(() => fetchData(true), 30_000);
+  useEffect(() => {
+    if (isSuperAdmin) fetchPlatformData();
+    else fetchData();
+  }, [fetchData, fetchPlatformData, isSuperAdmin]);
+
+  useInterval(() => {
+    if (isSuperAdmin) fetchPlatformData(true);
+    else fetchData(true);
+  }, 30_000);
 
   // â”€â”€ Derived values â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const active = selectedRestaurantId && restaurantStats ? restaurantStats : null;
@@ -135,47 +171,122 @@ export default function DashboardPage() {
     );
   }
 
+  if (isSuperAdmin) {
+    return (
+      <div className="space-y-6 animate-fadeIn">
+        <div className="page-card p-6 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium mb-1" style={{ color: '#94a3b8' }}>{TODAY_LABEL}</p>
+            <h1 className="text-2xl font-bold" style={{ color: '#0f172a' }}>Pilotage plateforme Noogo</h1>
+            <p className="text-sm mt-1" style={{ color: '#64748b' }}>
+              Activation des restaurants, licences, audits et supervision globale.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link to="/restaurants/new" className="btn-primary text-sm"><PlusCircle className="h-4 w-4" />Nouveau restaurant</Link>
+            <button onClick={() => fetchPlatformData()} disabled={isRefreshing}
+              className="p-2.5 rounded-lg disabled:opacity-50"
+              style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#64748b' }}>
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+        </div>
+
+        {platformStats && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <KpiCard icon={<Store className="h-5 w-5" />} label="Restaurants total" value={platformStats.restaurants.total} color="#2563eb" bg="#eff6ff" />
+            <KpiCard icon={<CheckCircle className="h-5 w-5" />} label="Restaurants actifs" value={platformStats.restaurants.active} color="#16a34a" bg="#f0fdf4" />
+            <KpiCard icon={<Users className="h-5 w-5" />} label="Utilisateurs plateforme" value={platformStats.users.total} color="#7c3aed" bg="#faf5ff" />
+            <KpiCard icon={<FileText className="h-5 w-5" />} label="Commandes globales" value={platformStats.orders.total} color="#f97316" bg="#fff7ed" />
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div className="page-card rounded-2xl overflow-hidden">
+            <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #f1f5f9' }}>
+              <h2 className="font-bold text-base" style={{ color: '#0f172a' }}>Etat des restaurants</h2>
+              <Link to="/admin" className="text-xs font-semibold" style={{ color: '#f97316' }}>Gerer licences</Link>
+            </div>
+            <div className="divide-y" style={{ borderColor: '#f1f5f9' }}>
+              {platformRestaurants.map((r) => (
+                <div key={r.id} className="px-5 py-3.5 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm truncate" style={{ color: '#0f172a' }}>{r.nom}</p>
+                    <p className="text-xs" style={{ color: '#94a3b8' }}>{r.is_active ? 'Actif' : 'Inactif'} · Licence {r.license_status ?? 'active'}</p>
+                  </div>
+                  <button
+                    onClick={async () => { await adminApi.toggleRestaurantActive(r.id); fetchPlatformData(true); }}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5"
+                    style={r.is_active
+                      ? { background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }
+                      : { background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0' }}
+                  >
+                    <Power className="h-3.5 w-3.5" />{r.is_active ? 'Desactiver' : 'Activer'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="page-card rounded-2xl overflow-hidden">
+            <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #f1f5f9' }}>
+              <h2 className="font-bold text-base" style={{ color: '#0f172a' }}>Journaux d'audit recents</h2>
+              <Link to="/admin" className="text-xs font-semibold" style={{ color: '#f97316' }}>Voir tout</Link>
+            </div>
+            <div className="divide-y" style={{ borderColor: '#f1f5f9' }}>
+              {platformLogs.length === 0 && (
+                <div className="px-5 py-10 text-center text-sm" style={{ color: '#94a3b8' }}>Aucun log disponible.</div>
+              )}
+              {platformLogs.map((log) => (
+                <div key={log.id} className="px-5 py-3.5">
+                  <p className="text-sm font-semibold" style={{ color: '#0f172a' }}>{log.action}</p>
+                  <p className="text-xs" style={{ color: '#94a3b8' }}>
+                    {log.target_type ?? 'systeme'} {log.target_id ? `#${log.target_id}` : ''} · {new Date(log.created_at).toLocaleString('fr-FR')}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-fadeIn">
 
       {/* â•â• ROW 1 â€” GREETING BANNER â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
-      <div className="relative overflow-hidden rounded-2xl p-6"
-        style={{ background: 'linear-gradient(135deg,#f97316 0%,#ea580c 60%,#dc2626 100%)', boxShadow: '0 8px 32px rgba(249,115,22,0.3)' }}>
-        {/* Decorative circles */}
-        <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-10 bg-white" />
-        <div className="absolute top-4 right-20 w-20 h-20 rounded-full opacity-10 bg-white" />
-        <div className="absolute -bottom-10 right-40 w-32 h-32 rounded-full opacity-10 bg-white" />
-
-        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="page-card p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-white opacity-80 mb-1">{TODAY_LABEL}</p>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">
-              {greet()}, {user?.name?.split(' ')[0] ?? 'Admin'} 👋
+            <p className="text-sm font-medium mb-1" style={{ color: '#94a3b8' }}>{TODAY_LABEL}</p>
+            <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: '#0f172a' }}>
+              {greet()}, {user?.name?.split(' ')[0] ?? 'Admin'}
             </h1>
-            <p className="text-sm mt-1 text-white opacity-70">
-              Livraison GRATUITE chaque weekend â€” Voici votre activité en temps réel.
+            <p className="text-sm mt-1" style={{ color: '#64748b' }}>
+              Vue temps réel de l’activité et des performances.
             </p>
           </div>
           <div className="flex items-center gap-2.5 flex-shrink-0">
             {lastUpdated && (
-              <span className="text-xs px-3 py-1.5 rounded-xl hidden sm:flex items-center gap-1.5 text-white"
-                style={{ background: 'rgba(255,255,255,0.2)' }}>
-                <span className="w-1.5 h-1.5 rounded-full bg-green-300 animate-pulse" />
+              <span className="text-xs px-3 py-1.5 rounded-lg hidden sm:flex items-center gap-1.5"
+                style={{ background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0' }}>
+                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#16a34a' }} />
                 {lastUpdated.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
               </span>
             )}
             <button onClick={() => fetchData()} disabled={isRefreshing}
-              className="p-2.5 rounded-xl disabled:opacity-50 transition-all hover:scale-105 text-white"
-              style={{ background: 'rgba(255,255,255,0.2)' }}>
+              className="p-2.5 rounded-lg disabled:opacity-50"
+              style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#64748b' }}>
               <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             </button>
             {restaurants.length > 1 && (
               <select value={selectedRestaurantId ?? ''}
                 onChange={e => setSelectedRestaurantId(e.target.value ? Number(e.target.value) : null)}
-                className="text-sm px-3 py-2 rounded-xl border-0 outline-none font-medium text-white"
-                style={{ background: 'rgba(255,255,255,0.2)' }}>
-                <option value="" style={{ background: '#1e293b' }}>Tous les restaurants</option>
-                {restaurants.map(r => <option key={r.id} value={r.id} style={{ background: '#1e293b' }}>{r.nom}</option>)}
+                className="text-sm px-3 py-2 rounded-lg outline-none font-medium"
+                style={{ background: '#f8fafc', color: '#334155', border: '1px solid #e2e8f0' }}>
+                <option value="">Tous les restaurants</option>
+                {restaurants.map(r => <option key={r.id} value={r.id}>{r.nom}</option>)}
               </select>
             )}
           </div>
@@ -200,14 +311,13 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
         {/* Sales area chart with tab switcher */}
-        <div className="lg:col-span-2 rounded-2xl p-6"
-          style={{ background: 'white', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div className="lg:col-span-2 rounded-2xl p-6 page-card">
           <div className="flex items-center justify-between mb-5">
             <div>
               <h2 className="font-bold text-base" style={{ color: '#0f172a' }}>Chiffres de ventes</h2>
-              <p className="text-xs mt-0.5" style={{ color: '#94a3b8' }}>7 derniers jours â€” vue live</p>
+              <p className="text-xs mt-0.5" style={{ color: '#94a3b8' }}>7 derniers jours - vue live</p>
             </div>
-            <div className="flex gap-1 p-1 rounded-xl" style={{ background: '#f8fafc', border: '1px solid #f1f5f9' }}>
+            <div className="segmented">
               {(['orders', 'revenue'] as const).map(tab => (
                 <button key={tab} onClick={() => setChartTab(tab)}
                   className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
@@ -247,24 +357,21 @@ export default function DashboardPage() {
 
         {/* Hero revenue card + 2 mini-kpis */}
         <div className="flex flex-col gap-4">
-          <div className="relative overflow-hidden rounded-2xl p-6 flex-1"
-            style={{ background: 'linear-gradient(145deg,#1e293b 0%,#0f172a 100%)', boxShadow: '0 4px 24px rgba(15,23,42,0.3)' }}>
-            <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full opacity-10" style={{ background: '#f97316' }} />
-            <div className="absolute bottom-2 right-2 w-16 h-16 rounded-full opacity-5" style={{ background: '#f97316' }} />
-            <div className="relative">
+          <div className="page-card rounded-2xl p-6 flex-1">
+            <div>
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(249,115,22,0.2)' }}>
-                  <TrendingUp className="h-4 w-4" style={{ color: '#fb923c' }} />
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: '#fff7ed' }}>
+                  <TrendingUp className="h-4 w-4" style={{ color: '#f97316' }} />
                 </div>
-                <span className="text-xs font-semibold" style={{ color: '#94a3b8' }}>
+                <span className="text-xs font-semibold" style={{ color: '#64748b' }}>
                   {selectedRestaurantId ? 'Revenus totaux' : 'Revenus ce mois'}
                 </span>
               </div>
-              <p className="text-3xl font-bold text-white leading-tight">{fmtCFA(totalRevenue)}</p>
+              <p className="text-3xl font-bold leading-tight" style={{ color: '#0f172a' }}>{fmtCFA(totalRevenue)}</p>
               {stats?.growth.revenue !== undefined && (
                 <div className="flex items-center gap-1.5 mt-2">
-                  <span className={`flex items-center gap-0.5 text-xs font-semibold px-2 py-0.5 rounded-lg ${stats.growth.revenue >= 0 ? 'text-green-400' : 'text-red-400'}`}
-                    style={{ background: stats.growth.revenue >= 0 ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)' }}>
+                  <span className={`flex items-center gap-0.5 text-xs font-semibold px-2 py-0.5 rounded-lg ${stats.growth.revenue >= 0 ? 'text-green-700' : 'text-red-700'}`}
+                    style={{ background: stats.growth.revenue >= 0 ? '#f0fdf4' : '#fef2f2' }}>
                     {stats.growth.revenue >= 0
                       ? <ArrowUpRight className="h-3 w-3" />
                       : <ArrowDownRight className="h-3 w-3" />}
@@ -273,7 +380,7 @@ export default function DashboardPage() {
                   <span className="text-xs" style={{ color: '#64748b' }}>vs mois dernier</span>
                 </div>
               )}
-              <div className="mt-4 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <div className="mt-4 pt-4" style={{ borderTop: '1px solid #e2e8f0' }}>
                 <div className="flex justify-between text-xs" style={{ color: '#64748b' }}>
                   <span>{totalOrders} commandes</span>
                   <span>{active?.total_dishes ?? stats?.total_dishes ?? 0} plats</span>
@@ -296,12 +403,11 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
         {/* Revenue bar chart */}
-        <div className="lg:col-span-2 rounded-2xl p-6"
-          style={{ background: 'white', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div className="lg:col-span-2 rounded-2xl p-6 page-card">
           <div className="flex items-center justify-between mb-5">
             <div>
               <h2 className="font-bold text-base" style={{ color: '#0f172a' }}>Ventes produits</h2>
-              <p className="text-xs mt-0.5" style={{ color: '#94a3b8' }}>Revenus & commandes â€” 6 derniers mois</p>
+              <p className="text-xs mt-0.5" style={{ color: '#94a3b8' }}>Revenus et commandes - 6 derniers mois</p>
             </div>
             <div className="flex items-center gap-3 text-xs" style={{ color: '#64748b' }}>
               <span className="flex items-center gap-1.5">
@@ -347,8 +453,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Dernières transactions */}
-        <div className="rounded-2xl p-6"
-          style={{ background: 'white', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div className="rounded-2xl p-6 page-card">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-bold text-base" style={{ color: '#0f172a' }}>Dernières transactions</h2>
             <span className="text-xs font-semibold px-2 py-1 rounded-lg cursor-pointer"
@@ -387,8 +492,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
         {/* Progress bars */}
-        <div className="rounded-2xl p-6"
-          style={{ background: 'white', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div className="rounded-2xl p-6 page-card">
           <div className="flex items-center justify-between mb-5">
             <h2 className="font-bold text-base" style={{ color: '#0f172a' }}>Performance</h2>
             <span className="text-xs font-semibold px-2 py-1 rounded-lg"
@@ -411,8 +515,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent orders table */}
-        <div className="lg:col-span-2 rounded-2xl overflow-hidden"
-          style={{ background: 'white', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div className="lg:col-span-2 rounded-2xl overflow-hidden page-card">
           <div className="flex items-center justify-between px-6 py-4"
             style={{ borderBottom: '1px solid #f8fafc' }}>
             <h2 className="font-bold text-base" style={{ color: '#0f172a' }}>Liste des commandes</h2>
@@ -459,7 +562,7 @@ export default function DashboardPage() {
                       <p className="text-xs" style={{ color: '#94a3b8' }}>
                         {order.order_date
                           ? new Date(order.order_date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' })
-                          : 'â€”'}
+                          : '-'}
                       </p>
                     </td>
                   </tr>
@@ -503,8 +606,7 @@ interface KpiCardProps {
 
 function KpiCard({ icon, label, value, trend, color, bg }: KpiCardProps) {
   return (
-    <div className="flex items-center gap-4 p-5 rounded-2xl relative overflow-hidden"
-      style={{ background: 'white', border: '1px solid #f1f5f9', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+    <div className="flex items-center gap-4 p-5 rounded-xl relative overflow-hidden page-card">
       <div className="absolute left-0 top-4 bottom-4 w-1 rounded-r-full" style={{ background: color }} />
       <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: bg, color }}>
         {icon}
@@ -527,8 +629,7 @@ interface MiniKpiProps { icon: React.ReactNode; label: string; value: string | n
 
 function MiniKpi({ icon, label, value, color, bg }: MiniKpiProps) {
   return (
-    <div className="flex flex-col gap-2 p-4 rounded-xl"
-      style={{ background: 'white', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+    <div className="flex flex-col gap-2 p-4 rounded-xl page-card">
       <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: bg, color }}>
         {icon}
       </div>
