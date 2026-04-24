@@ -251,6 +251,18 @@ export const myRestaurantsApi = {
   get: () => api.get('/auth/my-restaurants'),
 };
 
+// Notifications API (persistées en base)
+export const notificationsApi = {
+  list: (params?: { limit?: number; unread_only?: boolean }) =>
+    api.get('/notifications', { params }),
+  markAsRead: (id: number) =>
+    api.patch(`/notifications/${id}/read`),
+  markAllAsRead: () =>
+    api.patch('/notifications/read-all'),
+  clear: () =>
+    api.delete('/notifications/clear'),
+};
+
 // Portal API — endpoints publics (aucune auth requise), pour la page de connexion restaurant
 // Instance axios sans intercepteur auth pour ne pas envoyer de token
 const publicApi = axios.create({

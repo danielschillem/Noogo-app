@@ -2,6 +2,7 @@ import { useState, useEffect, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { portalApi } from '../../services/api';
+import { toImageUrl } from '../../utils/imageUrl';
 import {
     Store, Lock, Mail, Loader2, ChevronDown, Search, AlertTriangle,
 } from 'lucide-react';
@@ -14,10 +15,7 @@ interface PortalRestaurant {
 }
 
 function buildLogoUrl(path?: string | null): string {
-    if (!path) return '';
-    if (path.startsWith('http')) return path;
-    const base = (import.meta.env.VITE_IMAGE_BASE_URL || '').replace(/\/$/, '');
-    return `${base}/storage/${path.replace(/^\//, '')}`;
+    return toImageUrl(path);
 }
 
 export default function PortalLoginPage() {

@@ -1,13 +1,14 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import type { Channel } from 'pusher-js';
 import { useAuth } from './AuthContext';
-import { myRestaurantsApi, restaurantsApi } from '../services/api';
+import { myRestaurantsApi, notificationsApi, restaurantsApi } from '../services/api';
 import { getPusher } from '../hooks/usePusher';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface AppNotification {
     id: string;
+    dbId?: number;
     type: 'order_created' | 'order_updated';
     restaurantId: number;
     restaurantName: string;
@@ -37,6 +38,22 @@ interface OrderEventPayload {
     total_amount?: number;
     table_number?: string;
     customer_name?: string;
+}
+
+interface StoredNotificationPayload {
+    id: number;
+    type: AppNotification['type'] | string;
+    message: string;
+    payload?: {
+        order_id?: number;
+        order_status?: string;
+        amount?: number;
+        table_number?: string;
+        customer_name?: string;
+    };
+    restaurant_id?: number | null;
+    read_at?: string | null;
+    created_at?: string;
 }
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -87,15 +104,53 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         toastTimersRef.current.set(notif.id, timer);
     }, [dismissToast]);
 
+    const mapStoredNotification = useCallback((n: StoredNotificationPayload): AppNotification => {
+        const payload = n.payload ?? {};
+        return {
+            id: `db-${n.id}`,
+            dbId: n.id,
+            type: (n.type === 'order_created' || n.type === 'order_updated') ? n.type : 'order_updated',
+            restaurantId: Number(n.restaurant_id ?? 0),
+            restaurantName: n.restaurant_id ? `Restaurant #${n.restaurant_id}` : 'Plateforme Noogo',
+            orderId: Number(payload.order_id ?? 0),
+            orderStatus: payload.order_status ?? 'pending',
+            customerName: payload.customer_name,
+            tableNumber: payload.table_number,
+            amount: Number(payload.amount ?? 0),
+            message: n.message,
+            isRead: !!n.read_at,
+            createdAt: new Date(n.created_at ?? Date.now()),
+        };
+    }, []);
+
+    const hydrateFromServer = useCallback(async () => {
+        try {
+            const res = await notificationsApi.list({ limit: MAX_NOTIFICATIONS });
+            const raw: StoredNotificationPayload[] = res.data?.data?.notifications ?? [];
+            const mapped = raw.map(mapStoredNotification);
+            setNotifications(mapped);
+        } catch {
+            // fallback to in-memory realtime only
+        }
+    }, [mapStoredNotification]);
+
     const markAsRead = useCallback((id: string) => {
-        setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+        setNotifications(prev => {
+            const target = prev.find(n => n.id === id);
+            if (target?.dbId) {
+                notificationsApi.markAsRead(target.dbId).catch(() => undefined);
+            }
+            return prev.map(n => n.id === id ? { ...n, isRead: true } : n);
+        });
     }, []);
 
     const markAllAsRead = useCallback(() => {
+        notificationsApi.markAllAsRead().catch(() => undefined);
         setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
     }, []);
 
     const clearAll = useCallback(() => {
+        notificationsApi.clear().catch(() => undefined);
         setNotifications([]);
     }, []);
 
@@ -171,8 +226,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         };
 
         fetchAndSubscribe();
+        hydrateFromServer();
         return unsubscribeAll;
-    }, [isAuthenticated, user, subscribeToRestaurant, unsubscribeAll]);
+    }, [isAuthenticated, user, subscribeToRestaurant, unsubscribeAll, hydrateFromServer]);
 
     // Cleanup timers on unmount
     useEffect(() => {

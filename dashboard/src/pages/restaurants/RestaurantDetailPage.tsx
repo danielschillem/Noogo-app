@@ -21,13 +21,10 @@ import {
 } from 'lucide-react';
 import { restaurantsApi } from '../../services/api';
 import type { Restaurant, RestaurantStats } from '../../types';
+import { toImageUrl } from '../../utils/imageUrl';
 
 function buildImageUrl(path?: string | null): string {
-    if (!path) return '';
-    if (path.startsWith('http')) return path;
-    const base = (import.meta.env.VITE_IMAGE_BASE_URL || '').replace(/\/$/, '');
-    const clean = path.replace(/^\//, '');
-    return `${base}/storage/${clean}`;
+    return toImageUrl(path);
 }
 
 function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) {

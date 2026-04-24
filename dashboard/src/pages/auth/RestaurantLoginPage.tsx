@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { portalApi } from '../../services/api';
 import { Mail, Lock, Loader2, Store, ArrowRight, AlertTriangle } from 'lucide-react';
 import type { Restaurant } from '../../types';
+import { toImageUrl } from '../../utils/imageUrl';
 
 export default function RestaurantLoginPage() {
     const { restaurantId } = useParams<{ restaurantId: string }>();
@@ -78,7 +79,7 @@ export default function RestaurantLoginPage() {
         );
     }
 
-    const logoUrl = restaurant.logo_url || restaurant.logo;
+    const logoUrl = toImageUrl(restaurant.logo_url || restaurant.logo);
 
     return (
         <div className="min-h-screen flex" style={{ background: '#f1f5f9' }}>

@@ -288,10 +288,14 @@ export default function OrdersPage() {
 
   const handleCancel = useCallback(async (orderId: number) => {
     if (!restaurantId) return;
+    const ok = window.confirm('Confirmer l’annulation de cette commande ?');
+    if (!ok) return;
     setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'cancelled' as OrderStatus } : o));
     try {
       await ordersApi.cancel(parseInt(restaurantId), orderId);
-    } catch {
+    } catch (err) {
+      console.error('Erreur annulation commande:', err);
+      window.alert('Impossible d’annuler cette commande maintenant.');
       fetchOrders();
     }
   }, [restaurantId, fetchOrders]);

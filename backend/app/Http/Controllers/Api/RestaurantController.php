@@ -107,7 +107,10 @@ class RestaurantController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $restaurant->only(['id', 'nom', 'logo', 'adresse', 'telephone', 'description']),
+            'data' => array_merge(
+                $restaurant->only(['id', 'nom', 'logo', 'adresse', 'telephone', 'description']),
+                ['logo_url' => $restaurant->logo_url]
+            ),
         ]);
     }
 

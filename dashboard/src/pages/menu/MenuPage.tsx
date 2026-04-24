@@ -7,12 +7,10 @@ import {
 import { categoriesApi, dishesApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import type { Category, Dish } from '../../types';
+import { toImageUrl } from '../../utils/imageUrl';
 
 function buildImageUrl(path?: string | null): string {
-    if (!path) return '';
-    if (path.startsWith('http')) return path;
-    const base = (import.meta.env.VITE_IMAGE_BASE_URL || '').replace(/\/$/, '');
-    return `${base}/storage/${path.replace(/^\//, '')}`;
+    return toImageUrl(path);
 }
 
 // ── Modal wrapper ─────────────────────────────────────────────────────────────

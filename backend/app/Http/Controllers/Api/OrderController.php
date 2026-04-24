@@ -9,6 +9,7 @@ use App\Models\OrderItem;
 use App\Models\Restaurant;
 use App\Models\Dish;
 use App\Services\FcmNotificationService;
+use App\Services\OrderNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -228,6 +229,12 @@ class OrderController extends Controller
                 \Illuminate\Support\Facades\Log::warning('Broadcast failed: ' . $broadcastEx->getMessage());
             }
 
+            try {
+                (new OrderNotificationService())->notifyOrderCreated($restaurant, $order->fresh());
+            } catch (\Exception $notifEx) {
+                \Illuminate\Support\Facades\Log::warning('DB notifyOrderCreated failed: ' . $notifEx->getMessage());
+            }
+
             // Notification push FCM au restaurant (owner + topic staff)
             try {
                 (new FcmNotificationService())->notifyNewOrder($restaurant, $order);
@@ -303,6 +310,12 @@ class OrderController extends Controller
             \Illuminate\Support\Facades\Log::warning('Broadcast failed: ' . $broadcastEx->getMessage());
         }
 
+        try {
+            (new OrderNotificationService())->notifyOrderStatusChanged($restaurant, $order->fresh());
+        } catch (\Exception $notifEx) {
+            \Illuminate\Support\Facades\Log::warning('DB notifyOrderStatusChanged failed: ' . $notifEx->getMessage());
+        }
+
         // Notification push FCM au client (si connecté + token disponible)
         try {
             (new FcmNotificationService())->notifyOrderStatusChanged($order->fresh()->load('user'), $request->status);
@@ -348,6 +361,12 @@ class OrderController extends Controller
             broadcast(new OrderStatusChanged($order->fresh(), 'order.updated'));
         } catch (\Exception $broadcastEx) {
             \Illuminate\Support\Facades\Log::warning('Broadcast cancel failed: ' . $broadcastEx->getMessage());
+        }
+
+        try {
+            (new OrderNotificationService())->notifyOrderStatusChanged($restaurant, $order->fresh());
+        } catch (\Exception $notifEx) {
+            \Illuminate\Support\Facades\Log::warning('DB notifyCancel failed: ' . $notifEx->getMessage());
         }
 
         // Notification FCM au client
@@ -580,6 +599,12 @@ class OrderController extends Controller
                 broadcast(new OrderStatusChanged($order, 'order.created'));
             } catch (\Exception $broadcastEx) {
                 \Illuminate\Support\Facades\Log::warning('Broadcast storeMobile failed: ' . $broadcastEx->getMessage());
+            }
+
+            try {
+                (new OrderNotificationService())->notifyOrderCreated($restaurant, $order->fresh());
+            } catch (\Exception $notifEx) {
+                \Illuminate\Support\Facades\Log::warning('DB notifyOrderCreated (mobile) failed: ' . $notifEx->getMessage());
             }
 
             // Notification push FCM au restaurant

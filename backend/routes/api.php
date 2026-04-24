@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\DeliveryController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\RatingController;
 use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\OralOrderNoteController;
@@ -103,6 +104,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/device-token', [DeviceTokenController::class, 'destroy']);
         // Historique de commandes du client connecté
         Route::get('/my-orders', [OrderController::class, 'myOrders']);
+    });
+
+    // Notifications utilisateur (persistées en base)
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::patch('/{notification}/read', [NotificationController::class, 'markAsRead']);
+        Route::patch('/read-all', [NotificationController::class, 'markAllAsRead']);
+        Route::delete('/clear', [NotificationController::class, 'clear']);
     });
 
     // Dashboard — limité à 120 requêtes/minute (protection contre scraping / boucles)

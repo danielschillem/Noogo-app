@@ -3,15 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Upload, X, MapPin, Phone, Mail, Clock, FileText, Image, Navigation, Plus, Copy, Check, ExternalLink, KeyRound } from 'lucide-react';
 import { restaurantsApi } from '../../services/api';
 import type { Restaurant } from '../../types';
+import { toImageUrl } from '../../utils/imageUrl';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
 function buildImageUrl(path?: string | null): string {
-    if (!path) return '';
-    if (path.startsWith('http')) return path;
-    const base = (import.meta.env.VITE_IMAGE_BASE_URL || '').replace(/\/$/, '');
-    const clean = path.replace(/^\//, '');
-    return `${base}/storage/${clean}`;
+    return toImageUrl(path);
 }
 
 // ─── Types ─────────────────────────────────────────────────────────────────
