@@ -142,7 +142,9 @@ class DeliveryControllerTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJsonPath('success', true)
-            ->assertJsonPath('data.status', 'pending_assignment')
+            // L'auto-assignation peut faire passer directement à "assigned"
+            // si un livreur disponible existe.
+            ->assertJsonPath('data.status', 'assigned')
             ->assertJsonPath('data.order_id', $order->id);
     }
 

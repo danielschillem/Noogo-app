@@ -24,10 +24,13 @@ class DriverLocation {
   LatLng toLatLng() => LatLng(latitude, longitude);
 
   factory DriverLocation.fromJson(Map<String, dynamic> json) {
+    final lat = json['latitude'] ?? json['lat'];
+    final lng = json['longitude'] ?? json['lng'];
+    final ts = json['timestamp'] ?? json['updated_at'];
     return DriverLocation(
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
-      timestamp: DateTime.tryParse(json['timestamp']?.toString() ?? '') ??
+      latitude: (lat as num).toDouble(),
+      longitude: (lng as num).toDouble(),
+      timestamp: DateTime.tryParse(ts?.toString() ?? '') ??
           DateTime.now(),
     );
   }

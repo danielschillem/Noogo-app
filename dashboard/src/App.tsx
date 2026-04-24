@@ -228,9 +228,9 @@ function AppRoutes() {
           </AdminRoute>
         } />
         <Route path="deliveries" element={
-          <AdminRoute>
+          <RestaurantOpsRoute requiredPermission="manage_orders">
             <DeliveriesPage />
-          </AdminRoute>
+          </RestaurantOpsRoute>
         } />
         <Route path="admin" element={
           <AdminRoute>

@@ -299,6 +299,8 @@ export const deliveryApi = {
   // Deliveries (admin)
   getAll: (params?: { status?: string; driver_id?: number; page?: number }) =>
     api.get('/admin/deliveries', { params }),
+  getRestaurantDeliveries: (restaurantId: number, params?: { status?: string; driver_id?: number; page?: number }) =>
+    api.get(`/restaurants/${restaurantId}/deliveries`, { params }),
   getById: (id: number) => api.get(`/deliveries/${id}`),
   requestDelivery: (orderId: number, data: {
     client_lat?: number; client_lng?: number; client_address?: string; fee?: number; notes?: string;
@@ -311,6 +313,8 @@ export const deliveryApi = {
   // Drivers (admin)
   getDrivers: (params?: { status?: string; zone?: string; search?: string; page?: number }) =>
     api.get('/admin/drivers', { params }),
+  getRestaurantAvailableDrivers: (restaurantId: number, params?: { zone?: string; search?: string; page?: number }) =>
+    api.get(`/restaurants/${restaurantId}/drivers/available`, { params }),
   createDriver: (data: { name: string; phone: string; zone?: string; user_id?: number }) =>
     api.post('/admin/drivers', data),
   registerDriver: (data: { name: string; telephone: string; password: string; password_confirmation: string; zone?: string }) =>

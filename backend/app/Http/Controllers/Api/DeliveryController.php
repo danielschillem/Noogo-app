@@ -10,15 +10,16 @@ use App\Models\AdminAuditLog;
 use App\Models\Delivery;
 use App\Models\DeliveryDriver;
 use App\Models\Order;
-use App\Services\FcmNotificationService;
+use App\Models\Restaurant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class DeliveryController extends Controller
 {
-    public function __construct(private FcmNotificationService $fcm)
+    private function fcm()
     {
+        return app()->make(\App\Services\FcmNotificationService::class);
     }
 
     private function logAdminAction(Request $request, string $action, string $targetType, int $targetId, array $metadata = []): void
@@ -108,7 +109,7 @@ class DeliveryController extends Controller
             }
 
             if ($availableDriver->fcm_token) {
-                $this->fcm->sendToToken(
+                $this->fcm()->sendToToken(
                     $availableDriver->fcm_token,
                     'Nouvelle livraison assignée',
                     "Commande #{$order->id} — {$order->customer_name}",
@@ -175,7 +176,7 @@ class DeliveryController extends Controller
         // DEL-B11 : FCM au livreur — nouvelle commande assignée
         if ($driver->fcm_token) {
             $order = $delivery->order;
-            $this->fcm->sendToToken(
+            $this->fcm()->sendToToken(
                 $driver->fcm_token,
                 'Nouvelle livraison assignée',
                 "Commande #{$order->id} — {$order->customer_name}",
@@ -252,7 +253,7 @@ class DeliveryController extends Controller
                     'delivered' => ['Commande livrée !', 'Votre commande a été livrée avec succès. Bon appétit !'],
                 ];
                 [$title, $body] = $messages[$newStatus];
-                $this->fcm->sendToToken(
+                $this->fcm()->sendToToken(
                     $clientUser->fcm_token,
                     $title,
                     $body,
@@ -356,6 +357,52 @@ class DeliveryController extends Controller
         return response()->json([
             'success' => true,
             'data' => $query->paginate(20),
+        ]);
+    }
+
+    /**
+     * GET /api/restaurants/{restaurant}/deliveries
+     *
+     * Liste des livraisons d'un restaurant (owner/manager/manage_orders ou admin).
+     */
+    public function restaurantIndex(Request $request, Restaurant $restaurant): JsonResponse
+    {
+        $this->authorize('view', $restaurant);
+
+        $query = Delivery::with(['order.restaurant', 'driver'])
+            ->whereHas('order', fn($q) => $q->where('restaurant_id', $restaurant->id))
+            ->when($request->status, fn($q) => $q->where('status', $request->status))
+            ->when($request->driver_id, fn($q) => $q->where('delivery_driver_id', $request->driver_id))
+            ->latest();
+
+        return response()->json([
+            'success' => true,
+            'data' => $query->paginate(20),
+        ]);
+    }
+
+    /**
+     * GET /api/restaurants/{restaurant}/drivers/available
+     *
+     * Livreurs disponibles pour affectation depuis l'espace restaurant.
+     */
+    public function restaurantAvailableDrivers(Request $request, Restaurant $restaurant): JsonResponse
+    {
+        $this->authorize('view', $restaurant);
+
+        $drivers = DeliveryDriver::where('status', 'available')
+            ->when($request->zone, fn($q) => $q->where('zone', $request->zone))
+            ->when($request->search, fn($q) => $q->where(function ($q) use ($request) {
+                $search = '%' . $request->search . '%';
+                $q->where('name', 'like', $search)
+                    ->orWhere('phone', 'like', $search);
+            }))
+            ->latest()
+            ->paginate(20);
+
+        return response()->json([
+            'success' => true,
+            'data' => $drivers,
         ]);
     }
 

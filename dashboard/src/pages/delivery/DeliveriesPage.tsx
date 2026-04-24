@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useInterval } from '../../hooks/useInterval';
+import { useAuth } from '../../context/AuthContext';
 import {
     Package,
     RefreshCw,
@@ -98,6 +99,8 @@ function exportCsv(deliveries: Delivery[]) {
 }
 
 export default function DeliveriesPage() {
+    const { isSuperAdmin, selectedRestaurantId, lockedRestaurantId } = useAuth();
+    const contextRestaurantId = lockedRestaurantId ?? selectedRestaurantId ?? null;
     const [deliveries, setDeliveries] = useState<Delivery[]>([]);
     const [drivers, setDrivers] = useState<DeliveryDriver[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -111,20 +114,30 @@ export default function DeliveriesPage() {
 
     const fetchDeliveries = useCallback(async () => {
         try {
-            const res = await deliveryApi.getAll({
-                status: statusFilter || undefined,
-            });
+            const res = isSuperAdmin
+                ? await deliveryApi.getAll({
+                    status: statusFilter || undefined,
+                })
+                : contextRestaurantId
+                    ? await deliveryApi.getRestaurantDeliveries(contextRestaurantId, {
+                        status: statusFilter || undefined,
+                    })
+                    : { data: { data: [] } };
             setDeliveries(res.data.data?.data ?? res.data.data ?? []);
         } catch { /* ignore */ }
         finally { setIsLoading(false); }
-    }, [statusFilter]);
+    }, [statusFilter, isSuperAdmin, contextRestaurantId]);
 
     const fetchDrivers = useCallback(async () => {
         try {
-            const res = await deliveryApi.getDrivers({ status: 'available' });
+            const res = isSuperAdmin
+                ? await deliveryApi.getDrivers({ status: 'available' })
+                : contextRestaurantId
+                    ? await deliveryApi.getRestaurantAvailableDrivers(contextRestaurantId)
+                    : { data: { data: [] } };
             setDrivers(res.data.data?.data ?? res.data.data ?? []);
         } catch { /* ignore */ }
-    }, []);
+    }, [isSuperAdmin, contextRestaurantId]);
 
     useEffect(() => { fetchDeliveries(); }, [fetchDeliveries]);
     useEffect(() => { fetchDrivers(); }, [fetchDrivers]);

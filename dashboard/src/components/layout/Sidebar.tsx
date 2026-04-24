@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Star,
   ClipboardList,
+  Truck,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
@@ -31,6 +32,7 @@ const RESTAURANT_ADMIN_NAV = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Restaurants', href: '/restaurants', icon: Store },
   { name: 'Commandes', href: '/orders', icon: ShoppingBag },
+  { name: 'Livraisons', href: '/deliveries', icon: Truck },
   { name: 'Menu', href: '/menu', icon: UtensilsCrossed },
   { name: 'Commandes orales', href: '/oral-notes', icon: ClipboardList },
   { name: 'Promotions', href: '/promotions', icon: Tag },
@@ -78,6 +80,7 @@ export default function Sidebar({ restaurantId }: { restaurantId?: number }) {
 
   const staffNav = [
     canManageOrders ? { name: 'Commandes', href: '/orders', icon: ShoppingBag } : null,
+    canManageOrders ? { name: 'Livraisons', href: '/deliveries', icon: Truck } : null,
     canManageMenu ? { name: 'Menu', href: '/menu', icon: UtensilsCrossed } : null,
     canManageOrders ? { name: 'Commandes orales', href: '/oral-notes', icon: ClipboardList } : null,
     canViewStats ? { name: 'Promotions', href: '/promotions', icon: Tag } : null,

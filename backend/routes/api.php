@@ -142,6 +142,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/orders-statistics', [OrderController::class, 'statistics']);
         Route::get('/orders-pending-count', [OrderController::class, 'pendingCount']);
 
+        // Livraisons du restaurant (affectation côté restaurant)
+        Route::get('/deliveries', [DeliveryController::class, 'restaurantIndex']);
+        Route::get('/drivers/available', [DeliveryController::class, 'restaurantAvailableDrivers']);
+
         // Bloc note — commandes prises à l’oral (brouillon + validation avec snapshot des plats)
         Route::get('/oral-order-notes', [OralOrderNoteController::class, 'index']);
         Route::post('/oral-order-notes', [OralOrderNoteController::class, 'store']);
