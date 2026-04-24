@@ -67,6 +67,8 @@ class DeliveryControllerTest extends TestCase
             'nom' => 'Maquis Test',
             'telephone' => '70000000',
             'adresse' => 'Ouagadougou',
+            'latitude' => 12.3700,
+            'longitude' => -1.5200,
             'is_active' => true,
         ]);
 
@@ -137,7 +139,6 @@ class DeliveryControllerTest extends TestCase
                 'client_lat' => 12.37,
                 'client_lng' => -1.52,
                 'client_address' => '123 Rue de la Paix',
-                'fee' => 500,
             ]);
 
         $response->assertStatus(201)
@@ -145,7 +146,25 @@ class DeliveryControllerTest extends TestCase
             // L'auto-assignation peut faire passer directement à "assigned"
             // si un livreur disponible existe.
             ->assertJsonPath('data.status', 'assigned')
+            ->assertJsonPath('data.fee', '1000.00')
             ->assertJsonPath('data.order_id', $order->id);
+    }
+
+    public function test_delivery_fee_increases_above_five_km(): void
+    {
+        $order = $this->createDeliveryOrder();
+
+        // ~6.67 km depuis (12.37,-1.52) -> extra ~1.67 km => 1000 + 1.67*115 ~= 1192.05 => 1193
+        $response = $this->actingAs($this->owner)
+            ->postJson("/api/orders/{$order->id}/request-delivery", [
+                'client_lat' => 12.4300,
+                'client_lng' => -1.5200,
+                'client_address' => 'Zone plus éloignée',
+            ]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.fee', '1193.00');
     }
 
     public function test_cannot_request_delivery_for_non_livraison_order(): void

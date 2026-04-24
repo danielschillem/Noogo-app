@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\DB;
  */
 class OralOrderNoteController extends Controller
 {
+    private const DELIVERY_BASE_FEE = 1000.0;
     public function index(Request $request, Restaurant $restaurant): JsonResponse
     {
         $this->authorize('manageOrders', $restaurant);
@@ -290,6 +291,10 @@ class OralOrderNoteController extends Controller
             }
 
             $order->calculateTotal();
+            if ($order->order_type === 'livraison') {
+                $order->total_amount = (float) $order->total_amount + self::DELIVERY_BASE_FEE;
+                $order->save();
+            }
 
             $oralOrderNote->update(['converted_order_id' => $order->id]);
 

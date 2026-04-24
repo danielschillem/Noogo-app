@@ -16,6 +16,10 @@ use Illuminate\Support\Facades\Validator;
 
 class OrderController extends Controller
 {
+    private const DELIVERY_BASE_FEE = 1000.0;
+    private const DELIVERY_INCLUDED_KM = 5.0;
+    private const DELIVERY_EXTRA_PER_KM = 115.0;
+
     /**
      * Vérifie que la commande appartient bien au restaurant de l’URL (anti-IDOR).
      */
@@ -24,6 +28,53 @@ class OrderController extends Controller
         if ((int) $order->restaurant_id !== (int) $restaurant->id) {
             abort(404);
         }
+    }
+
+    private function haversineKm(float $lat1, float $lng1, float $lat2, float $lng2): float
+    {
+        $earthRadius = 6371.0;
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLng = deg2rad($lng2 - $lng1);
+        $a = sin($dLat / 2) ** 2
+            + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLng / 2) ** 2;
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+        return $earthRadius * $c;
+    }
+
+    private function computeDeliveryFee(?float $distanceKm): float
+    {
+        if ($distanceKm === null || $distanceKm <= self::DELIVERY_INCLUDED_KM) {
+            return self::DELIVERY_BASE_FEE;
+        }
+
+        $extraKm = $distanceKm - self::DELIVERY_INCLUDED_KM;
+        return (float) ceil(self::DELIVERY_BASE_FEE + ($extraKm * self::DELIVERY_EXTRA_PER_KM));
+    }
+
+    private function applyDeliveryPricing(Order $order, Restaurant $restaurant, ?float $deliveryLat, ?float $deliveryLng): void
+    {
+        if ($order->order_type !== 'livraison') {
+            return;
+        }
+
+        $distanceKm = null;
+        if (
+            $restaurant->latitude !== null
+            && $restaurant->longitude !== null
+            && $deliveryLat !== null
+            && $deliveryLng !== null
+        ) {
+            $distanceKm = $this->haversineKm(
+                (float) $restaurant->latitude,
+                (float) $restaurant->longitude,
+                $deliveryLat,
+                $deliveryLng
+            );
+        }
+
+        $deliveryFee = $this->computeDeliveryFee($distanceKm);
+        $order->total_amount = (float) $order->total_amount + $deliveryFee;
+        $order->save();
     }
 
     /**
@@ -96,6 +147,9 @@ class OrderController extends Controller
             'customer_phone' => 'nullable|string|max:20',
             'order_type' => 'required|in:sur_place,a_emporter,livraison',
             'table_number' => 'nullable|string|max:10',
+            'delivery_address' => 'nullable|string|max:500',
+            'delivery_lat' => 'nullable|numeric|between:-90,90',
+            'delivery_lng' => 'nullable|numeric|between:-180,180',
             'payment_method' => 'required|string|max:50',
             'mobile_money_provider' => 'nullable|string|max:50',
             'notes' => 'nullable|string',
@@ -124,6 +178,9 @@ class OrderController extends Controller
                 'customer_phone' => $request->customer_phone,
                 'order_type' => $request->order_type,
                 'table_number' => $request->table_number,
+                'delivery_address' => $request->delivery_address,
+                'delivery_lat' => $request->delivery_lat,
+                'delivery_lng' => $request->delivery_lng,
                 'payment_method' => $request->payment_method,
                 'mobile_money_provider' => $request->mobile_money_provider,
                 'notes' => $request->notes,
@@ -155,6 +212,12 @@ class OrderController extends Controller
 
             // Calculer et sauvegarder le total de la commande
             $order->calculateTotal();
+            $this->applyDeliveryPricing(
+                $order,
+                $restaurant,
+                $request->delivery_lat !== null ? (float) $request->delivery_lat : null,
+                $request->delivery_lng !== null ? (float) $request->delivery_lng : null
+            );
 
             DB::commit();
 
@@ -503,6 +566,12 @@ class OrderController extends Controller
             }
 
             $order->calculateTotal();
+            $this->applyDeliveryPricing(
+                $order,
+                $restaurant,
+                $request->delivery_lat !== null ? (float) $request->delivery_lat : null,
+                $request->delivery_lng !== null ? (float) $request->delivery_lng : null
+            );
 
             DB::commit();
 

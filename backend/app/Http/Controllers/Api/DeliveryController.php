@@ -17,9 +17,35 @@ use Illuminate\Support\Facades\DB;
 
 class DeliveryController extends Controller
 {
+    private const DELIVERY_BASE_FEE = 1000.0;
+    private const DELIVERY_INCLUDED_KM = 5.0;
+    private const DELIVERY_EXTRA_PER_KM = 115.0;
+
     private function fcm()
     {
         return app()->make(\App\Services\FcmNotificationService::class);
+    }
+
+    private function haversineKm(float $lat1, float $lng1, float $lat2, float $lng2): float
+    {
+        $earthRadius = 6371.0;
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLng = deg2rad($lng2 - $lng1);
+        $a = sin($dLat / 2) ** 2
+            + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLng / 2) ** 2;
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+        return $earthRadius * $c;
+    }
+
+    private function computeDeliveryFee(?float $distanceKm): float
+    {
+        if ($distanceKm === null || $distanceKm <= self::DELIVERY_INCLUDED_KM) {
+            return self::DELIVERY_BASE_FEE;
+        }
+
+        $extraKm = $distanceKm - self::DELIVERY_INCLUDED_KM;
+        $raw = self::DELIVERY_BASE_FEE + ($extraKm * self::DELIVERY_EXTRA_PER_KM);
+        return (float) ceil($raw);
     }
 
     private function logAdminAction(Request $request, string $action, string $targetType, int $targetId, array $metadata = []): void
@@ -75,17 +101,38 @@ class DeliveryController extends Controller
             'client_lat' => 'nullable|numeric|between:-90,90',
             'client_lng' => 'nullable|numeric|between:-180,180',
             'client_address' => 'nullable|string|max:255',
-            'fee' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:500',
         ]);
+
+        $restaurant = $order->restaurant;
+        $clientLat = isset($validated['client_lat']) ? (float) $validated['client_lat'] : null;
+        $clientLng = isset($validated['client_lng']) ? (float) $validated['client_lng'] : null;
+
+        $distanceKm = null;
+        if (
+            $restaurant
+            && $restaurant->latitude !== null
+            && $restaurant->longitude !== null
+            && $clientLat !== null
+            && $clientLng !== null
+        ) {
+            $distanceKm = $this->haversineKm(
+                (float) $restaurant->latitude,
+                (float) $restaurant->longitude,
+                $clientLat,
+                $clientLng
+            );
+        }
+        $fee = $this->computeDeliveryFee($distanceKm);
 
         $delivery = Delivery::create([
             'order_id' => $order->id,
             'status' => 'pending_assignment',
-            'client_lat' => $validated['client_lat'] ?? null,
-            'client_lng' => $validated['client_lng'] ?? null,
+            'client_lat' => $clientLat,
+            'client_lng' => $clientLng,
             'client_address' => $validated['client_address'] ?? null,
-            'fee' => $validated['fee'] ?? 0,
+            'distance_km' => $distanceKm,
+            'fee' => $fee,
             'notes' => $validated['notes'] ?? null,
         ]);
 

@@ -96,6 +96,23 @@ class StoreMobileTest extends TestCase
         $this->assertEquals(4500, $order->total_amount);
     }
 
+    public function test_livraison_applique_frais_de_base_dans_le_total(): void
+    {
+        $response = $this->postJson('/api/commandes', $this->payload([
+            'type' => 'livraison',
+            'delivery_address' => 'Centre-ville',
+            'delivery_lat' => 12.37,
+            'delivery_lng' => -1.52,
+            'plats' => [['id' => $this->dish->id, 'quantite' => 2]],
+        ]));
+
+        $response->assertStatus(201);
+
+        $order = Order::latest()->first();
+        // 2 × 1500 + 1000 (frais livraison base)
+        $this->assertEquals(4000, $order->total_amount);
+    }
+
     public function test_retourne_422_si_restaurant_nexiste_pas(): void
     {
         $response = $this->postJson('/api/commandes', $this->payload([
