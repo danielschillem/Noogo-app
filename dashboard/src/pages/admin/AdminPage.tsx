@@ -2,10 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import {
     Users, Store, ShoppingBag, TrendingUp, Search, RefreshCw,
     Shield, ShieldOff, Trash2, Plus, X, Eye, EyeOff, Check,
-    Activity, Edit2,
+    Activity, Edit2, FileText,
 } from 'lucide-react';
 import { adminApi } from '../../services/api';
-import type { AdminRestaurant, AdminStats, AdminUser } from '../../types';
+import type { AdminAuditLog, AdminRestaurant, AdminStats, AdminUser } from '../../types';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -284,7 +284,13 @@ function UserRow({ user, onToggleAdmin, onEdit, onDelete }: {
 
 // ── RestaurantRow ─────────────────────────────────────────────────────────────
 
-function RestaurantRow({ restaurant, onToggle }: { restaurant: AdminRestaurant; onToggle: () => void }) {
+function RestaurantRow({
+    restaurant, onToggle, onLicenseChange,
+}: {
+    restaurant: AdminRestaurant;
+    onToggle: () => void;
+    onLicenseChange: (status: 'active' | 'suspended' | 'expired' | 'trial') => void;
+}) {
     return (
         <tr className="table-row-hover" style={{ borderBottom: '1px solid #f8fafc', opacity: restaurant.is_active ? 1 : 0.6 }}>
             <td className="px-5 py-3.5">
@@ -318,6 +324,19 @@ function RestaurantRow({ restaurant, onToggle }: { restaurant: AdminRestaurant; 
                     {restaurant.is_active ? <><Check size={12} className="inline mr-0.5" />Actif</> : 'Inactif'}
                 </button>
             </td>
+            <td className="px-5 py-3.5">
+                <select
+                    value={restaurant.license_status ?? 'active'}
+                    onChange={(e) => onLicenseChange(e.target.value as 'active' | 'suspended' | 'expired' | 'trial')}
+                    className="text-xs px-2.5 py-1.5 rounded-lg font-semibold"
+                    style={{ background: '#f8fafc', color: '#334155', border: '1px solid #e2e8f0' }}
+                >
+                    <option value="active">Active</option>
+                    <option value="trial">Trial</option>
+                    <option value="suspended">Suspendue</option>
+                    <option value="expired">Expirée</option>
+                </select>
+            </td>
             <td className="px-5 py-3.5 text-xs" style={{ color: '#94a3b8' }}>
                 {new Date(restaurant.created_at).toLocaleDateString('fr-FR')}
             </td>
@@ -327,13 +346,14 @@ function RestaurantRow({ restaurant, onToggle }: { restaurant: AdminRestaurant; 
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-type Tab = 'users' | 'restaurants';
+type Tab = 'users' | 'restaurants' | 'logs';
 
 export default function AdminPage() {
     const [tab, setTab] = useState<Tab>('users');
     const [stats, setStats] = useState<AdminStats | null>(null);
     const [users, setUsers] = useState<AdminUser[]>([]);
     const [restaurants, setRestaurants] = useState<AdminRestaurant[]>([]);
+    const [auditLogs, setAuditLogs] = useState<AdminAuditLog[]>([]);
     const [userSearch, setUserSearch] = useState('');
     const [restSearch, setRestSearch] = useState('');
     const [isLoading, setIsLoading] = useState(true);
@@ -365,18 +385,27 @@ export default function AdminPage() {
         } catch { /* ignore */ }
     }, [restSearch]);
 
+    const loadAuditLogs = useCallback(async () => {
+        try {
+            const r = await adminApi.listAuditLogs({ per_page: 50 });
+            const payload = r.data.data;
+            setAuditLogs(payload.data ?? payload);
+        } catch { /* ignore */ }
+    }, []);
+
     const loadAll = useCallback(async (silent = false) => {
         if (!silent) setIsRefreshing(true);
-        await Promise.all([loadStats(), loadUsers(), loadRestaurants()]);
+        await Promise.all([loadStats(), loadUsers(), loadRestaurants(), loadAuditLogs()]);
         setIsLoading(false);
         setIsRefreshing(false);
-    }, [loadStats, loadUsers, loadRestaurants]);
+    }, [loadStats, loadUsers, loadRestaurants, loadAuditLogs]);
 
     useEffect(() => { loadAll(); }, [loadAll]);
 
     // Re-filter users on search change
     useEffect(() => { loadUsers(); }, [loadUsers]);
     useEffect(() => { loadRestaurants(); }, [loadRestaurants]);
+    useEffect(() => { loadAuditLogs(); }, [loadAuditLogs]);
 
     const handleToggleAdmin = async (user: AdminUser) => {
         try {
@@ -397,6 +426,22 @@ export default function AdminPage() {
         try {
             await adminApi.toggleRestaurantActive(r.id);
             loadRestaurants(); loadStats();
+        } catch { /* ignore */ }
+    };
+
+    const handleLicenseStatusChange = async (
+        restaurant: AdminRestaurant,
+        status: 'active' | 'suspended' | 'expired' | 'trial'
+    ) => {
+        try {
+            await adminApi.updateRestaurantLicense(restaurant.id, {
+                license_status: status,
+                license_plan: restaurant.license_plan ?? null,
+                license_expires_at: restaurant.license_expires_at ?? null,
+                license_max_staff: restaurant.license_max_staff ?? null,
+            });
+            loadRestaurants();
+            loadAuditLogs();
         } catch { /* ignore */ }
     };
 
@@ -453,6 +498,7 @@ export default function AdminPage() {
                 {([
                     { key: 'users', label: `Utilisateurs (${users.length})`, icon: Users },
                     { key: 'restaurants', label: `Restaurants (${restaurants.length})`, icon: Store },
+                    { key: 'logs', label: `Journaux (${auditLogs.length})`, icon: FileText },
                 ] as { key: Tab; label: string; icon: React.ElementType }[]).map(t => (
                     <button key={t.key} onClick={() => setTab(t.key)}
                         className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
@@ -526,19 +572,62 @@ export default function AdminPage() {
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr style={{ borderBottom: '1px solid #f1f5f9', background: '#f8fafc' }}>
-                                        {['Restaurant', 'Propriétaire', 'Commandes', 'Statut', 'Créé le'].map(h => (
+                                        {['Restaurant', 'Propriétaire', 'Commandes', 'Activation', 'Licence', 'Créé le'].map(h => (
                                             <th key={h} className="text-left px-5 py-3.5 text-xs font-semibold" style={{ color: '#64748b' }}>{h}</th>
                                         ))}
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {restaurants.map(r => (
-                                        <RestaurantRow key={r.id} restaurant={r} onToggle={() => handleToggleRestaurant(r)} />
+                                        <RestaurantRow
+                                            key={r.id}
+                                            restaurant={r}
+                                            onToggle={() => handleToggleRestaurant(r)}
+                                            onLicenseChange={(status) => handleLicenseStatusChange(r, status)}
+                                        />
                                     ))}
                                 </tbody>
                             </table>
                         )}
                     </div>
+                </div>
+            )}
+
+            {/* ── LOGS TAB ── */}
+            {tab === 'logs' && (
+                <div className="rounded-2xl overflow-hidden" style={{ background: 'white', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                    {auditLogs.length === 0 ? (
+                        <div className="text-center py-16">
+                            <FileText className="h-10 w-10 mx-auto mb-3" style={{ color: '#cbd5e1' }} />
+                            <p className="font-medium" style={{ color: '#374151' }}>Aucun journal d’audit</p>
+                        </div>
+                    ) : (
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr style={{ borderBottom: '1px solid #f1f5f9', background: '#f8fafc' }}>
+                                    {['Action', 'Cible', 'Admin', 'Date'].map(h => (
+                                        <th key={h} className="text-left px-5 py-3.5 text-xs font-semibold" style={{ color: '#64748b' }}>{h}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {auditLogs.map((log) => (
+                                    <tr key={log.id} style={{ borderBottom: '1px solid #f8fafc' }}>
+                                        <td className="px-5 py-3.5 text-xs font-semibold" style={{ color: '#0f172a' }}>{log.action}</td>
+                                        <td className="px-5 py-3.5 text-xs" style={{ color: '#64748b' }}>
+                                            {log.target_type ?? '—'}{log.target_id ? ` #${log.target_id}` : ''}
+                                        </td>
+                                        <td className="px-5 py-3.5 text-xs" style={{ color: '#64748b' }}>
+                                            {log.admin_user?.name ?? 'Système'}
+                                        </td>
+                                        <td className="px-5 py-3.5 text-xs" style={{ color: '#94a3b8' }}>
+                                            {new Date(log.created_at).toLocaleString('fr-FR')}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
                 </div>
             )}
 

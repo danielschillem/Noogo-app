@@ -1,0 +1,61 @@
+name: Portal Smoke Monitor
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Toutes les 15 minutes
+    - cron: "*/15 * * * *"
+  push:
+    branches: [develop]
+    paths:
+      - "dashboard/**"
+      - "nginx.do.conf"
+      - ".github/workflows/portal-smoke.yml"
+
+jobs:
+  probe-portal:
+    name: Probe portal and API
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Verify /portal and hashed bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE_URL="https://noogo-e5ygx.ondigitalocean.app"
+
+          echo "Fetching /portal HTML..."
+          HTML="$(curl -fsSL "${BASE_URL}/portal")"
+          BUNDLE_PATH="$(printf '%s' "$HTML" | grep -oE '/assets/index-[^"]+\.js' | head -n1 || true)"
+
+          if [[ -z "${BUNDLE_PATH}" ]]; then
+            echo "ERROR: impossible de trouver le bundle index-*.js dans /portal"
+            exit 1
+          fi
+
+          echo "Bundle detected: ${BUNDLE_PATH}"
+          BUNDLE_STATUS="$(curl -s -o /dev/null -w '%{http_code}' "${BASE_URL}${BUNDLE_PATH}")"
+          if [[ "${BUNDLE_STATUS}" != "200" ]]; then
+            echo "ERROR: bundle ${BUNDLE_PATH} retourne ${BUNDLE_STATUS}"
+            exit 1
+          fi
+
+      - name: Verify portal API endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE_URL="https://noogo-e5ygx.ondigitalocean.app"
+          STATUS="$(curl -s -o /tmp/portal.json -w '%{http_code}' "${BASE_URL}/api/portal/restaurants")"
+          if [[ "${STATUS}" != "200" ]]; then
+            echo "ERROR: /api/portal/restaurants retourne ${STATUS}"
+            exit 1
+          fi
+
+          if ! grep -q '"success":true' /tmp/portal.json; then
+            echo "ERROR: payload inattendu pour /api/portal/restaurants"
+            cat /tmp/portal.json
+            exit 1
+          fi
+
+          echo "Portal API OK"

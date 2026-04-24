@@ -26,6 +26,7 @@ export default function PortalLoginPage() {
 
     const [restaurants, setRestaurants] = useState<PortalRestaurant[]>([]);
     const [loadingList, setLoadingList] = useState(true);
+    const [listError, setListError] = useState('');
     const [search, setSearch] = useState('');
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [selected, setSelected] = useState<PortalRestaurant | null>(null);
@@ -43,13 +44,37 @@ export default function PortalLoginPage() {
         }
     }, [isAuthenticated, lockedRestaurantId, navigate]);
 
+    const loadRestaurants = async () => {
+        setLoadingList(true);
+        setListError('');
+        try {
+            const response = await portalApi.listRestaurants();
+            setRestaurants(response.data.data ?? []);
+        } catch {
+            setRestaurants([]);
+            setListError('Impossible de charger les restaurants. Vérifiez la connexion puis réessayez.');
+        } finally {
+            setLoadingList(false);
+        }
+    };
+
     // Charger la liste des restaurants
     useEffect(() => {
-        portalApi.listRestaurants()
-            .then(r => setRestaurants(r.data.data ?? []))
-            .catch(() => setRestaurants([]))
-            .finally(() => setLoadingList(false));
+        loadRestaurants();
     }, []);
+
+    useEffect(() => {
+        if (!dropdownOpen) {
+            return;
+        }
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                setDropdownOpen(false);
+            }
+        };
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [dropdownOpen]);
 
     const filtered = restaurants.filter(r =>
         r.nom.toLowerCase().includes(search.toLowerCase()) ||
@@ -255,6 +280,20 @@ export default function PortalLoginPage() {
                                         {loadingList ? (
                                             <div className="flex items-center justify-center py-6">
                                                 <Loader2 className="h-5 w-5 animate-spin" style={{ color: '#f97316' }} />
+                                            </div>
+                                        ) : listError ? (
+                                            <div className="py-4 px-3 space-y-2">
+                                                <p className="text-xs text-center" style={{ color: '#dc2626' }}>
+                                                    {listError}
+                                                </p>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => void loadRestaurants()}
+                                                    className="w-full py-2 rounded-lg text-sm font-semibold"
+                                                    style={{ background: '#fff7ed', color: '#f97316', border: '1px solid #fed7aa' }}
+                                                >
+                                                    Réessayer
+                                                </button>
                                             </div>
                                         ) : filtered.length === 0 ? (
                                             <p className="text-sm text-center py-4" style={{ color: '#94a3b8' }}>

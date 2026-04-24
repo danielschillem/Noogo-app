@@ -247,6 +247,8 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     // Restaurants
     Route::get('/restaurants', [AdminController::class, 'listRestaurants']);
     Route::post('/restaurants/{restaurant}/toggle-active', [AdminController::class, 'toggleRestaurantActive']);
+    Route::put('/restaurants/{restaurant}/license', [AdminController::class, 'updateRestaurantLicense']);
+    Route::get('/audit-logs', [AdminController::class, 'listAuditLogs']);
 
     // Livreurs (CRUD admin)
     Route::get('/deliveries', [DeliveryController::class, 'index']);

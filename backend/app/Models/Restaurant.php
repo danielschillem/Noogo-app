@@ -27,6 +27,10 @@ class Restaurant extends Model
         'is_active',
         'is_open_override',
         'qr_code',
+        'license_plan',
+        'license_status',
+        'license_expires_at',
+        'license_max_staff',
         'latitude',
         'longitude',
     ];
@@ -35,6 +39,7 @@ class Restaurant extends Model
         'images' => 'array',
         'is_active' => 'boolean',
         'is_open_override' => 'boolean',
+        'license_expires_at' => 'datetime',
         'latitude' => 'float',
         'longitude' => 'float',
     ];

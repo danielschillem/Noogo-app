@@ -7,6 +7,7 @@ use App\Models\Dish;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Restaurant;
+use App\Models\RestaurantStaff;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -82,6 +83,16 @@ class OrderControllerTest extends TestCase
         ]);
 
         return $order;
+    }
+
+    private function attachStaff(User $user, string $role): RestaurantStaff
+    {
+        return RestaurantStaff::create([
+            'user_id' => $user->id,
+            'restaurant_id' => $this->restaurant->id,
+            'role' => $role,
+            'is_active' => true,
+        ]);
     }
 
     // =========================================================================
@@ -238,6 +249,31 @@ class OrderControllerTest extends TestCase
             ->assertJsonPath('data.id', $order->id);
     }
 
+    public function test_show_refuse_une_commande_dun_autre_restaurant(): void
+    {
+        $otherRestaurant = Restaurant::create([
+            'user_id' => $this->other->id,
+            'nom' => 'Resto voisin',
+            'telephone' => '72222222',
+            'adresse' => 'Bobo',
+            'is_active' => true,
+        ]);
+
+        $foreignOrder = Order::create([
+            'restaurant_id' => $otherRestaurant->id,
+            'status' => 'pending',
+            'order_type' => 'sur_place',
+            'payment_method' => 'cash',
+            'total_amount' => 1000,
+            'order_date' => now(),
+        ]);
+
+        $response = $this->actingAs($this->owner)
+            ->getJson("/api/restaurants/{$this->restaurant->id}/orders/{$foreignOrder->id}");
+
+        $response->assertStatus(404);
+    }
+
     // =========================================================================
     // UPDATE STATUS
     // =========================================================================
@@ -364,6 +400,17 @@ class OrderControllerTest extends TestCase
             ->assertStatus(401);
     }
 
+    public function test_statistics_refuse_le_role_waiter(): void
+    {
+        $waiter = User::factory()->create(['is_admin' => false]);
+        $this->attachStaff($waiter, 'waiter');
+
+        $response = $this->actingAs($waiter)
+            ->getJson("/api/restaurants/{$this->restaurant->id}/orders-statistics");
+
+        $response->assertStatus(403);
+    }
+
     // =========================================================================
     // PENDING COUNT
     // =========================================================================
@@ -384,5 +431,27 @@ class OrderControllerTest extends TestCase
             ->assertJsonPath('data.confirmed', 1)
             ->assertJsonPath('data.preparing', 1)
             ->assertJsonPath('data.ready', 0);
+    }
+
+    public function test_waiter_peut_gerer_les_commandes_sans_acces_aux_stats(): void
+    {
+        $waiter = User::factory()->create(['is_admin' => false]);
+        $this->attachStaff($waiter, 'waiter');
+        $order = $this->createOrder(['status' => 'pending']);
+
+        $this->actingAs($waiter)
+            ->getJson("/api/restaurants/{$this->restaurant->id}/orders")
+            ->assertStatus(200);
+
+        $this->actingAs($waiter)
+            ->patchJson("/api/restaurants/{$this->restaurant->id}/orders/{$order->id}/status", [
+                'status' => 'confirmed',
+            ])
+            ->assertStatus(200)
+            ->assertJsonPath('data.status', 'confirmed');
+
+        $this->actingAs($waiter)
+            ->getJson("/api/restaurants/{$this->restaurant->id}/orders-statistics")
+            ->assertStatus(403);
     }
 }

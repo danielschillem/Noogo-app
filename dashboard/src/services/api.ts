@@ -284,6 +284,14 @@ export const adminApi = {
   listRestaurants: (params?: { search?: string; page?: number; per_page?: number; is_active?: boolean }) =>
     api.get('/admin/restaurants', { params }),
   toggleRestaurantActive: (id: number) => api.post(`/admin/restaurants/${id}/toggle-active`),
+  updateRestaurantLicense: (id: number, data: {
+    license_plan?: string | null;
+    license_status: 'active' | 'suspended' | 'expired' | 'trial';
+    license_expires_at?: string | null;
+    license_max_staff?: number | null;
+  }) => api.put(`/admin/restaurants/${id}/license`, data),
+  listAuditLogs: (params?: { action?: string; target_type?: string; page?: number; per_page?: number }) =>
+    api.get('/admin/audit-logs', { params }),
 };
 
 // Delivery API

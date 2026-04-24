@@ -249,6 +249,10 @@ export interface AdminRestaurant {
   email?: string;
   logo_url?: string;
   is_active: boolean;
+  license_plan?: string | null;
+  license_status?: 'active' | 'suspended' | 'expired' | 'trial';
+  license_expires_at?: string | null;
+  license_max_staff?: number | null;
   orders_count: number;
   dishes_count: number;
   created_at: string;
@@ -260,6 +264,17 @@ export interface AdminStats {
   restaurants: { total: number; active: number; this_month: number };
   orders: { total: number; today: number; pending: number };
   revenue: { total: number; this_month: number };
+}
+
+export interface AdminAuditLog {
+  id: number;
+  action: string;
+  target_type?: string | null;
+  target_id?: number | null;
+  metadata?: Record<string, unknown> | null;
+  ip_address?: string | null;
+  created_at: string;
+  admin_user?: { id: number; name: string; email: string };
 }
 
 // Delivery types

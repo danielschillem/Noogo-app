@@ -32,6 +32,14 @@ android/key.properties
 *.mov
 *.avi
 *.hprof
+hs_err_pid*.log
+replay_pid*.log
+android/hs_err_pid*.log
+android/replay_pid*.log
+
+# Local deploy tooling and scratch binaries
+.do/doctl-bin/
+.do/*.zip
 
 # Scripts avec credentials (cles API, mots de passe)
 

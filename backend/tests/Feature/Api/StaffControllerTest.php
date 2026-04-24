@@ -379,4 +379,21 @@ class StaffControllerTest extends TestCase
 
         $response->assertStatus(401);
     }
+
+    public function test_my_restaurants_expose_kitchen_display_pour_waiter(): void
+    {
+        $waiter = User::factory()->create();
+        $this->createStaff($waiter, 'waiter');
+
+        $response = $this->actingAs($waiter)
+            ->getJson('/api/auth/my-restaurants');
+
+        $response->assertStatus(200);
+        $restaurant = collect($response->json('data'))->firstWhere('id', $this->restaurant->id);
+
+        $this->assertNotNull($restaurant);
+        $this->assertContains('manage_orders', $restaurant['permissions']);
+        $this->assertContains('kitchen_display', $restaurant['permissions']);
+        $this->assertNotContains('view_stats', $restaurant['permissions']);
+    }
 }

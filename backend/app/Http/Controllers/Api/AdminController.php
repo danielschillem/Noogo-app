@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdminAuditLog;
 use App\Models\Order;
 use App\Models\Restaurant;
 use App\Models\User;
@@ -13,6 +14,19 @@ use Illuminate\Validation\Rules\Password;
 
 class AdminController extends Controller
 {
+    private function logAdminAction(Request $request, string $action, ?string $targetType = null, ?int $targetId = null, array $metadata = []): void
+    {
+        AdminAuditLog::create([
+            'admin_user_id' => $request->user()?->id,
+            'action' => $action,
+            'target_type' => $targetType,
+            'target_id' => $targetId,
+            'metadata' => $metadata,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+    }
+
     // ── Platform statistics ──────────────────────────────────────────────────
 
     public function stats(): JsonResponse
@@ -91,6 +105,10 @@ class AdminController extends Controller
         // is_admin hors fillable (protection mass-assignment) → assignation directe
         $user->is_admin = $data['is_admin'] ?? false;
         $user->save();
+        $this->logAdminAction($request, 'admin.user.created', 'user', $user->id, [
+            'email' => $user->email,
+            'is_admin' => (bool) $user->is_admin,
+        ]);
 
         return response()->json([
             'success' => true,
@@ -121,6 +139,10 @@ class AdminController extends Controller
             $user->is_admin = (bool) $isAdmin;
             $user->save();
         }
+        $this->logAdminAction($request, 'admin.user.updated', 'user', $user->id, [
+            'changed_fields' => array_keys($data),
+            'is_admin' => $user->is_admin,
+        ]);
 
         return response()->json([
             'success' => true,
@@ -138,7 +160,9 @@ class AdminController extends Controller
             ], 422);
         }
 
+        $deletedId = $user->id;
         $user->delete();
+        $this->logAdminAction($request, 'admin.user.deleted', 'user', $deletedId);
 
         return response()->json([
             'success' => true,
@@ -158,6 +182,9 @@ class AdminController extends Controller
         // is_admin hors fillable → assignation directe
         $user->is_admin = !$user->is_admin;
         $user->save();
+        $this->logAdminAction($request, 'admin.user.toggled_admin', 'user', $user->id, [
+            'is_admin' => $user->is_admin,
+        ]);
 
         return response()->json([
             'success' => true,
@@ -192,14 +219,60 @@ class AdminController extends Controller
         ]);
     }
 
-    public function toggleRestaurantActive(Restaurant $restaurant): JsonResponse
+    public function toggleRestaurantActive(Request $request, Restaurant $restaurant): JsonResponse
     {
         $restaurant->update(['is_active' => !$restaurant->is_active]);
+        $this->logAdminAction($request, 'admin.restaurant.toggled_active', 'restaurant', $restaurant->id, [
+            'is_active' => $restaurant->is_active,
+        ]);
 
         return response()->json([
             'success' => true,
             'data' => $restaurant->fresh(),
             'message' => $restaurant->is_active ? 'Restaurant activé.' : 'Restaurant désactivé.',
+        ]);
+    }
+
+    public function updateRestaurantLicense(Request $request, Restaurant $restaurant): JsonResponse
+    {
+        $data = $request->validate([
+            'license_plan' => 'nullable|string|max:50',
+            'license_status' => 'required|in:active,suspended,expired,trial',
+            'license_expires_at' => 'nullable|date',
+            'license_max_staff' => 'nullable|integer|min:1|max:1000',
+        ]);
+
+        $restaurant->update($data);
+        $this->logAdminAction($request, 'admin.restaurant.license_updated', 'restaurant', $restaurant->id, [
+            'license_status' => $restaurant->license_status,
+            'license_plan' => $restaurant->license_plan,
+            'license_expires_at' => optional($restaurant->license_expires_at)?->toISOString(),
+            'license_max_staff' => $restaurant->license_max_staff,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Licence du restaurant mise à jour.',
+            'data' => $restaurant->fresh(),
+        ]);
+    }
+
+    public function listAuditLogs(Request $request): JsonResponse
+    {
+        $query = AdminAuditLog::query()
+            ->with('adminUser:id,name,email')
+            ->orderByDesc('created_at');
+
+        if ($request->filled('action')) {
+            $query->where('action', $request->string('action')->toString());
+        }
+        if ($request->filled('target_type')) {
+            $query->where('target_type', $request->string('target_type')->toString());
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $query->paginate((int) $request->get('per_page', 50)),
         ]);
     }
 }

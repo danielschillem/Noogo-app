@@ -6,6 +6,7 @@ use App\Events\DeliveryStatusChanged;
 use App\Events\DriverDeliveryAssigned;
 use App\Events\DriverLocationUpdated;
 use App\Http\Controllers\Controller;
+use App\Models\AdminAuditLog;
 use App\Models\Delivery;
 use App\Models\DeliveryDriver;
 use App\Models\Order;
@@ -18,6 +19,22 @@ class DeliveryController extends Controller
 {
     public function __construct(private FcmNotificationService $fcm)
     {
+    }
+
+    private function logAdminAction(Request $request, string $action, string $targetType, int $targetId, array $metadata = []): void
+    {
+        if (!$request->user()?->isAdmin()) {
+            return;
+        }
+        AdminAuditLog::create([
+            'admin_user_id' => $request->user()->id,
+            'action' => $action,
+            'target_type' => $targetType,
+            'target_id' => $targetId,
+            'metadata' => $metadata,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
     }
 
     // ─── DEL-B06 : Demander une livraison pour une commande ─────────────────
@@ -389,6 +406,10 @@ class DeliveryController extends Controller
         ]);
 
         $driver = DeliveryDriver::create($validated);
+        $this->logAdminAction($request, 'admin.driver.created', 'driver', $driver->id, [
+            'name' => $driver->name,
+            'phone' => $driver->phone,
+        ]);
 
         return response()->json([
             'success' => true,
@@ -410,6 +431,9 @@ class DeliveryController extends Controller
         ]);
 
         $driver->update($validated);
+        $this->logAdminAction($request, 'admin.driver.updated', 'driver', $driver->id, [
+            'changed_fields' => array_keys($validated),
+        ]);
 
         return response()->json(['success' => true, 'data' => $driver]);
     }
@@ -419,7 +443,12 @@ class DeliveryController extends Controller
      */
     public function destroyDriver(DeliveryDriver $driver): JsonResponse
     {
+        $request = request();
+        $driverId = $driver->id;
         $driver->delete();
+        if ($request instanceof Request) {
+            $this->logAdminAction($request, 'admin.driver.deleted', 'driver', $driverId);
+        }
 
         return response()->json(['success' => true, 'message' => 'Livreur supprimé.']);
     }
